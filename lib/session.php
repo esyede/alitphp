@@ -67,7 +67,7 @@ class Session {
         $this->data['token']=substr(sha1(base64_encode(md5(utf8_encode(microtime(1))))),0,20);
     }
 
-    // Checking session existance
+    // Check session existance
     protected function check() {
         $fw=\Alit::instance();
         $cookie=$fw->cookie($this->cookie);
@@ -108,11 +108,12 @@ class Session {
 
     /**
     *   Get session data from database
-    *   @param   $key   string
+    *   @param   $key      string
+    *   @param   $default  string|null
     *   @return  mixed
     */
-    function get($key) {
-        return isset($this->data[$key])?$this->data[$key]:null;
+    function get($key,$default=null) {
+        return isset($this->data[$key])?$this->data[$key]:$default;
     }
 
     /**
@@ -126,13 +127,13 @@ class Session {
             foreach ($key as $k=>$v)
                 $this->data[$k]=$v;
         else $this->data[$key]=$val;
-        $cdata=base64_encode($this->data['token']);
-        $fw->setcookie($this->cookie,$cdata);
+        $fw->setcookie($this->cookie,base64_encode($this->data['token']));
         $data=[
             'token'=>$this->data['token'],
             'ip'=>$fw->get('IP'),
             'seen'=>time()
         ];
+        $res=0;
         if ($this->existed===false) {
             $data['data']=serialize($this->data);
             $this->db->table($this->table)->insert($data);

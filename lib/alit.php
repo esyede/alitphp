@@ -143,18 +143,21 @@ final class Alit extends \Factory implements \ArrayAccess {
 		// Execute user-defined routes
         if (isset($this->get('ROUTES')[$this->get('METHOD')]))
             $handled=$this->execute($this->get('ROUTES')[$this->get('METHOD')],true);
-			// No route specified
+			// No route specified or fail to handle routes
         if ($handled===0) {
 			// Call notfound handler if any
 			$notfound=$this->get('NOTFOUND');
 			if (!is_null($notfound)) {
+				// Call directly if it's a closure
 				if (is_callable($notfound))
 	                call_user_func($notfound);
+	            // If it's a class method, instantiate the class then call it's method 
 				elseif (is_string($notfound)) {
 					if (stripos($notfound,'@')!==false) {
 						list($class,$method)=explode('@',$notfound);
 						if (class_exists($class))
 							call_user_func([new $class,$method]);
+						// Error, class or class-method cannot be found
 						else trigger_error(vsprintf(self::E_Route,[$class,$method]),E_ERROR);
 					}
 					else trigger_error(vsprintf(self::E_Route,[$class,$method]),E_ERROR);
@@ -349,7 +352,8 @@ final class Alit extends \Factory implements \ArrayAccess {
 		if (!($error=error_get_last())
 		&&session_status()==PHP_SESSION_ACTIVE)
 			session_commit();
-		if ($error&&in_array($error['type'],[E_ERROR,E_PARSE,E_CORE_ERROR,E_COMPILE_ERROR]))
+		$errors=[E_ERROR,E_PARSE,E_CORE_ERROR,E_CORE_WARNING,E_COMPILE_ERROR,E_COMPILE_WARNING];
+		if ($error&&in_array($error['type'],$errors))
 			$this->abort(500,$error['message'],$error['file'],$error['line']);
 	}
 
@@ -363,17 +367,16 @@ final class Alit extends \Factory implements \ArrayAccess {
 		$base=$this->get('PROTO').'://'.rtrim($this->get('BASE'),'/');
 		$url=filter_var($url,FILTER_SANITIZE_URL);
 		if (!is_null($url)) {
-			if (preg_match('~^(http(s)?://)?[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(/.*)?$~i',$url)
-			||filter_var($url,FILTER_VALIDATE_URL))
-				$url=$url;
-			else $url=$base.$url;
+			if (!preg_match('~^(http(s)?://)?[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(/.*)?$~i',$url)
+			||!filter_var($url,FILTER_VALIDATE_URL))
+				$url=$base.$url;
 		}
 		else $url=$base;
         try {
             ob_start();
-            header('Location: '.$url,true,$permanent?302:301);
+            header('Location: '.$url,true,$permanent?302:307);
             ob_end_flush();
-            exit;
+            exit();
         }
         catch (\Exception $ex) {
 			trigger_error(vsprintf(self::E_Redirect,[$url]),E_ERROR);
@@ -426,9 +429,9 @@ final class Alit extends \Factory implements \ArrayAccess {
 					}
 					if (!empty($fn))
 						call_user_func_array(
-							// method based on flag
+							// Call method based on config flag
 							[$this,$fn[1]],
-							// arrays to be passed in
+							// Array to be passed in
 							array_merge([$match['left']],str_getcsv($match['right']))
 						);
 					else {
@@ -444,6 +447,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 						preg_match('/^(?<child>[^:]+)?/',$child,$node);
 						$custom=(strtolower($node['child']!='global'));
 						$left=($custom?($node['child'].'.'):'').preg_replace('/\s+/','',$match['left']);
+						// Set config array to hive
 						call_user_func_array([$this,'set'],array_merge([$left],[$right]));
 					}
 				}
@@ -485,8 +489,8 @@ final class Alit extends \Factory implements \ArrayAccess {
 		$ts=time();
 		$date=new \DateTime('now',new \DateTimeZone($this->get('TZ')));
 		$date->setTimestamp($ts);
-		return $this->write($file,"[".$date->format('y/m/d H:i:s')."]".((bool)$block?PHP_EOL:" ").
-			$data.PHP_EOL,file_exists($file));
+		return $this->write($file,"[".$date->format('y/m/d H:i:s')."]".
+			((bool)$block?PHP_EOL:" ").$data.PHP_EOL,file_exists($file));
 	}
 
 	/**
@@ -833,9 +837,8 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@return  string
 	**/
 	function serialize($key) {
-		return (strtolower($this->get('SERIALIZER'))=='igbinary')
-			?igbinary_serialize($key)
-			:serialize($key);
+		return ($this->get('SERIALIZER')=='igbinary')
+			?igbinary_serialize($key):serialize($key);
 	}
 
 	/**
@@ -844,9 +847,8 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@return  string
 	**/
 	function unserialize($key) {
-		return (strtolower($this->get('SERIALIZER'))=='igbinary')
-			?igbinary_unserialize($key)
-			:unserialize($key);
+		return ($this->get('SERIALIZER')=='igbinary')
+			?igbinary_unserialize($key):unserialize($key);
 	}
 
 	/**
@@ -876,8 +878,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	function post($key,$escape=true) {
 		if (isset($_POST[$key]))
 			return ($escape===true)
-				?\Validation::instance()->xss_clean([$_POST[$key]])
-				:$_POST[$key];
+				?\Validation::instance()->xss_clean([$_POST[$key]]):$_POST[$key];
 		return null;
 	}
 
@@ -905,11 +906,12 @@ final class Alit extends \Factory implements \ArrayAccess {
 	/**
 	*	Grab uri segment
 	*	@param   $key         int
+	*	@param   $default     string|null
 	*	@return  string|null
 	*/
-	function segment($key) {
+	function segment($key,$default=null) {
 		$uri=array_map('trim',preg_split('~/~',$app->get('URI'),0,PREG_SPLIT_NO_EMPTY));
-		return array_key_exists($key,$uri)?$uri[$key]:null;
+		return array_key_exists($key,$uri)?$uri[$key]:$default;
 	}
 
 
@@ -1046,7 +1048,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	        &&$headers['X-Forwarded-Proto']=='https'?'https':'http';
 		// Get request method
 		// if it's a HEAD request, override it to being GET and prevent any output
-		// @see: http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.4
+		// Reference: http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.4
         $method=$_SERVER['REQUEST_METHOD'];
         if ($_SERVER['REQUEST_METHOD']=='HEAD') {
             ob_start();
@@ -1059,9 +1061,9 @@ final class Alit extends \Factory implements \ArrayAccess {
         }
         // Determine ajax request
         $isajax=(isset($_SERVER['HTTP_X_REQUESTED_WITH'])
-		&&$_SERVER['HTTP_X_REQUESTED_WITH']==='XMLHttpRequest')?true:false;
+			&&$_SERVER['HTTP_X_REQUESTED_WITH']==='XMLHttpRequest')?true:false;
 		// Determine default serializer
-		$serializer=extension_loaded('igbinary')?'igbinary':'php';
+		$serializer=extension_loaded('igbinary')?'igbinary':'default';
 		// Assign default value to router-related variables
 		$fw->hive=[
 			'ROUTES'=>[],

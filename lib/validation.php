@@ -282,9 +282,7 @@ class Validation extends \Factory {
     *   @param  $data  array
     */
     private function check_fields(array $data) {
-        $ruleset=$this->validation_rules();
-        $mismatch=array_diff_key($data,$ruleset);
-        $fields=array_keys($mismatch);
+        $fields=array_keys(array_diff_key($data,$this->validation_rules()));
         foreach ($fields as $field)
             $this->errors[]=[
                 'field'=>$field,
@@ -369,7 +367,7 @@ class Validation extends \Factory {
                             $rule=explode(',',$rule);
                             $method='validate_'.$rule[0];
                             $arg=$rule[1];
-                            // Check if $arg is regex then throw error message
+                            // Check if $arg is regex then throw error message, sorry!
                             if (preg_match("/^\/.+\/[a-z]*$/i",$arg))
                                 \Alit::instance()->abort(500,vsprintf(self::E_Arg_isRegex,[$rule]));
                             $rule=$rule[0];
@@ -460,71 +458,71 @@ class Validation extends \Factory {
     */
     function get_readable_errors($to_string=false,$field_class='check-field',$err_class='error-message') {
         if (empty($this->errors))
-            return ($to_string)?null:[];
-        $resp=[];
+            return ((bool)$to_string)?null:[];
+        $response=[];
         $allmsg=$this->lang;
-        foreach ($this->errors as $e) {
-            $field=ucwords(str_replace($this->field_char_to_remove,chr(32),$e['field']));
-            $arg=$e['param'];
-            if (array_key_exists($e['field'],self::$fields)) {
-                $field=self::$fields[$e['field']];
+        foreach ($this->errors as $err) {
+            $field=ucwords(str_replace($this->field_char_to_remove,chr(32),$err['field']));
+            $arg=$err['param'];
+            if (array_key_exists($err['field'],self::$fields)) {
+                $field=self::$fields[$err['field']];
                 if (array_key_exists($arg,self::$fields))
-                    $arg=self::$fields[$e['param']];
+                    $arg=self::$fields[$err['param']];
             }
-            if (isset($allmsg[$e['rule']])) {
+            if (isset($allmsg[$err['rule']])) {
                 if (is_array($arg))
                     $arg=implode(',',$arg);
                 $msg=str_replace('{param}',$arg,
                     str_replace('{field}','<span class="'.$field_class.'">'.$field.'</span>',
-                    $allmsg[$e['rule']])
+                    $allmsg[$err['rule']])
                 );
-                $resp[]=$msg;
+                $response[]=$msg;
             }
-            else \Alit::instance()->abort(500,vsprintf(self::E_Rule_NoMsg,[$e['rule']]));
+            else \Alit::instance()->abort(500,vsprintf(self::E_Rule_NoMsg,[$err['rule']]));
         }
-        if (!$to_string)
-            return $resp;
+        if ((bool)$to_string===false)
+            return $response;
         else {
             $buffer='';
-            foreach ($resp as $s)
-                $buffer.='<span class="'.$err_class.'">'.$s.'</span>';
+            foreach ($response as $res)
+                $buffer.='<span class="'.$err_class.'">'.$res.'</span>';
             return $buffer;
         }
     }
 
     /**
     *   Process the validation errors and return an array of errors with field names as keys
-    *   @param   $to_string
+    *   @param   $to_string  bool
     *   @return  array|null
     */
-    function get_errors_array($to_string=null) {
+    function get_errors_array($to_string=false) {
         if (empty($this->errors))
-            return ($to_string)?null:[];
-        $resp=[];
+            return ((bool)$to_string)?null:[];
+        $response=[];
         $allmsg=[];
         foreach ($this->lang as $k=>$v)
             $allmsg['validate_'.$k]=$v;
-        foreach ($this->errors as $e) {
-            $field=ucwords(str_replace(['_','-'],chr(32),$e['field']));
-            $arg=$e['param'];
-            if (array_key_exists($e['field'],self::$fields)) {
-                $field=self::$fields[$e['field']];
+        foreach ($this->errors as $err) {
+            $field=ucwords(str_replace(['_','-'],chr(32),$err['field']));
+            $arg=$err['param'];
+            if (array_key_exists($err['field'],self::$fields)) {
+                $field=self::$fields[$err['field']];
                 if (array_key_exists($arg,self::$fields))
-                    $arg=self::$fields[$e['param']];
+                    $arg=self::$fields[$err['param']];
             }
-            if (isset($allmsg[$e['rule']])) {
-                if (!isset($resp[$e['field']])) {
+            if (isset($allmsg[$err['rule']])) {
+                if (!isset($response[$err['field']])) {
                     if (is_array($arg))
                         $arg=implode(',',$arg);
                     $msg=str_replace('{param}',$arg,
-                        str_replace('{field}',$field,$allmsg[$e['rule']])
+                        str_replace('{field}',$field,$allmsg[$err['rule']])
                     );
-                    $resp[$e['field']]=$msg;
+                    $response[$err['field']]=$msg;
                 }
             }
-            else \Alit::instance()->abort(500,vsprintf(self::E_Rule_NoMsg,[$e['rule']]));
+            else \Alit::instance()->abort(500,vsprintf(self::E_Rule_NoMsg,[$err['rule']]));
         }
-        return $resp;
+        return $response;
     }
 
     /**
@@ -565,7 +563,7 @@ class Validation extends \Factory {
 
     /**
     *   Replace noise words in a string
-    *   ref: http://tax.cchgroup.com/help/Avoiding_noise_words_in_your_search.htm
+    *   Reference: http://tax.cchgroup.com/help/Avoiding_noise_words_in_your_search.htm
     *   @param   $val   string
     *   @param   $args  array
     *   @return  string
@@ -672,17 +670,27 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Convert MS Word special characters (“, ”, ‘, ’, –, …) to web safe characters
+    *   Convert MS Word special characters to web safe characters
+    *   Reference: https://stackoverflow.com/questions/7419302/converting-microsoft-word-special-characters-with-php
     *   @param   $val    string
     *   @param   $args   array
     *   @return  string
     */
     protected function filter_ms_word_characters($val,$args=null) {
-        $val=str_replace(['“','”'],'"',$val);
-        $val=str_replace(['‘','’'],"'",$val);
-        $val=str_replace('–','-',$val);
-        $val=str_replace('…','...',$val);
-        return $val;
+        return str_replace([
+                "\xC2\xAB","\xC2\xBB","\xE2\x80\x98","\xE2\x80\x99",
+                "\xE2\x80\x9A","\xE2\x80\x9B","\xE2\x80\x9C","\xE2\x80\x9D",
+                "\xE2\x80\x9E","\xE2\x80\x9F","\xE2\x80\xB9","\xE2\x80\xBA",
+                "\xE2\x80\x93","\xE2\x80\x94","\xE2\x80\xA6"
+            ],
+            [
+                "<<",">>","'","'",
+                "'","'",'"','"',
+                '"','"',"<",">",
+                "-","-","..."
+            ],
+            $val
+        );
     }
 
     /**
@@ -1170,7 +1178,7 @@ class Validation extends \Factory {
 
     /**
     *   Determine if the input is a valid credit card number.
-    *   ref: http://stackoverflow.com/questions/174730/what-is-the-best-way-to-validate-a-credit-card-in-php
+    *   Reference: http://stackoverflow.com/questions/174730/what-is-the-best-way-to-validate-a-credit-card-in-php
     *   @param   $field  string
     *   @param   $ipt    array
     *   @return  mixed

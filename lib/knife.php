@@ -22,7 +22,7 @@ class Knife extends \Preview {
 
     const
         // Command-type tokens
-        TOKEN='command|comment|echo';
+        TOKENS='command|comment|echo';
 
 
     // Class constructor
@@ -40,7 +40,7 @@ class Knife extends \Preview {
 	*	@return  bool
 	*/
     function cleanup() {
-        foreach(glob($this->cache.'*.knife.php') as $f)
+        foreach (glob($this->cache.'*.knife.php') as $f)
 			if (unlink($f))
                 return true;
         return false;
@@ -53,12 +53,11 @@ class Knife extends \Preview {
     */
     protected function tpl($name) {
         $fw=\Alit::instance();
-        $tpl=$this->ui.$name.'.knife.php';
-        $tpl=preg_replace('/\s+/','',$tpl);
+        $tpl=preg_replace('/\s+/','',$this->ui.$name.'.knife.php');
         $php=$this->cache.DS.md5($name).'.knife.php';
         if (!file_exists($php)||filemtime($tpl)>filemtime($php)) {
             $txt=preg_replace('/@BASE/',$fw->base(),$fw->read($tpl));
-            foreach ($fw->split(self::TOKEN) as $type)
+            foreach ($fw->split(self::TOKENS) as $type)
                 $txt=$this->{'_'.$type}($txt);
             $fw->write($php,$txt);
         }
