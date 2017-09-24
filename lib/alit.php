@@ -327,6 +327,28 @@ final class Alit extends \Factory implements \ArrayAccess {
     }
 
 	/**
+	*	Read from file (with option to apply Unix LF as standard line ending)
+	*	@param   $file   string
+	*	@param   $lf     bool
+	*	@return  string
+	**/
+	function read($file,$lf=false) {
+		$data=@file_get_contents($file);
+		return $lf?preg_replace('/\r\n|\r/',"\n",$data):$data;
+	}
+
+	/**
+	*	Write to file (or append if $append is true)
+	*	@param   $file     string
+	*	@param   $data     mixed
+	*	@param   $append   bool
+	*	@return  int|false
+	**/
+	function write($file,$data,$append=false) {
+		return file_put_contents($file,$data,LOCK_EX|($append?FILE_APPEND:0));
+	}
+
+	/**
 	*	Get client's IP
 	*	@return  string
 	*/
@@ -404,7 +426,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@return  bool
 	*/
 	protected function autoloader($class) {
-		$class=$this->slashfixer(ltrim($class,'\\'));
+		$class=$this->slash(ltrim($class,'\\'));
 		$func=NULL;
 		if (is_array($path=$this->hive['AUTOLOAD'])
 		&&isset($path[1])
@@ -423,7 +445,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@param   $class  string
 	*	@return  mixed
 	**/
-	function slashfixer($str) {
+	function slash($str) {
 		return $str?strtr($str,'\\','/'):$str;
 	}
 
@@ -699,7 +721,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 			'IP'=>$fw->ip(),
 			'TZ'=>@date_default_timezone_get(),
 			'TIME'=>&$_SERVER['REQUEST_TIME_FLOAT'],
-			'LIB'=>$fw->slashfixer(__DIR__).'/',
+			'LIB'=>$fw->slash(__DIR__).'/',
 			'AUTOLOAD'=>'./',
 			'UI'=>'./',
 			'TEMP'=>'tmp/',
