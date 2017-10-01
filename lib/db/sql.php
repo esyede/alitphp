@@ -13,6 +13,7 @@ namespace DB;
 class SQL {
 
     protected
+        $fw,
         $op=['=','!=','<','>','<=','>=','<>'],
         $from=null,
         $where=null,
@@ -38,13 +39,14 @@ class SQL {
 
     // Class constructor
     function __construct(array $config) {
+        $this->fw=\Alit::instance();
         $config['driver']=(isset($config['driver'])?$config['driver']:'mysql');
         $config['host']=(isset($config['host'])?$config['host']:'localhost');
         $config['charset']=(isset($config['charset'])?$config['charset']:'utf8');
         $config['collation']=(isset($config['collation'])?$config['collation']:'utf8_general_ci');
         $config['port']=(strstr($config['host'],':')?explode(':',$config['host'])[1]:'');
         $this->prefix=(isset($config['prefix'])?$config['prefix']:'');
-        $this->cachedir=(isset($config['cachedir'])?$config['cachedir']:\Alit::instance()->grab('TEMP'));
+        $this->cachedir=(isset($config['cachedir'])?$config['cachedir']:$this->fw->hive['TEMP']);
         $this->debug=(isset($config['debug'])?$config['debug']:true);
         $dsn='';
         if ($config['driver']=='mysql'||$config['driver']==''||$config['driver']=='pgsql')
@@ -868,7 +870,7 @@ class SQLCache {
             return false;
         $target=$this->cachedir.$this->filename($sql).'.cache';
         if (file_exists($target)) {
-            $cache=json_decode(file_get_contents($target),$array);
+            $cache=json_decode($this->fw->read($target),$array);
             if (($array?$cache['finish']:$cache->finish)<time()) {
                 unlink($target);
                 return;

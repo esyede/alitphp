@@ -20,7 +20,7 @@ class Session extends \Factory {
 
     // Class constructor
     function __construct($db,$table='_session',$cookie='_cookie') {
-        $fw=Alit::instance();
+        $fw=\Alit::instance();
         $this->fw=$fw;
         $this->db=$db;
         $this->table=$table;

@@ -300,7 +300,7 @@ class Validation extends \Factory {
         $this->errors=[];
         foreach ($ruleset as $field=>$rules) {
             $rules=explode('|',$rules);
-            $look_for=array('required_file','required');
+            $look_for=['required_file','required'];
             if (count(array_intersect($look_for,$rules))>0
             ||(isset($input[$field]))) {
                 if (isset($input[$field])) {
@@ -325,7 +325,7 @@ class Validation extends \Factory {
                                     $param=str_replace('_'.$matches[1],$input[$matches[1]],$param);
                         }
                         else $method='validate_'.$rule;
-                        if (is_callable(array($this,$method))) {
+                        if (is_callable([$this,$method])) {
                             $result=$this->$method($field,$input,$param);
                             if (is_array($result))
                                 if (array_search($result['field'],array_column($this->errors,'field'))===false)
@@ -488,9 +488,9 @@ class Validation extends \Factory {
                 }
                 if (is_array($input[$field]))
                     $input_array=&$input[$field];
-                else $input_array=array(&$input[$field]);
+                else $input_array=[&$input[$field]];
                 foreach ($input_array as &$value) {
-                    if (is_callable(array($this,'filter_'.$filter))) {
+                    if (is_callable([$this,'filter_'.$filter])) {
                         $method='filter_'.$filter;
                         $value=$this->$method($value,$params);
                     }

@@ -183,7 +183,8 @@ final class Alit extends \Factory implements \ArrayAccess {
                 call_user_func($this->hive['FW']['notfound']);
             else {
 				header($_SERVER['SERVER_PROTOCOL'].' 404 Not Found');
-				echo json_encode(['error'=>404,'message'=>'Page not found']);
+				echo "<!DOCTYPE html>\n<html>\n<head>\n<title>404</title>\n</head>\n".
+					"<body>\n<center>\n<h1>404</h1>\n<p>Page Not Found!</p>\n</center>\n</body>\n</html>";
 				exit();
 			}
         }
@@ -295,7 +296,7 @@ final class Alit extends \Factory implements \ArrayAccess {
     *   @param  $data  null|array
     */
 	function render($name,$data=null) {
-		$file=$this->grab('BASE').str_replace('./','',$this->grab('UI').$name);
+		$file=$this->hive['BASE'].str_replace('./','',$this->hive['UI'].$name);
 		$file=str_replace('/',DIRECTORY_SEPARATOR,$file);
 		if (!file_exists($file))
 			throw new \Exception("Can't find view file '{$name}'");
@@ -308,7 +309,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 
 
 	/**
-	*	Parse .ini file and keep it's array to hive (or overwrite if key exists )
+	*	Parse .ini file and store it's array to hive (or overwrite if key exists)
 	*	@param  $file  string
 	*/
 	function config($file) {
@@ -441,9 +442,9 @@ final class Alit extends \Factory implements \ArrayAccess {
 	}
 
 	/**
-	*	Class autoloader
-	*	@param   $class  string
-	*	@return  mixed
+	*	Replace backslash with slash
+	*	@param   $str    string
+	*	@return  string
 	**/
 	function slash($str) {
 		return $str?strtr($str,'\\','/'):$str;
@@ -581,8 +582,8 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*/
     function sort($key=null) {
         if (is_string($key)) {
-            $vals=$this->grab($key);
-            return $this->arrsort((array)$vals);
+            $val=$this->grab($key);
+            return $this->arrsort((array)$val);
         }
         elseif (is_null($key))
             return $this->arrsort($this->hive);
@@ -647,7 +648,7 @@ final class Alit extends \Factory implements \ArrayAccess {
     }
 
 	/**
-	*	Get all stored values in hive
+	*	Grab all stored values in hive
 	*	@return  array
 	*/
     function hive() {
@@ -709,15 +710,27 @@ final class Alit extends \Factory implements \ArrayAccess {
 			$base=implode('/',array_slice(explode('/',$_SERVER['SCRIPT_NAME']),0,-1)).'/';
         $uri=substr($_SERVER['REQUEST_URI'],strlen($base));
         if (strstr($uri,'?')) $uri=substr($uri,0,strpos($uri,'?'));
+		// determine server protocol
+		$proto='http';
+		$ssl=false;
+		if (isset($_SERVER['HTTPS'])&&$_SERVER['HTTPS']=='on') $ssl=true;
+		elseif (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])
+		&&$_SERVER['HTTP_X_FORWARDED_PROTO']=='https'
+		||!empty($_SERVER['HTTP_X_FORWARDED_SSL'])
+		&&$_SERVER['HTTP_X_FORWARDED_SSL']=='on')
+			$ssl=true;
+		$proto=$ssl?'https':'http';
+		// start assigning initial hive values
         $fw->hive['PACKAGE']=self::PACKAGE;
 		$fw->hive['VERSION']=self::VERSION;
 		$fw->hive+=[
 			'FW'=>['after'=>[],'before'=>[],'notfound'=>null,'base_route'=>'','method'=>''],
 			// 'ROUTES'=>[], // not yet implemented :)
-			'ROOT'=>$_SERVER['DOCUMENT_ROOT'],
-			'BASE'=>$_SERVER['DOCUMENT_ROOT'].$base,
+			'PROTO'=>$proto,
 			'HOST'=>$_SERVER['SERVER_NAME'],
+			'BASE'=>$_SERVER['SERVER_NAME'].$base,
 			'URI'=>'/'.trim($uri,'/'),
+			'ROOT'=>$_SERVER['DOCUMENT_ROOT'].$base,
 			'IP'=>$fw->ip(),
 			'TZ'=>@date_default_timezone_get(),
 			'TIME'=>&$_SERVER['REQUEST_TIME_FLOAT'],
@@ -745,18 +758,18 @@ final class Alit extends \Factory implements \ArrayAccess {
 //!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class Preview extends \Factory {
     protected
+		$fw,
+    	$ui,
 		$block,
-    	$stack,
-    	$ui;
+		$stack;
 
 	// Class constructor
     function __construct() {
-        $fw=Alit::instance();
-        $ui=$fw->grab('BASE').str_replace('./','',$fw->grab('UI'));
-        $ui=str_replace('/',DIRECTORY_SEPARATOR,$ui);
-        $this->ui=$ui;
-        $this->block=[];
-        $this->stack=[];
+        $fw=\Alit::instance();
+		$this->fw=$fw;
+		$this->block=[];
+		$this->stack=[];
+        $this->ui=str_replace('/',DIRECTORY_SEPARATOR,$fw->hive['ROOT'].str_replace('./','',$fw->hive['UI']));
     }
 
 	/**
@@ -805,18 +818,6 @@ class Preview extends \Factory {
     }
 
 	/**
-	*	Cleanup template cache
-	*	@return  bool
-	*/
-    function cleanup() {
-        foreach (scandir($this->cache) as $file) {
-            if (!in_array($file,['.','..','index.html','index.php','.htaccess','.cache','.log']))
-                if (unlink($this->cache.DIRECTORY_SEPARATOR.$file)) return true;
-        }
-        return false;
-    }
-
-	/**
 	*	Define parent
 	*	@param  $name  string
 	*/
@@ -860,7 +861,7 @@ class Preview extends \Factory {
 
 
 //!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//! Factory - factory class for single-instance objects
+//! Factory - A factory class for single-instance objects
 //!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 abstract class Factory {
 
@@ -870,7 +871,7 @@ abstract class Factory {
 	*/
 	static function instance() {
 		if (!\Warehouse::exists($class=get_called_class())) {
-			$ref=new \Reflectionclass($class);
+			$ref=new \ReflectionClass($class);
 			$args=func_get_args();
 			\Warehouse::store($class,$args?$ref->newInstanceArgs($args):new $class);
 		}
@@ -932,4 +933,4 @@ final class Warehouse {
 	private function __construct() {}
 }
 // Return alit instance on file include
-return Alit::instance();
+return \Alit::instance();

@@ -11,23 +11,32 @@
 
 class Knife extends \Preview {
     protected
+        $root,
         $base,
         $cache,
         $format,
-        $base_url,
         $type=['command','comment','echo'];
 
 
     // Class constructor
     function __construct() {
-        $fw=Alit::instance();
-        $this->base=$fw->grab('BASE');
-        $this->base_url=$fw->grab('HOST').$fw->grab('URI');
-        $cache=$this->base.str_replace('./','',$fw->grab('TEMP'));
-        $cache=str_replace('/',DIRECTORY_SEPARATOR,$cache);
-        $this->cache=$cache;
-        $this->format="htmlspecialchars(%s,ENT_QUOTES,'UTF-8')";
         parent::__construct();
+        $this->root=$this->fw->hive['ROOT'];
+        $this->base=$this->fw->hive['BASE'];
+        $this->cache=$this->root.str_replace('./','',$this->fw->hive['TEMP']);
+        $this->format="htmlspecialchars(%s,ENT_QUOTES,'UTF-8')";
+    }
+
+
+
+	/**
+	*	Cleanup template cache
+	*	@return  bool
+	*/
+    function cleanup() {
+        foreach(glob($this->cache.'*.knife.php') as $f)
+			if (unlink($f)) return true;
+        return false;
     }
 
     /**
@@ -36,13 +45,13 @@ class Knife extends \Preview {
     *   @return  string
     */
     protected function tpl($name) {
-        $tpl=$this->ui.str_replace('/',DIRECTORY_SEPARATOR,$name.'.knife.php');
+        $tpl=$this->ui.$name.'.knife.php';
         $php=$this->cache.DIRECTORY_SEPARATOR.md5($name).'.knife.php';
         if (!file_exists($php)||filemtime($tpl)>filemtime($php)) {
-            $text=str_replace('@BASE','<?php echo $this->base_url?>',file_get_contents($tpl));
+            $text=preg_replace('/@BASE/',rtrim($this->fw->hive['PROTO'].'://'.$this->base,'/'),$this->fw->read($tpl));
             foreach ($this->type as $type)
                 $text=$this->{'_'.$type}($text);
-            file_put_contents($php,$text);
+            $this->fw->write($php,$text);
         }
         return $php;
     }
@@ -231,7 +240,7 @@ class Knife extends \Preview {
     }
 
     /**
-    *   Compile the @yield statements (PHP 5.5+)
+    *   Compile the @yield statements
     *   @param   $expr    string
     *   @return  string
     */
