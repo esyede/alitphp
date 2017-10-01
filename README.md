@@ -3,7 +3,7 @@ Lightweight closure-based PHP micro framework
 
 
 ### Requirements
- * PHP 5.5+
+ * PHP 5.6+
  * Apache webserver (optional, you can use php built-in webserver)
  * mode_rewrite if using apache webserver
  * PCRE 8.02+ (usually already bundled with php)
