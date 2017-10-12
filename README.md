@@ -97,7 +97,7 @@ Or even further, you can specify routes in a config file, like this:
 ; NOTE: [route] is a flag for automatic routing definition
 [route]
 GET /                 = Welcome@home
-GET|POST|PUT  /hello  = Welcome@hello
+GET|POST|PUT /hello   = Welcome@hello
 GET /user(/\w+)       = Welcome@test
 ```
 
@@ -118,11 +118,11 @@ You can use validation library after instantiate the class:
 $eval=Validation::instance();
 ```
 
-Then you now you will be able to use all available methods, for example:
+Then you will be able to use all available methods, for example:
 
 ```php
 $data=['email'=>'johndoe@gmail.com'];
-$eval->isvalid([$data],['required|valid_email']); // Return: true
+$eval->isvalid([$data],['email'=>'required|valid_email']); // Return: true
 $eval->isvalid($data,['email'=>'required|min_len,100']);
 // Return:
 // Array (
@@ -165,17 +165,21 @@ $db->table('users')
 
 ### Session Library
 To use the session library, you need to pass database connection object to session constructor.
-Let's assume we have database connection object saved on `$db` variable, like we already did on above example, so
+Let's assume we have database connection object saved on `$db` variable, like we did above, so
 the session instantiation will looks like:
 
 ```php
-$sess=new Session($db);
+$sess=new Session($db,'mysession','mycookie');
 ```
+It will automatically create db table named `mysession` on your database and will set the cookie
 
-Then you can use all of Session library methods like:
+
+Then you can start using Session library like:
 
 ```php
+// store session data to database
 $sess->set('role','administrator');
+// grab session data from database 
 $sess->get('role'); // Result: administrator
 ```
 
