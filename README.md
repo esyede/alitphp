@@ -3,7 +3,7 @@ Lightweight, blazing fast micro framework
 
 
 ### Features
-* Clean routing engine with route-mounting support
+* Clean routing engine
 * Tiny laravel blade-like templating engine
 * INI style configuration
 * Dot-notation array ready
