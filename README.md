@@ -123,10 +123,10 @@ Then you now you will be able to use all available methods, for example:
 ```php
 $data=['email'=>'johndoe@gmail.com'];
 $eval->isvalid([$data],['required|valid_email']); // Return: true
-$eval->isvalid($data,['required|min_len,100']);
+$eval->isvalid($data,['email'=>'required|min_len,100']);
 // Return:
 // Array (
-//    [0] => The 0 field needs to be at least 100 characters
+//    [0] => The Email field needs to be at least 100 characters
 // )
 ```
 
