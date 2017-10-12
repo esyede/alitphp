@@ -217,8 +217,15 @@ And the last step is creating the `ui/mytemplate.knife.php` file:
     </body>
 </html>
 ```
-
-
+#### Framework Variables
+Alit framework variables can be accessed like this:
+```php
+print_r($app->hive());
+// or
+print_r($app->hive);
+// or
+print_r($app);
+```
 
 
 ### Documentation
