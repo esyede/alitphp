@@ -20,8 +20,8 @@ Lightweight, blazing fast micro framework
  * Writable access to `tmp/` dir, for temporary files.
 
 
-### Apache Configuration
-```php
+### Apache Configuration:
+```apache
 RewriteEngine On
 # RewriteBase /
 RewriteCond %{REQUEST_FILENAME} !-f
@@ -34,6 +34,7 @@ RewriteRule ^(.*)$ index.php [QSA,L]
 # Prohibit direct access to system files
 RewriteRule ^(tmp)\/|\.(cache|ini|log)$ - [R=404]
 ```
+
 
 ### Routing Engine
 Alit routing engine can be used either procedural or Object Orirnted way
@@ -122,7 +123,7 @@ Then you will be able to use all available methods, for example:
 
 ```php
 $data=['email'=>'johndoe@gmail.com'];
-$eval->isvalid([$data],['email'=>'required|valid_email']); // Return: true
+$eval->isvalid($data,['email'=>'required|valid_email']); // Return: true
 $eval->isvalid($data,['email'=>'required|min_len,100']);
 // Return:
 // Array (
@@ -179,8 +180,10 @@ Then you can start using Session library like:
 ```php
 // store session data to database
 $sess->set('role','administrator');
-// grab session data from database 
+// grab session data from database
 $sess->get('role'); // Result: administrator
+$sess->erase('role'); // erase/unset the session
+$sess->destroy(); // destroy session and remove from db
 ```
 
 
@@ -221,8 +224,10 @@ And the last step is creating the `ui/mytemplate.knife.php` file:
     </body>
 </html>
 ```
+
+
 #### Framework Variables
-Alit framework variables can be accessed like this:
+All framework variables are stored on `Alit::hive`, so this code maybe useful:
 ```php
 print_r($app->hive());
 // or
@@ -233,9 +238,7 @@ print_r($app);
 
 
 ### Documentation
-Full documentation is work in progress..
-
-
+Full documentation is still work in progress..
 
 
 ### To-do List

@@ -81,11 +81,11 @@ class Session extends \Factory {
     }
 
     /**
-    *   Store session to database
+    *   Set/store session to database
     *   @param   $name  string
     *   @param   $val   mixed
     */
-    function store($name,$val=null) {
+    function set($name,$val=null) {
         if (is_array($name))
             foreach ($name as $key=>$val)
                 $this->fw->hive['SESSION'][$key]=$val;
@@ -108,7 +108,7 @@ class Session extends \Factory {
         return false;
     }
 
-    // Destroy current session
+    // Destroy session and remove user data from database
     function destroy() {
         $id=base64_encode($this->fw->hive['SESSION']['token']);
         $this->setcookie($this->fw->hive['SESSION']['cookie'],$id,time()-1);
@@ -127,18 +127,18 @@ class Session extends \Factory {
     *   @param   $name   string
     *   @return  mixed
     */
-    function grab($name) {
+    function get($name) {
         if (isset($this->fw->hive['SESSION'][$name]))
             return $this->fw->hive['SESSION'][$name];
         return null;
     }
 
     /**
-    *   Unset session
+    *   Erase/unset session
     *   @param   $name  string
     *   @return  bool
     */
-    function delete($name) {
+    function erase($name) {
         unset($this->fw->hive['SESSION'][$name]);
     }
 

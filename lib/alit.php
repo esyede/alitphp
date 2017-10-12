@@ -135,7 +135,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@return  string
 	*/
     function method() {
-		// If it's a HEAD request, override it to being GET and -
+		// If it's a HEAD request, override it to being GET and prevent any output
 		// Reference: http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.4
         $method=$_SERVER['REQUEST_METHOD'];
         if ($_SERVER['REQUEST_METHOD']=='HEAD') {
@@ -219,28 +219,28 @@ final class Alit extends \Factory implements \ArrayAccess {
 			ob_start();
 			if (!headers_sent())
 				header($_SERVER['SERVER_PROTOCOL'].' '.$code.' '.$hdrmsg);
-				// if DEBUG value larger than 0
-				if ((int)$this->hive['DEBUG']>0) {
-					echo "<!DOCTYPE html>\n<html>".
-						"\n\t<head>\n\t\t<title>{$code} {$hdrmsg}</title>\n\t</head>".
-						"\n\t<body>\n".
-						"\t\t<h1>{$code} {$hdrmsg}</h1>\n".
-						"\t\t<p>{$reason}</p>\n";
-					(!is_null($file)?$path="\t\t<pre>{$file}:<font color=red>{$line}</font></pre></br>\n":$path="");
-					echo $path."\t\t<b>Back Trace:</b><br>\n".
-						// Show backtrace
-						"\t\t<pre>{$trace}</pre>\n".
-						"\t</body>\n</html>";
-				}
-				else {
-					echo "<!DOCTYPE html>\n<html>".
-						"\n\t<head>\n\t\t<title>{$code} {$hdrmsg}</title>\n\t</head>".
-						"\n\t<body>\n".
-						"\t\t<h1>{$code} {$hdrmsg}</h1>\n".
-						"\t\t<p>{$reason}</p>\n";
-					(!is_null($file)?$path="\t\t<pre>{$file}:<font color=red>{$line}</font></pre></br>\n":$path="");
-					echo $path."\t</body>\n</html>";
-				}
+			// if DEBUG value larger than 0
+			if ((int)$this->hive['DEBUG']>0) {
+				echo "<!DOCTYPE html>\n<html>".
+					"\n\t<head>\n\t\t<title>{$code} {$hdrmsg}</title>\n\t</head>".
+					"\n\t<body>\n".
+					"\t\t<h1>{$code} {$hdrmsg}</h1>\n".
+					"\t\t<p>{$reason}</p>\n";
+				(!is_null($file)?$path="\t\t<pre>{$file}:<font color=red>{$line}</font></pre></br>\n":$path="");
+				echo $path."\t\t<b>Back Trace:</b><br>\n".
+					// Show backtrace
+					"\t\t<pre>{$trace}</pre>\n".
+					"\t</body>\n</html>";
+			}
+			else {
+				echo "<!DOCTYPE html>\n<html>".
+					"\n\t<head>\n\t\t<title>{$code} {$hdrmsg}</title>\n\t</head>".
+					"\n\t<body>\n".
+					"\t\t<h1>{$code} {$hdrmsg}</h1>\n".
+					"\t\t<p>{$reason}</p>\n";
+				(!is_null($file)?$path="\t\t<pre>{$file}:<font color=red>{$line}</font></pre></br>\n":$path="");
+				echo $path."\t</body>\n</html>";
+			}
             ob_end_flush();
             die();
 		}
@@ -329,7 +329,7 @@ final class Alit extends \Factory implements \ArrayAccess {
     }
 
 	/**
-	*	Handle a set of routes: if a match is found, execute the relating handling function
+	*	Handle a set of routes: if a route is found, execute the relating handling function
 	*	@param   $routes  array
 	*	@param   $quit    boolean
 	*	@return  int
@@ -355,7 +355,7 @@ final class Alit extends \Factory implements \ArrayAccess {
                         	if (forward_static_call_array([$controller,$method],$params)===false)
 								$this->abort(500,"Can't forward route handler: {$route['handler']}");
 					}
-					else $this->abort(500,"Can't find route handler: {$controller}::{$method}");
+					else $this->abort(500,"Can't find route handler: {$controller}@{$method}");
                 }
                 $handled++;
                 if ($quit)
@@ -366,7 +366,7 @@ final class Alit extends \Factory implements \ArrayAccess {
     }
 
 	/**
-    *   Render native view
+    *   Render view using native template
     *   @param  $name  string
     *   @param  $data  null|array
     */
