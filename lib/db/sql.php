@@ -1,5 +1,4 @@
 <?php
-namespace DB;
 /**
 *   Tiny PDO-Based SQL Query Builder for Alit PHP
 *   @package     Alit PHP
@@ -8,33 +7,38 @@ namespace DB;
 *   @license     https://opensource.org/licenses/MIT The MIT License (MIT)
 *   @author      Suyadi <suyadi.1992@gmail.com>
 */
+namespace DB;
+// Prohibit direct access to file
+if (!defined('ALIT')) die('Direct file access is not allowed.');
 
 
 class SQL {
 
     protected
         $fw,
-        $op=['=','!=','<','>','<=','>=','<>'],
+        $numrows=0,
+        $result=[],
         $from=null,
+        $join=null,
+        $select='*',
+        $debug=true,
         $where=null,
+        $cache=null,
         $limit=null,
+        $query=null,
+        $error=null,
         $offset=null,
+        $prefix=null,
+        $having=null,
+        $querycount=0,
         $orderby=null,
         $groupby=null,
         $insertid=null,
         $cachedir=null,
-        $prefix=null,
-        $having=null,
-        $cache=null,
-        $query=null,
-        $error=null,
-        $join=null,
-        $grouped=false,
-        $debug=true,
-        $querycount=0,
-        $numrows=0,
-        $select='*',
-        $result=[];
+        $grouped=false;
+    const
+        // Comparison operators
+        OPERATORS='=|!=|<|>|<=|>=|<>';
     public $pdo=null;
 
     // Class constructor
@@ -49,7 +53,9 @@ class SQL {
         $this->cachedir=(isset($config['cachedir'])?$config['cachedir']:$this->fw->hive['TEMP']);
         $this->debug=(isset($config['debug'])?$config['debug']:true);
         $dsn='';
-        if ($config['driver']=='mysql'||$config['driver']==''||$config['driver']=='pgsql')
+        if ($config['driver']=='mysql'
+        ||$config['driver']==''
+        ||$config['driver']=='pgsql')
             $dsn=$config['driver'].':host='.$config['host'].';'.
                 (($config['port'])!=''?'port='.$config['port'].';':'').'dbname='.$config['database'];
         elseif ($config['driver']=='sqlite')
@@ -62,7 +68,7 @@ class SQL {
             $this->pdo->exec("SET CHARACTER SET '".$config["charset"]."'");
             $this->pdo->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE,\PDO::FETCH_OBJ);
         } catch(\PDOException $e) {
-            die("Cannot the connect to Database with PDO.<br /><br />".$e->getMessage());
+            $this->fw->abort(500,"Cannot the connect to Database with PDO.<br><br>{$e->getMessage()}");
         }
         return $this->pdo;
     }
@@ -159,7 +165,7 @@ class SQL {
         $on=$field1;
         $table=$this->prefix.$table;
         if (!is_null($op))
-            $on=(!in_array($op,$this->op)
+            $on=(!in_array($op,$this->fw->split(self::OPERATORS))
                 ?$this->prefix.$field1.' = '.$this->prefix.$op
                 :$this->prefix.$field1.' '.$op.' '.$this->prefix.$field2);
         if (is_null($this->join))
@@ -265,7 +271,7 @@ class SQL {
                         $w.=$type.$v.(isset($op[$k])?$this->escape($op[$k]):'');
                 $where=$w;
             }
-            elseif (!in_array($op,$this->op)||$op==false)
+            elseif (!in_array($op,$this->fw->split(self::OPERATORS))||$op==false)
                 $where=$type.$where.' = '.$this->escape($op);
             else $where=$type.$where.' '.$op.' '.$this->escape($val);
         }
@@ -445,7 +451,8 @@ class SQL {
             $where='('.$where;
             $this->grouped=false;
         }
-        if (is_null($this->where)) $this->where=$where;
+        if (is_null($this->where))
+            $this->where=$where;
         else $this->where=$this->where.' '.$and_or.' '.$where;
         return $this;
     }
@@ -554,7 +561,7 @@ class SQL {
                     $w.=$v.(isset($op[$k])?$this->escape($op[$k]):'');
             $this->having=$w;
         }
-        elseif (!in_array($op,$this->op))
+        elseif (!in_array($op,$this->fw->split(self::OPERATORS)))
             $this->having=$field.'> '.$this->escape($op);
         else $this->having=$field.' '.$op.' '.$this->escape($val);
         return $this;
@@ -572,12 +579,12 @@ class SQL {
 
     // Get last database error message
     function error() {
-        $msg='<h1>Database Error</h1>';
-        $msg.='<h4>Query: <em style="font-weight:normal;">"'.$this->query.'"</em></h4>';
-        $msg.='<h4>Error: <em style="font-weight:normal;">'.$this->error.'</em></h4>';
+        $msg='<h3>Database Error</h3>';
+        $msg.='<b>Query:</b><pre>'.$this->query.'</pre><br/>';
+        $msg.='<b>Error:</b><pre>'.$this->error.'</pre><br/>';
         if ($this->debug===true)
-            die($msg);
-        else throw new \Exception($this->error.'. ('.$this->query.')');
+            $this->fw->abort(500,"{$msg}");
+        else $this->fw->abort(500,"{$this->error}. ({$this->query})");
     }
 
     /**
@@ -803,21 +810,21 @@ class SQL {
 
     // Reset class properties
     protected function reset() {
-        $this->select='*';
+        $this->result=[];
+        $this->numrows=0;
         $this->from=null;
+        $this->join=null;
+        $this->select='*';
+        $this->error=null;
         $this->where=null;
+        $this->query=null;
         $this->limit=null;
         $this->offset=null;
+        $this->having=null;
         $this->orderby=null;
         $this->groupby=null;
-        $this->having=null;
-        $this->join=null;
         $this->grouped=false;
-        $this->numrows=0;
         $this->insertid=null;
-        $this->query=null;
-        $this->error=null;
-        $this->result=[];
         return;
     }
 
@@ -832,9 +839,10 @@ class SQL {
 
 class SQLCache {
 
-    private $cacheDir=null;
-    private $cache=null;
-    private $finish=null;
+    private
+        $cacheDir=null,
+        $cache=null,
+        $finish=null;
 
     // Class constructor
     function __construct($dir=null,$time=0) {

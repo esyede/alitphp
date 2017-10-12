@@ -7,16 +7,19 @@
 *   @license     https://opensource.org/licenses/MIT The MIT License (MIT)
 *   @author      Suyadi <suyadi.1992@gmail.com>
 */
+// Prohibit direct access to file
+if (!defined('ALIT')) die('Direct file access is not allowed.');
+
 
 
 class Session extends \Factory {
 
     protected
-        $started,
-        $exists,
-        $table,
+        $fw,
         $db,
-        $fw;
+        $table,
+        $exists,
+        $started;
 
     // Class constructor
     function __construct($db,$table='_session',$cookie='_cookie') {
@@ -29,7 +32,8 @@ class Session extends \Factory {
         $this->started=false;
         $this->start();
         $this->maketable();
-        if (!$this->check()) $this->create();
+        if (!$this->check())
+            $this->create();
     }
 
     //  Start a session if it's not already started
@@ -49,7 +53,8 @@ class Session extends \Factory {
     // Checking session existance
     protected function check() {
         $cookie=$this->cookie($this->fw->hive['SESSION']['cookie']);
-        if ($cookie==false) return false;
+        if ($cookie==false)
+            return false;
         $token=base64_decode($cookie);
         $res=(array)$this->db->table($this->table)
             ->where('token',$token)
@@ -107,8 +112,7 @@ class Session extends \Factory {
     function destroy() {
         $id=base64_encode($this->fw->hive['SESSION']['token']);
         $this->setcookie($this->fw->hive['SESSION']['cookie'],$id,time()-1);
-        $this->db
-            ->table($this->table)
+        $this->db->table($this->table)
             ->where('token',$this->fw->hive['SESSION']['token'])
             ->delete();
         $this->data=[];
@@ -145,8 +149,7 @@ class Session extends \Factory {
             'accessed'=>time(),
             'userdata'=>$id
         ];
-        return $this->db
-            ->table($this->table)
+        return $this->db->table($this->table)
             ->where('token',$this->fw->hive['SESSION']['token'])
             ->update($data);
     }
@@ -155,11 +158,11 @@ class Session extends \Factory {
     private function maketable() {
         $table=$this->table;
         $sql="CREATE TABLE IF NOT EXISTS `{$table}` (
-          `id` int(11) NOT NULL AUTO_INCREMENT,
-          `token` varchar(25) NOT NULL DEFAULT '',
-          `ip` varchar(50) DEFAULT NULL,
-          `accessed` varchar(50) DEFAULT NULL,
-          `userdata` text,
+          `id`       INT(11)      NOT NULL AUTO_INCREMENT,
+          `token`    VARCHAR(25)  NOT NULL DEFAULT '',
+          `ip`       VARCHAR(50)  DEFAULT NULL,
+          `accessed` VARCHAR(50)  DEFAULT NULL,
+          `userdata` TEXT,
           PRIMARY KEY (`id`,`token`)
         ) DEFAULT CHARSET=utf8;";
         return $this->db->query($sql);
@@ -184,7 +187,8 @@ class Session extends \Factory {
     *   @return  string
     */
     function setcookie($name,$val,$time=null) {
-        if($time===null) $time=(time()+(60*60*24*365));
-        setcookie($name,$val,$time,$this->fw->grab('TEMP'));
+        if($time===null)
+            $time=(time()+(60*60*24*365));
+        setcookie($name,$val,$time,$this->fw->hive['TEMP']);
     }
 }

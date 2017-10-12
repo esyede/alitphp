@@ -7,6 +7,9 @@
 *   @license     https://opensource.org/licenses/MIT The MIT License (MIT)
 *   @author      Suyadi <suyadi.1992@gmail.com>
 */
+// Prohibit direct access to file
+if (!defined('ALIT')) die('Direct file access is not allowed.');
+
 
 
 class Knife extends \Preview {
@@ -14,8 +17,9 @@ class Knife extends \Preview {
         $root,
         $base,
         $cache,
-        $format,
-        $type=['command','comment','echo'];
+        $format;
+    const
+        TOKEN='command|comment|echo';
 
 
     // Class constructor
@@ -35,7 +39,8 @@ class Knife extends \Preview {
 	*/
     function cleanup() {
         foreach(glob($this->cache.'*.knife.php') as $f)
-			if (unlink($f)) return true;
+			if (unlink($f))
+                return true;
         return false;
     }
 
@@ -46,12 +51,14 @@ class Knife extends \Preview {
     */
     protected function tpl($name) {
         $tpl=$this->ui.$name.'.knife.php';
+        $tpl=preg_replace('/\s+/','',$tpl);
         $php=$this->cache.DIRECTORY_SEPARATOR.md5($name).'.knife.php';
         if (!file_exists($php)||filemtime($tpl)>filemtime($php)) {
-            $text=preg_replace('/@BASE/',rtrim($this->fw->hive['PROTO'].'://'.$this->base,'/'),$this->fw->read($tpl));
-            foreach ($this->type as $type)
-                $text=$this->{'_'.$type}($text);
-            $this->fw->write($php,$text);
+            $txt=preg_replace('/@BASE/',rtrim($this->fw->hive['PROTO'].'://'.
+                $this->base,'/'),$this->fw->read($tpl));
+            foreach ($this->fw->split(self::TOKEN) as $type)
+                $txt=$this->{'_'.$type}($txt);
+            $this->fw->write($php,$txt);
         }
         return $php;
     }
@@ -63,7 +70,7 @@ class Knife extends \Preview {
     */
     protected function _command($vars) {
         return preg_replace_callback('/\B@(\w+)([ \t]*)(\( ( (?>[^()]+) | (?3) )* \))?/x',function ($match) {
-            if (method_exists($this,$method='_'.ucfirst($match[1])))
+            if (method_exists($this,$method='_'.strtolower($match[1])))
                 $match[0]=$this->$method(isset($match[3])?$match[3]:'');
             return isset($match[3])?$match[0]:$match[0].$match[2];
         },$vars);
