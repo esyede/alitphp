@@ -227,7 +227,7 @@ And the last step is creating the `ui/mytemplate.knife.php` file:
 
 
 #### Framework Variables
-All framework variables are stored on `Alit::hive`, so this code maybe useful:
+All framework variables are stored on `Alit::hive`, so this dumping this proprty maybe useful:
 ```php
 print_r($app->hive());
 // or
