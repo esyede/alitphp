@@ -304,15 +304,14 @@ final class Alit extends \Factory implements \ArrayAccess {
 
 	/**
 	*	Redirect to specified URI
-	*	@param  $url   string
-	*	@param  $wait  int
+	*	@param  $url  string
 	*/
 	function redirect($url=null) {
 		$base=$this->hive['PROTO'].'://'.rtrim($this->hive['BASE'],'/');
 		$url=filter_var($url,FILTER_SANITIZE_URL);
 		if (!is_null($url)) {
-			// Scheme must be included for valid url
-			if (filter_var($url,FILTER_VALIDATE_URL))
+			if (preg_match('|^(http(s)?://)?[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(/.*)?$|i',$url)
+			||filter_var($url,FILTER_VALIDATE_URL))
 				$url=$url;
 			else $url=$base.$url;
 		}
