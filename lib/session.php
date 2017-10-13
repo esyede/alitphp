@@ -139,7 +139,8 @@ class Session extends \Factory {
     *   @return  bool
     */
     function erase($name) {
-        $this->fw->split($name);
+        if (is_string($name))
+            $this->fw->split($name);
         foreach ($name as $k)
             unset($this->fw->hive['SESSION'][$k]);
     }
