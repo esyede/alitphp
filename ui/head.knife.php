@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <title>{{ $app }}</title>
         <style>
-            body{
+            body {
                 font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
                 font-weight:lighter;
                 font-size:1rem;
@@ -12,19 +12,19 @@
                 color:#BFBFBF;
                 background-color:#fff;
             }
-            a{
+            a {
                 color:#BFBFBF!important;
                 text-decoration:none;
             }
-            a:hover{
+            a:hover {
                 text-decoration:underline;
             }
-            .title{
+            .title {
                 padding-top:150px;
                 font-weight:lighter;
                 font-size:50px;
             }
-            .content{
+            .content {
                 padding:30px;
             }
         </style>

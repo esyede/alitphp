@@ -1,4 +1,4 @@
-@include('head')
+    @include('head')
     <center>
         <div class="content">
             <h1 class="title">{{ $app }}</h1>
@@ -6,4 +6,4 @@
             <small>v{{ $version }}</small>
         </div>
     </center>
-@include('foot')
+    @include('foot')
