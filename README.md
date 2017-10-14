@@ -134,7 +134,6 @@ Alit provide some method to play around with this. Let's take a look some of the
 
 Set a value
 ```php
-// set and multiple-set
 $app->set('profile',[
     'uname'=>'johndoe',
     'surname'=> 'John Doe',
@@ -156,6 +155,8 @@ $app->mset([
     ]
 ]);
 ```
+_Tip: You can also setting hive value from config file_
+
 
 Get a value:
 ```php
@@ -168,7 +169,11 @@ $app->hive['entry']['title']; // Lorem ipsum
 
 Add a value or array of value:
 ```php
-$app->add('profile.city','Seoul');
+$app->add('profile.nationality','Indonesia');
+$app->add([
+    'profile.city'=>'Ngawi',
+    'profile.food'=>'Nasi goreng'
+]);
 ```
 
 Check if hive path exists:
@@ -186,7 +191,7 @@ $app->erase(['profile.age','profile.uname']);
 
 
 #### Framework Variables
-All framework variables are stored on `$hive` property, So, this maybe useful:
+All framework variables are stored on `$hive` property, So, maybe useful to see hive values:
 ```php
 print_r($app->hive);
 // or
