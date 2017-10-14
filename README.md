@@ -130,7 +130,7 @@ Wait, 3 lines? Woohoo !!
 
 ### Playing With Hive
 Hive is a variable that holds an array of whole system variables.
-Alit provide some method to play around with this. Let's take a look some of them:
+Alit provide some method to play around with it. Let's take a look some of them:
 
 
 Set a value
@@ -236,6 +236,7 @@ $config=[
     'driver'=>'mysql',
     'host'=>'localhost',
     'username'=>'johndoe',
+    'password'=>'s3cr3t',
     'database'=>'my_database',
     'port'=>3306,                  // optional
     'prefix'=>'',                  // optional

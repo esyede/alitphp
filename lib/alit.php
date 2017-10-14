@@ -450,8 +450,6 @@ final class Alit extends \Factory implements \ArrayAccess {
 				$child='global';
 				$fn=[];
 				foreach ($matches as $match) {
-					if(isset($match[0]))
-						preg_replace('/\s+/',' ',$match[0]);
 					if ($match['child']) {
 						$child=$match['child'];
 						if (preg_match('/^(?!(?:global|config|route|before|after)\b)((?:\.?\w)+)/i',$child,$gchild)
