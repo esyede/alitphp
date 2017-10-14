@@ -13,12 +13,18 @@ if (!defined('ALIT')) die('Direct file access is not allowed.');
 
 
 class Knife extends \Preview {
+    
     protected
+        // Actual root directory
         $root,
+        // Base directory (symlink)
         $base,
+        // Cache directory
         $cache,
+        // Output format
         $format;
     const
+        // Command-type tokens
         TOKEN='command|comment|echo';
 
 

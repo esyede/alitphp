@@ -15,10 +15,15 @@ if (!defined('ALIT')) die('Direct file access is not allowed.');
 class Session extends \Factory {
 
     protected
+        // Framework instance
         $fw,
+        // Database object
         $db,
+        // Table name
         $table,
+        // Session existance indicator
         $exists,
+        // Session start indicator
         $started;
 
     // Class constructor
@@ -139,8 +144,7 @@ class Session extends \Factory {
     *   @return  bool
     */
     function erase($name) {
-        if (is_string($name))
-            $this->fw->split($name);
+        $this->fw->split($name);
         foreach ($name as $k)
             unset($this->fw->hive['SESSION'][$k]);
     }

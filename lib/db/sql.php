@@ -15,7 +15,9 @@ if (!defined('ALIT')) die('Direct file access is not allowed.');
 class SQL {
 
     protected
+        // Framework instance
         $fw,
+        // Class properties
         $numrows=0,
         $result=[],
         $from=null,
@@ -39,7 +41,9 @@ class SQL {
     const
         // Comparison operators
         OPERATORS='=|!=|<|>|<=|>=|<>';
-    public $pdo=null;
+    public
+        // Database connection object
+        $conn=null;
 
     // Class constructor
     function __construct(array $config) {
@@ -63,14 +67,14 @@ class SQL {
         elseif ($config['driver']=='oracle')
             $dsn='oci:dbname='.$config['host'].'/'.$config['database'];
         try {
-            $this->pdo=new \PDO($dsn,$config['username'],$config['password']);
-            $this->pdo->exec("SET NAMES '".$config["charset"]."' COLLATE '".$config["collation"]."'");
-            $this->pdo->exec("SET CHARACTER SET '".$config["charset"]."'");
-            $this->pdo->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE,\PDO::FETCH_OBJ);
+            $this->conn=new \PDO($dsn,$config['username'],$config['password']);
+            $this->conn->exec("SET NAMES '".$config["charset"]."' COLLATE '".$config["collation"]."'");
+            $this->conn->exec("SET CHARACTER SET '".$config["charset"]."'");
+            $this->conn->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE,\PDO::FETCH_OBJ);
         } catch(\PDOException $e) {
-            $this->fw->abort(500,"Cannot the connect to Database with PDO.<br><br>{$e->getMessage()}");
+            throw new \Exception("Cannot the connect to Database with PDO.<br><br>{$e->getMessage()}");
         }
-        return $this->pdo;
+        return $this->conn;
     }
 
     /**
@@ -583,8 +587,8 @@ class SQL {
         $msg.='<b>Query:</b><pre>'.$this->query.'</pre><br/>';
         $msg.='<b>Error:</b><pre>'.$this->error.'</pre><br/>';
         if ($this->debug===true)
-            $this->fw->abort(500,"{$msg}");
-        else $this->fw->abort(500,"{$this->error}. ({$this->query})");
+            throw new \Exception("{$msg}");
+        else throw new \Exception("{$this->error}. ({$this->query})");
     }
 
     /**
@@ -637,7 +641,7 @@ class SQL {
         $query='INSERT INTO '.$this->from.' ('.$column.') VALUES ('.$val.')';
         $query=$this->query($query);
         if ($query) {
-            $this->insertid=$this->pdo->lastInsertId();
+            $this->insertid=$this->conn->lastInsertId();
             return $this->insert_id();
         }
         else return false;
@@ -733,7 +737,7 @@ class SQL {
         if (!is_null($this->cache))
             $cache=$this->cache->getcache($this->query,$array);
         if (!$cache&&$str) {
-            $sql=$this->pdo->query($this->query);
+            $sql=$this->conn->query($this->query);
             if ($sql) {
                 $this->numrows=$sql->rowCount();
                 if (($this->numrows>0)) {
@@ -754,16 +758,16 @@ class SQL {
             }
             else {
                 $this->cache=null;
-                $this->error=$this->pdo->errorInfo();
+                $this->error=$this->conn->errorInfo();
                 $this->error=$this->error[2];
                 return $this->error();
             }
         }
         elseif ((!$cache&&!$str)||($cache&&!$str)) {
             $this->cache=null;
-            $this->result=$this->pdo->exec($this->query);
+            $this->result=$this->conn->exec($this->query);
             if ($this->result===false) {
-                $this->error=$this->pdo->errorInfo();
+                $this->error=$this->conn->errorInfo();
                 $this->error=$this->error[2];
                 return $this->error();
             }
@@ -786,7 +790,7 @@ class SQL {
             return 'NULL';
         if (is_null($data))
             return null;
-        return $this->pdo->quote(trim($data));
+        return $this->conn->quote(trim($data));
     }
 
     /**
@@ -830,7 +834,7 @@ class SQL {
 
     // Class destructor
     function __destruct() {
-        $this->pdo=null;
+        $this->conn=null;
     }
 }
 

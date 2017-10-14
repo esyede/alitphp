@@ -22,17 +22,27 @@ Lightweight, blazing fast micro framework
 
 ### Apache Configuration:
 ```apache
+# Enable rewrite engine
 RewriteEngine On
+
+# Some server needs to specify base directory for rewriting
 # RewriteBase /
+
+# Continue if a match is not an existing file, directory or symlink
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-l
 
-# Alit rewrite rule
+# Redirect all request to index.php,
+# append any query string from original url,
+# and then stop processing this
 RewriteRule ^(.*)$ index.php [QSA,L]
 
-# Prohibit direct access to system files
+# Give 404 error when accessing /tmp dir or
+# .cache, .ini, or .log files
 RewriteRule ^(tmp)\/|\.(cache|ini|log)$ - [R=404]
+# Disable directory listing of php files
+IndexIgnore *.php
 ```
 
 
@@ -82,6 +92,10 @@ class Welcome {
     function home() {
         echo "Welcome home dude !";
     }
+
+    function prfile($name) {
+        echo "Welcome home dude !";
+    }
 }
 ```
 
@@ -89,6 +103,7 @@ Then, register it to your route:
 
 ```php
 $app->route('GET /','Welcome@home');
+$app->route('GET /profile(/\w+)','Welcome@profile');
 ```
 
 Or even further, you can specify routes in a config file, like this:
@@ -98,8 +113,8 @@ Or even further, you can specify routes in a config file, like this:
 ; NOTE: [route] is a flag for automatic routing definition
 [route]
 GET /                 = Welcome@home
+GET /profile(/\w+)       = Welcome@user
 GET|POST|PUT /hello   = Welcome@hello
-GET /user(/\w+)       = Welcome@test
 ```
 
 And your _index.php_ will be even simpler:
@@ -131,7 +146,7 @@ $eval->isvalid($data,['email'=>'required|min_len,100']);
 // )
 ```
 
-Default error message is in english. To set error message you can use the `seterrors()` method before calling the `Alit::isvalid()` method.
+Default error message is in english. To set error message you can use the `setlang()` method before calling the `isvalid()`.
 
 
 
@@ -226,8 +241,44 @@ And the last step is creating the `ui/mytemplate.knife.php` file:
 ```
 
 
+#### Unit-testing Tool
+You can use Unit-testing library by instantiate the class, like this:
+```php
+$test=new Test($level);
+```
+
+The `$level` takes the following values: `RL_FALSE`, `RL_TRUE`, `RL_BOTH`, which means that the testing stack only returns results for expections that resolved to TRUE, FALSE or BOTH (default).
+
+
+Then you can do unit testing like:
+
+```php
+// function hello() {
+//     return "hello!";
+// }
+
+$hello=hello();
+$test->expect(!empty($hello),'Something was returned');
+
+// This test should succeed
+$test->expect(is_string($hello),'Return value is a string');
+
+// This test is bound to fail
+$test->expect(is_array($hello),'Return value is array');
+
+// Display the results
+foreach ($test->results() as $res) {
+    echo $res['text'].'<br>';
+    echo $res['status']
+        ?"Test passed"
+        :"Fail ({$res['source']})";
+    echo '<br>';
+}
+```
+
+
 #### Framework Variables
-All framework variables are stored on `Alit::hive`, so this dumping this proprty maybe useful:
+All framework variables are stored on `Alit::hive`, SO you can check it by printing the resources:
 ```php
 print_r($app->hive());
 // or
@@ -245,7 +296,7 @@ Full documentation is still work in progress..
 * Bug fixing
 * Add regex alias to route pattern
 * Add route-caching
-* Add CLI tool, unit testing, logger, etc.
+* Add CLI tool, ~~unit testing~~ (done!), ~~logger~~ (done!), etc.
 
 
 

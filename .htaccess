@@ -3,9 +3,6 @@ RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-l
-
-# Alit rewrite rule
 RewriteRule ^(.*)$ index.php [QSA,L]
-
-# Prohibit direct access to system files
 RewriteRule ^(tmp)\/|\.(cache|ini|log)$ - [R=404]
+IndexIgnore *.php
