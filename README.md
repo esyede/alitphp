@@ -93,7 +93,7 @@ class Welcome {
         echo "Welcome home dude !";
     }
 
-    function prfile($name) {
+    function profile($name) {
         echo "Welcome home dude !";
     }
 }
