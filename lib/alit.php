@@ -529,6 +529,16 @@ final class Alit extends \Factory implements \ArrayAccess {
 	}
 
 	/**
+	*	Return base url (with protocol)
+	*	@param   $suffix  string
+	*	@return  string
+	*/
+	function base($suffix=null) {
+		$base=rtrim($this->hive['PROTO'].'://'.$this->get('BASE'),'/');
+		return is_null($suffix)?$base:$base.$suffix;
+	}
+
+	/**
 	*	Get client's ip
 	*	@return  string
 	*/

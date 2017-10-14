@@ -13,7 +13,7 @@ if (!defined('ALIT')) die('Direct file access is not allowed.');
 
 
 class Knife extends \Preview {
-    
+
     protected
         // Actual root directory
         $root,
@@ -60,8 +60,7 @@ class Knife extends \Preview {
         $tpl=preg_replace('/\s+/','',$tpl);
         $php=$this->cache.DIRECTORY_SEPARATOR.md5($name).'.knife.php';
         if (!file_exists($php)||filemtime($tpl)>filemtime($php)) {
-            $txt=preg_replace('/@BASE/',rtrim($this->fw->hive['PROTO'].'://'.
-                $this->base,'/'),$this->fw->read($tpl));
+            $txt=preg_replace('/@BASE/',$this->fw->base(),$this->fw->read($tpl));
             foreach ($this->fw->split(self::TOKEN) as $type)
                 $txt=$this->{'_'.$type}($txt);
             $this->fw->write($php,$txt);
