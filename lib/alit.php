@@ -803,6 +803,44 @@ final class Alit extends \Factory implements \ArrayAccess {
     }
 
 	/**
+	*	Check if given key or keys are empty
+	*	@param   $key  string|array
+	*	@return  bool
+	*/
+	function dry($key) {
+		$key=(array)$key;
+		foreach ($key as $k)
+			if (!empty($this->get($k)))
+				return false;
+		return true;
+	}
+
+	/**
+	*	Return the value of given key and delete the key
+	*	@param   $key      string
+	*	@param   $default  mixed|null
+	*	@return  mixed
+	*/
+	function pull($key,$default=null) {
+		$val=$this->get($key,$default);
+		$this->erase($key);
+		return $val;
+	}
+
+	/**
+	*	Push a given array to the end of the array in a given key
+	*	@param   $key   string
+	*	@param   $val   mixed
+	*/
+	function push($key,$val) {
+		$item=$this->get($key);
+		if (is_array($val)||is_null($item)) {
+			$item[]=$val;
+			$this->set($key,$item);
+		}
+	}
+
+	/**
 	*	Sort the values of a hive path or all the stored values
 	*	@param   $key   string|null
 	*	@return  array

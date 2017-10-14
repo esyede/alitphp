@@ -127,6 +127,75 @@ $app->run();
 Wait, 3 lines? Woohoo !!
 
 
+### Playing With Hive
+Hive is a variable that holds an array of whole system variables.
+Alit provide some method to play around with this. Let's take a look some of them:
+
+
+Set a value
+```php
+// set and multiple-set
+$app->set('profile',[
+    'uname'=>'johndoe',
+    'surname'=> 'John Doe',
+    'interest'=>['reading','football'],
+    'family'=>[
+        'wife'=>'Jane Doe'
+    ]
+]);
+$app->set('profile.family.son','John Roe');
+```
+
+Multiple set:
+```php
+$app->mset([
+    'entry' =>[
+        'title'=>'Lorem ipsum',
+        'posted'=>'14/10/2017',
+        'by'=>'johndoe',
+    ]
+]);
+```
+
+Get a value:
+```php
+$app->get('profile')['uname']; // johndoe
+$app->get('profile.surname'); // John Doe
+$app->get('profile.interest.1'); // football
+$app->get('profile.family.son'); // John Roe
+$app->hive['entry']['title']; // Lorem ipsum
+```
+
+Add a value or array of value:
+```php
+$app->add('profile.city','Seoul');
+```
+
+Check if hive path exists:
+```php
+$app->has('profile.family.wife'); // true
+```
+
+Erase a hive path or array of hive paths:
+```php
+$app->erase('entry.by');
+// $app->get('entry.by'); // null
+$app->erase(['profile.age','profile.uname']);
+```
+..and much more.
+
+
+#### Framework Variables
+All framework variables are stored on `$hive` property, So, this maybe useful:
+```php
+print_r($app->hive);
+// or
+print_r($app->hive());
+// or
+print_r($app);
+```
+
+
 ### Validation Library
 You can use validation library after instantiate the class:
 
@@ -171,7 +240,7 @@ $db=new DB\SQL($config);
 Now you can use all DB\SQL methods, for example:
 
 ```php
-$db->table('users')
+$db->table('profile')
    ->select('id,name,address')
    ->where('age','>',15)
    ->many();
@@ -274,17 +343,6 @@ foreach ($test->results() as $res) {
         :"Fail ({$res['source']})";
     echo '<br>';
 }
-```
-
-
-#### Framework Variables
-All framework variables are stored on `Alit::hive`, SO you can check it by printing the resources:
-```php
-print_r($app->hive());
-// or
-print_r($app->hive);
-// or
-print_r($app);
 ```
 
 
