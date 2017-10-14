@@ -108,12 +108,13 @@ $app->route('GET /profile(/\w+)','Welcome@profile');
 
 Or even further, you can specify routes in a config file, like this:
 
-```ini
+```txt
 ; file: config.ini
-; NOTE: [route] is a flag for automatic routing definition
+; [route] is a flag for automatic routing definition
+
 [route]
 GET /                 = Welcome@home
-GET /profile(/\w+)       = Welcome@user
+GET /profile(/\w+)    = Welcome@user
 GET|POST|PUT /hello   = Welcome@hello
 ```
 
@@ -152,7 +153,9 @@ $app->mset([
         'title'=>'Lorem ipsum',
         'posted'=>'14/10/2017',
         'by'=>'johndoe',
-    ]
+        'category'=>'Art',
+    ],
+    'categories'=>['General','Art'],
 ]);
 ```
 _Tip: You can also setting hive value from config file_
@@ -233,11 +236,11 @@ $config=[
     'driver'=>'mysql',
     'host'=>'localhost',
     'username'=>'johndoe',
-    'port'=>3306,
     'database'=>'my_database',
-    'prefix'=>'',
-    'charset'=>'utf8',
-    'collation'=>'utf8_general_ci'
+    'port'=>3306,                  // optional
+    'prefix'=>'',                  // optional
+    'charset'=>'utf8',             // optional
+    'collation'=>'utf8_general_ci' // optional
 ];
 $db=new DB\SQL($config);
 ```
