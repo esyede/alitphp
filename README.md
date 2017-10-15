@@ -73,10 +73,9 @@ Regex pattern is also supported:
 
 ```php
 $app->route('GET /test(/\w+)?',function($param1) use($app) {
-    !isset($param1)
-        ? $text="Hello from /test !"
-        : $text="Hello from /test/{$param1} !";
-    echo $text;
+    echo 'Hello from '.(!isset($param1)
+            ? '/test'
+            : '/test/'.$param1).' !';
 });
 ```
 
@@ -94,7 +93,9 @@ class Welcome {
     }
 
     function profile($name) {
-        echo "Welcome home dude !";
+        echo 'Welcome home '.(!isset($name)
+            ? 'dude'
+            : $name).' !';
     }
 }
 ```
@@ -114,7 +115,7 @@ Or even further, you can specify routes in a config file, like this:
 
 [route]
 GET /                 = Welcome@home
-GET /profile(/\w+)    = Welcome@user
+GET /profile(/\w+)    = Welcome@profile
 GET|POST|PUT /hello   = Welcome@hello
 ```
 
@@ -128,7 +129,7 @@ $app->run();
 Wait, 3 lines? Woohoo !!
 
 
-### Playing With Hive
+### Playing with Hive
 Hive is a variable that holds an array of whole system variables.
 Alit provide some method to play around with it. Let's take a look some of them:
 
@@ -194,7 +195,7 @@ $app->erase(['profile.age','profile.uname']);
 
 
 #### Framework Variables
-All framework variables are stored on `$hive` property, So, maybe useful to see hive values:
+All framework variables are stored in `$hive` property, So, maybe useful to see hive values:
 ```php
 print_r($app->hive);
 // or
@@ -202,6 +203,25 @@ print_r($app->hive());
 // or
 print_r($app);
 ```
+
+
+### String Manipulation Library
+You can use validation library after instantiate the class:
+
+```php
+$str=String::instance();
+```
+
+Then you will be able to use all available methods, for example:
+```php
+$str->from('world')
+    ->prepend('Hello ')
+    ->wrap('#','??')
+    ->append(' this is ')
+    ->append('alit!')
+    ->get(); // Return: '#Hello world?? this is alit!'
+```
+
 
 
 ### Validation Library
@@ -259,7 +279,7 @@ $db->table('profile')
 
 ### Session Library
 To use the session library, you need to pass database connection object to session constructor.
-Let's assume we have database connection object saved on `$db` variable, like we did above, so
+Let's assume we have database connection object saved in `$db` variable, like we did above, so
 the session instantiation will looks like:
 
 ```php
@@ -274,9 +294,9 @@ Then you can start using Session library like:
 // store session data to database
 $sess->set('role','administrator');
 // grab session data from database
-$sess->get('role'); // Result: administrator
-$sess->erase('role'); // erase/unset the session
-$sess->destroy(); // destroy session and remove from db
+$sess->get('role');    // Result: administrator
+$sess->erase('role');  // erase/unset the session
+$sess->destroy();      // destroy session and remove from db
 ```
 
 
@@ -296,7 +316,7 @@ $tpl->render('mytemplate',$data);
 ```
 
 Based on above code, knife will look for `mytemplate.knife.php` file in `UI` directory.
-`UI` is setted to `ui/` by default, so Knife will look for `ui/mytemplate.knife.php` on your alit installation directory.
+`UI` is setted to `ui/` by default, so Knife will look for `ui/mytemplate.knife.php` inside your alit installation directory.
 
 You can change this with `$app->set('UI','path/to/dir/');`
 before calling the `render()` function.
