@@ -91,6 +91,13 @@ class Validation extends \Factory {
             'validate_valid_array_size_lesser'  => 'The {field} fields needs to be an array with a size, equal to, or lower than {param}',
             'validate_valid_array_size_equal'   => 'The {field} fields needs to be an array with a size equal to {param}',
         ];
+    const
+        // Error messages
+        E_Validator_Inexist="Validation method doesn't exists: %s",
+        E_Validator_RuleExist="Vlaidation rule already exists: %s",
+        E_Filter_Inexist="Filter method doesn't exists: %s",
+        E_Filter_RuleExist="Filter rule already exists: %s",
+        E_Rule_NoMsg="Rule doesn't have Error message: %s";
 
     // Class constructor
     function __construct() {
@@ -100,9 +107,9 @@ class Validation extends \Factory {
 
     static function setlang(array $errors) {
         $eval=self::instance();
-        if (count($errors)>0)
+        if (is_array($errors)&&count($errors)>0)
             $eval->lang=$errors;
-        else throw new \Exception("Argument 1 for setlang() cannot be empty");
+
     }
 
     /**
@@ -160,7 +167,7 @@ class Validation extends \Factory {
         $method='validate_'.$rule;
         if (method_exists(__CLASS__,$method)
         ||isset(self::$validation_methods[$rule]))
-            throw new \Exception("Validation rule already exists: {$rule}");
+            user_error(vsprintf(self::E_Validator_RuleExist,[$rule]),E_USER_ERROR);
         self::$validation_methods[$rule]=$callback;
         if ($err_msg)
             self::$validation_methods_errors[$rule]=$err_msg;
@@ -177,7 +184,7 @@ class Validation extends \Factory {
         $method='filter_'.$rule;
         if (method_exists(__CLASS__,$method)
         ||isset(self::$filter_methods[$rule]))
-            throw new \Exception("Filter rule already exists: {$rule}");
+            user_error(vsprintf(self::E_Filter_RuleExist,[$rule]),E_USER_ERROR);
         self::$filter_methods[$rule]=$callback;
         return true;
     }
@@ -352,7 +359,7 @@ class Validation extends \Factory {
                                         'param'=>$arg
                                     ];
                         }
-                        else throw new \Exception("Validation method does not exists: {$method}");
+                        else user_error(vsprintf(self::E_Validator_Inexist,[$method]),E_USER_ERROR);
                     }
                 }
             }
@@ -434,7 +441,7 @@ class Validation extends \Factory {
                 );
                 $resp[]=$msg;
             }
-            else throw new \Exception("Rule does not have an error message: {$e['rule']}");
+            else user_error(vsprintf(self::E_Rule_NoMsg,[$e['rule']]),E_USER_ERROR);
         }
         if (!$to_string)
             return $resp;
@@ -474,7 +481,7 @@ class Validation extends \Factory {
                     $resp[$e['field']]=$msg;
                 }
             }
-            else throw new \Exception("Rule does not have an error message: {$e['rule']}");
+            else user_error(vsprintf(self::E_Rule_NoMsg,[$e['rule']]),E_USER_ERROR);
         }
         return $resp;
     }
@@ -509,7 +516,7 @@ class Validation extends \Factory {
                         $val=$filter($val);
                     elseif (isset(self::$filter_methods[$filter]))
                         $val=call_user_func(self::$filter_methods[$filter],$val,$args);
-                    else throw new \Exception("Filter method does not exists: {$filter}");
+                    else user_error(vsprintf(self::E_Filter_Inexist,[$filter]),E_USER_ERROR);
                 }
             }
         }

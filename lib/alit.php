@@ -64,6 +64,14 @@ final class Alit extends \Factory implements \ArrayAccess {
 		HTTP_503='Service Unavailable',
 		HTTP_504='Gateway Timeout',
 		HTTP_505='HTTP Version Not Supported';
+
+	const
+		// Error messages
+		E_Method="Invalid method supplied: %s",
+		E_Redirect="Can't redirect to specified url: %s",
+		E_Route="Can't find route handler: %s@%s",
+		E_Forward="Can't forward route handler: %s",
+		E_View="Can't find view file: %s";
 	public
 		// Store all framework variables
 		$hive;
@@ -108,7 +116,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 		$pattern=$request[1];
 	    foreach ($this->split($methods) as $method) {
 			if (!in_array($method,$this->split(self::METHODS)))
-				throw new \Exception("Invalid method supplied: {$method}");
+				user_error(vsprintf(self::E_Method,[$method]),E_USER_ERROR);
 	        $this->hive['ALIT']['route'][$method][]=['pattern'=>$pattern,'handler'=>$handler];
 		}
 	}
@@ -377,7 +385,7 @@ final class Alit extends \Factory implements \ArrayAccess {
             exit;
         }
         catch (\Exception $ex) {
-			throw new \Exception("Can't redirect to specified url: {$url}");
+			trigger_error(vsprintf(self::E_Redirect,[$url]),E_ERROR);
         }
     }
 
@@ -406,9 +414,9 @@ final class Alit extends \Factory implements \ArrayAccess {
                     if (class_exists($controller)) {
                         if (call_user_func_array([new $controller,$method],$params)===false)
                         	if (forward_static_call_array([$controller,$method],$params)===false)
-								throw new \Exception("Can't forward route handler: {$route['handler']}");
+								trigger_error(vsprintf(self::E_Forward,[$route['handler']]),E_ERROR);
 					}
-					else throw new \Exception("Can't find route handler: {$controller}@{$method}");
+					else trigger_error(vsprintf(self::E_Route,[$controller,$method]),E_ERROR);
                 }
                 $handled++;
                 if ($quit)
@@ -427,7 +435,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 		$file=$this->hive['BASE'].str_replace('./','',$this->hive['UI'].$name);
 		$file=str_replace('/',DIRECTORY_SEPARATOR,$file);
 		if (!file_exists($file))
-			throw new \Exception("Can't find view file: {$name}");
+			user_error(vsprintf(self::E_View,[$name]),E_USER_ERROR);
         ob_start();
         if (is_array($data))
         	extract($data);

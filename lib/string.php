@@ -14,7 +14,9 @@ if (!defined('ALIT')) die('Direct file access is not allowed.');
 
 class String extends \Factory implements \Serializable {
 
-    private $str;
+    private
+        // String holder
+        $str;
 
     /**
     *   Set internal string value

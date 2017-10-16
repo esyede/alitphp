@@ -23,7 +23,6 @@ class SQL {
         $from=null,
         $join=null,
         $select='*',
-        $debug=true,
         $where=null,
         $cache=null,
         $limit=null,
@@ -38,6 +37,10 @@ class SQL {
         $insertid=null,
         $cachedir=null,
         $grouped=false;
+    const
+        // Error messages
+        E_Connection="Cannot connect to Database.<br><br>%s",
+        E_LastError="<h3>Database Error</h3><b>Query:</b><pre>%s</pre><br><b>Error:</b><pre>%s</pre><br>";
     const
         // Comparison operators
         OPERATORS='=|!=|<|>|<=|>=|<>';
@@ -55,7 +58,6 @@ class SQL {
         $config['port']=(strstr($config['host'],':')?explode(':',$config['host'])[1]:'');
         $this->prefix=(isset($config['prefix'])?$config['prefix']:'');
         $this->cachedir=(isset($config['cachedir'])?$config['cachedir']:$this->fw->hive['TEMP']);
-        $this->debug=(isset($config['debug'])?$config['debug']:true);
         $dsn='';
         if ($config['driver']=='mysql'
         ||$config['driver']==''
@@ -71,8 +73,9 @@ class SQL {
             $this->conn->exec("SET NAMES '".$config["charset"]."' COLLATE '".$config["collation"]."'");
             $this->conn->exec("SET CHARACTER SET '".$config["charset"]."'");
             $this->conn->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE,\PDO::FETCH_OBJ);
-        } catch(\PDOException $e) {
-            throw new \Exception("Cannot the connect to Database with PDO.<br><br>{$e->getMessage()}");
+        }
+        catch(\PDOException $e) {
+            trigger_error(vsprintf(self::E_Connection,[$e->getMessage()]),E_ERROR);
         }
         return $this->conn;
     }
@@ -586,9 +589,9 @@ class SQL {
         $msg='<h3>Database Error</h3>';
         $msg.='<b>Query:</b><pre>'.$this->query.'</pre><br/>';
         $msg.='<b>Error:</b><pre>'.$this->error.'</pre><br/>';
-        if ($this->debug===true)
-            throw new \Exception("{$msg}");
-        else throw new \Exception("{$this->error}. ({$this->query})");
+        if ($this->fw->hive['DEBUG']>0)
+            trigger_error(vsprintf(self::E_LastError,[$this->query,$this->error]),E_ERROR);
+        else trigger_error(vsprintf("%s. (%s)",[$this->error,$this->query]),E_ERROR);
     }
 
     /**
