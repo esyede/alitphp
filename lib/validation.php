@@ -85,7 +85,6 @@ class Validation extends \Factory {
             'validate_equalsfield'              => 'The {field} field does not equal {param} field',
             'validate_iban'                     => 'The {field} field needs to contain a valid IBAN',
             'validate_phone_number'             => 'The {field} field needs to be a valid Phone Number',
-            'validate_regex'                    => 'The {field} field needs to contain a value with valid format',
             'validate_valid_json_string'        => 'The {field} field needs to contain a valid JSON format string',
             'validate_valid_array_size_greater' => 'The {field} fields needs to be an array with a size, equal to, or higher than {param}',
             'validate_valid_array_size_lesser'  => 'The {field} fields needs to be an array with a size, equal to, or lower than {param}',
@@ -1477,26 +1476,6 @@ class Validation extends \Factory {
         ||empty($ipt[$field]))
             return;
         if (!preg_match('/^(\d[\s-]?)?[\(\[\s-]{0,2}?\d{3}[\)\]\s-]{0,2}?\d{3}[\s-]?\d{4}$/i',$ipt[$field]))
-            return [
-                'field'=>$field,
-                'value'=>$ipt[$field],
-                'rule'=>__FUNCTION__,
-                'param'=>$arg
-            ];
-    }
-
-    /**
-    *   Custom regex validator
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @return  mixed
-    */
-    protected function validate_regex($field,$ipt,$arg=null) {
-        if (!isset($ipt[$field])
-        ||empty($ipt[$field]))
-            return;
-        $regex=$arg;
-        if (!preg_match($regex,$ipt[$field]))
             return [
                 'field'=>$field,
                 'value'=>$ipt[$field],
