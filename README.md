@@ -129,8 +129,8 @@ $app->run();
 Wait, 3 lines? Woohoo !!
 
 
-### Config flags
-Alit provide some config flags such as:
+### Config Flags
+Alit provide some configuration flags such as:
 ```ini
 ; for global hive assignment
 [global]
@@ -177,7 +177,7 @@ $app->set('profile',[
     ]
 ]);
 $app->set('profile.family.son','John Roe');
-$this->hive['profile']['family']['wife']='Jane Doe';
+$app->hive['profile']['family']['wife']='Jane Doe';
 ```
 
 Multiple set:
