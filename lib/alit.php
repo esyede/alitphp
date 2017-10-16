@@ -689,14 +689,14 @@ final class Alit extends \Factory implements \ArrayAccess {
                 	$this->set("$key.$k",$v);
             else {
                 $keys=explode('.',$key);
-                $arr=&$this->hive;
+                $hive=&$this->hive;
                 foreach ($keys as $key) {
-                    if (!isset($arr[$key])
-                    ||!is_array($arr[$key]))
-						$arr[$key]=[];
-                    $arr=&$arr[$key];
+                    if (!isset($hive[$key])
+                    ||!is_array($hive[$key]))
+						$hive[$key]=[];
+                    $hive=&$hive[$key];
                 }
-                $arr=$val;
+                $hive=$val;
             }
         }
         elseif (is_array($key))
@@ -722,13 +722,13 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*/
     function get($key,$default=null) {
         $keys=explode('.',(string)$key);
-        $arr=&$this->hive;
+        $hive=&$this->hive;
         foreach ($keys as $key) {
-            if (!$this->exists($key,$arr))
+            if (!$this->exists($key,$hive))
             	return $default;
-            $arr=&$arr[$key];
+            $hive=&$hive[$key];
         }
-        return $arr;
+        return $hive;
     }
 
 	/**
@@ -745,16 +745,16 @@ final class Alit extends \Factory implements \ArrayAccess {
                 	$this->add("$key.$k",$v,true);
             else {
                 $keys=explode('.',$key);
-                $arr=&$this->hive;
+                $hive=&$this->hive;
                 if ($pop===true)
                     array_pop($keys);
                 foreach ($keys as $key) {
-                    if (!isset($arr[$key])
-                    ||!is_array($arr[$key]))
-                    	$arr[$key]=[];
-                    $arr=&$arr[$key];
+                    if (!isset($hive[$key])
+                    ||!is_array($hive[$key]))
+                    	$hive[$key]=[];
+                    $hive=&$hive[$key];
                 }
-                $arr[]=$val;
+                $hive[]=$val;
             }
         }
         elseif (is_array($key))
@@ -768,26 +768,38 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*/
     function has($key) {
         $keys=explode('.',(string)$key);
-        $arr=&$this->hive;
+        $hive=&$this->hive;
         foreach ($keys as $key) {
-            if (!$this->exists($key,$arr))
+            if (!$this->exists($key,$hive))
             	return false;
-            $arr=&$arr[$key];
+            $hive=&$hive[$key];
         }
         return true;
     }
 
 	/**
 	*	Determine if the given key exists in the provided array
-	*	@param   $arr  object|array
-	*	@param   $key  string
+	*	@param   $hive  object|array
+	*	@param   $key   string
 	*	@return  bool
 	*/
-    function exists($key,$arr) {
-        if ($arr instanceof \ArrayAccess)
-        	return isset($arr[$key]);
-        return array_key_exists($key,$arr);
+    protected function exists($key,$hive) {
+        if ($hive instanceof \ArrayAccess)
+        	return isset($hive[$key]);
+        return array_key_exists($key,(array)$hive);
     }
+
+	/**
+	*	Clear a values of given key or keys
+	*	@param  $key  string|array
+	*/
+	function clear($key) {
+		if (is_string($key))
+			$this->set($key,[]);
+		elseif (is_array($key))
+			foreach ($key as $k)
+				$this->clear($k,[]);
+	}
 
 	/**
 	*	Erase a hive path or array of hive paths
@@ -796,14 +808,14 @@ final class Alit extends \Factory implements \ArrayAccess {
     function erase($key) {
         if (is_string($key)) {
             $keys=explode('.',$key);
-            $arr=&$this->hive;
+            $hive=&$this->hive;
             $last=array_pop($keys);
             foreach ($keys as $key) {
-                if (!$this->exists($key,$arr))
+                if (!$this->exists($key,$hive))
                 	return;
-                $arr=&$arr[$key];
+                $hive=&$hive[$key];
             }
-            unset($arr[$last]);
+            unset($hive[$last]);
         }
         elseif (is_array($key))
             foreach ($key as $k)
@@ -816,11 +828,39 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@return  bool
 	*/
 	function dry($key) {
-		$key=(array)$key;
-		foreach ($key as $k)
-			if (!empty($this->get($k)))
-				return false;
+		if (is_string($key))
+			return empty($this->get($key));
+		elseif (is_array($key))
+			foreach ($key as $k)
+				if (!empty($this->get($k)))
+					return false;
 		return true;
+	}
+
+	/**
+	*	Return the given key as an array
+	*	@param  $key  string|array
+	*/
+	protected function items($key) {
+		if ($key instanceof \ArrayAccess
+		||is_array($key))
+			return $key;
+		return (array)$key;
+
+	}
+
+	/**
+	*	Merge a given array with the given key
+	*	@param  $key  mixed
+	*/
+	function merge($key,$val=null) {
+		if (is_array($key))
+			$this->hive=array_merge($this->hive,$key);
+		elseif (is_string($key)) {
+			$item=(array)$this->get($key);
+			$val=array_merge($item,$this->items($val));
+			$this->set($key,$val);
+		}
 	}
 
 	/**
@@ -830,6 +870,8 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@return  mixed
 	*/
 	function pull($key,$default=null) {
+		if (!is_string($key))
+			return false;
 		$val=$this->get($key,$default);
 		$this->erase($key);
 		return $val;
@@ -838,9 +880,13 @@ final class Alit extends \Factory implements \ArrayAccess {
 	/**
 	*	Push a given array to the end of the array in a given key
 	*	@param   $key   string
-	*	@param   $val   mixed
+	*	@param   $val   mixed|null
 	*/
-	function push($key,$val) {
+	function push($key,$val=null) {
+		if (is_null($val)) {
+			$this->hive[]=$key;
+			return;
+		}
 		$item=$this->get($key);
 		if (is_array($val)||is_null($item)) {
 			$item[]=$val;
