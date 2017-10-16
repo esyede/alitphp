@@ -129,6 +129,33 @@ $app->run();
 Wait, 3 lines? Woohoo !!
 
 
+### Config flags
+Alit provide some config flags such as:
+```ini
+; for global hive assign
+[global]
+UI = ui/
+
+; for atomatic route definition
+[route]
+GET / = Welcome@home
+
+; for atomatic befoure-route miffleware definition
+[before]
+GET / = Welcome@authenticate
+
+; for atomatic after-route miffleware definition
+[after]
+GET / = Welcome@render_view
+
+; for including other config file
+[config]
+database.ini = true
+user.ini = true
+```
+You can also define your own flags.
+
+
 ### Playing with Hive
 Hive is a variable that holds an array of whole system variables.
 Alit provide some method to play around with it. Let's take a look some of them:
@@ -145,6 +172,7 @@ $app->set('profile',[
     ]
 ]);
 $app->set('profile.family.son','John Roe');
+$this->hive['profile']['family']['wife']='Jane Doe';
 ```
 
 Multiple set:
@@ -195,7 +223,7 @@ $app->erase(['profile.age','profile.uname']);
 
 
 #### Framework Variables
-All framework variables are stored in `$hive` property, So, maybe useful to see hive values:
+All framework variables are stored in `$hive` property, So, you can fump this variable to see available vars:
 ```php
 print_r($app->hive);
 // or
@@ -205,8 +233,22 @@ print_r($app);
 ```
 
 
+### Debugging
+Alit provide a `DEBUG` directive that you can adjust to see more detailed error info:
+```php
+$app->set('DEBUG',3);
+```
+Possible value for debug is:
+
+ * 0 : suppresses prints of the stack trace.
+ * 1 : prints files & lines.
+ * 2 : prints classes & functions as well.
+ * 3 : prints detailed infos of the objects as well.
+
+
+
 ### String Manipulation Library
-You can use validation library after instantiate the class:
+You can use string manipulation library after instantiate the class:
 
 ```php
 $str=String::instance();
