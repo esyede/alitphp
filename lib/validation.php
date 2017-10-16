@@ -96,7 +96,8 @@ class Validation extends \Factory {
         E_Validator_RuleExist="Vlaidation rule already exists: %s",
         E_Filter_Inexist="Filter method doesn't exists: %s",
         E_Filter_RuleExist="Filter rule already exists: %s",
-        E_Rule_NoMsg="Rule doesn't have Error message: %s";
+        E_Rule_NoMsg="Rule doesn't have Error message: %s",
+        E_Arg_isRegex="You can't use regex as an function arguments";
 
     // Class constructor
     function __construct() {
@@ -335,6 +336,9 @@ class Validation extends \Factory {
                             $rule=explode(',',$rule);
                             $method='validate_'.$rule[0];
                             $arg=$rule[1];
+                            // Check whether argument is regex
+                            if (preg_match("/^\/.+\/[a-z]*$/i",$arg))
+                                user_error(vsprintf(self::E_Arg_isRegex,[$rule]),E_USER_ERROR);
                             $rule=$rule[0];
                             if (preg_match('/(?:(?:^|;)_([a-z_]+))/',$arg,$found))
                                 if (isset($ipt[$found[1]]))
