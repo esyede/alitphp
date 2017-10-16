@@ -132,19 +132,19 @@ Wait, 3 lines? Woohoo !!
 ### Config flags
 Alit provide some config flags such as:
 ```ini
-; for global hive assign
+; for global hive assignment
 [global]
 UI = ui/
 
-; for atomatic route definition
+; for automatic route definition
 [route]
 GET / = Welcome@home
 
-; for atomatic befoure-route miffleware definition
+; for automatic befoure-route middleware definition
 [before]
 GET / = Welcome@authenticate
 
-; for atomatic after-route miffleware definition
+; for automatic after-route middleware definition
 [after]
 GET / = Welcome@render_view
 
@@ -152,8 +152,13 @@ GET / = Welcome@render_view
 [config]
 database.ini = true
 user.ini = true
+
+; example of custom flags
+[books]
+price = 1000
+discount = 0.2
 ```
-You can also define your own flags.
+You can define your own flags, as much as you want!
 
 
 ### Playing with Hive
@@ -231,20 +236,6 @@ print_r($app->hive());
 // or
 print_r($app);
 ```
-
-
-### Debugging
-Alit provide a `DEBUG` directive that you can adjust to see more detailed error info:
-```php
-$app->set('DEBUG',3);
-```
-Possible value for debug is:
-
- * 0 : suppresses prints of the stack trace.
- * 1 : prints files & lines.
- * 2 : prints classes & functions as well.
- * 3 : prints detailed infos of the objects as well.
-
 
 
 ### String Manipulation Library
@@ -415,6 +406,19 @@ foreach ($test->results() as $res) {
     echo '<br>';
 }
 ```
+
+
+### Debugging
+Alit provide a `DEBUG` directive that you can adjust to see more detailed error info:
+```php
+$app->set('DEBUG',3);
+```
+Possible value for debug is:
+
+ * 0 : suppresses prints of the stack trace (default)
+ * 1 : prints files & lines
+ * 2 : prints classes & functions as well
+ * 3 : prints detailed infos of the objects as well
 
 
 ### Documentation
