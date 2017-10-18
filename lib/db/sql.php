@@ -847,7 +847,7 @@ class SQL {
 class SQLCache {
 
     private
-        $cacheDir=null,
+        $cachedir=null,
         $cache=null,
         $finish=null;
 
