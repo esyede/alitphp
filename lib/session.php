@@ -12,7 +12,7 @@ if (!defined('ALIT')) die('Direct file access is not allowed.');
 
 
 
-class Session extends \Factory {
+class Session {
 
     protected
         // Framework instance
@@ -28,8 +28,7 @@ class Session extends \Factory {
 
     // Class constructor
     function __construct($db,$table='_session',$cookie='_cookie') {
-        $fw=\Alit::instance();
-        $this->fw=$fw;
+        $this->fw=\Alit::instance();
         $this->db=$db;
         $this->table=$table;
         $this->fw->hive['SESSION']['cookie']=$cookie;

@@ -20,8 +20,6 @@ class Validation extends \Factory {
         $validation_methods=[],
         $validation_methods_errors=[];
     protected
-        // Framework instance
-        $fw,
         // Rules and error message
         $lang,
         $errors=[],
@@ -336,7 +334,7 @@ class Validation extends \Factory {
                             $rule=explode(',',$rule);
                             $method='validate_'.$rule[0];
                             $arg=$rule[1];
-                            // Check whether argument is regex
+                            // Check if $arg is regex then throw error message
                             if (preg_match("/^\/.+\/[a-z]*$/i",$arg))
                                 user_error(vsprintf(self::E_Arg_isRegex,[$rule]),E_USER_ERROR);
                             $rule=$rule[0];
