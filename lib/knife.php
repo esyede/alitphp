@@ -15,10 +15,6 @@ if (!defined('ALIT')) die('Direct file access is not allowed.');
 class Knife extends \Preview {
 
     protected
-        // Actual root directory
-        $root,
-        // Base directory (symlink)
-        $base,
         // Cache directory
         $cache,
         // Output format
@@ -31,9 +27,8 @@ class Knife extends \Preview {
     // Class constructor
     function __construct() {
         parent::__construct();
-        $this->root=$this->fw->hive['ROOT'];
-        $this->base=$this->fw->hive['BASE'];
-        $this->cache=$this->root.str_replace('./','',$this->fw->hive['TEMP']);
+        $fw=\Alit::instance();
+        $this->cache=$fw->get('ROOT').str_replace('./','',$fw->get('TEMP'));
         $this->format="htmlspecialchars(%s,ENT_QUOTES,'UTF-8')";
     }
 
@@ -56,14 +51,15 @@ class Knife extends \Preview {
     *   @return  string
     */
     protected function tpl($name) {
+        $fw=\Alit::instance();
         $tpl=$this->ui.$name.'.knife.php';
         $tpl=preg_replace('/\s+/','',$tpl);
         $php=$this->cache.DIRECTORY_SEPARATOR.md5($name).'.knife.php';
         if (!file_exists($php)||filemtime($tpl)>filemtime($php)) {
-            $txt=preg_replace('/@BASE/',$this->fw->base(),$this->fw->read($tpl));
-            foreach ($this->fw->split(self::TOKEN) as $type)
+            $txt=preg_replace('/@BASE/',$fw->base(),$fw->read($tpl));
+            foreach ($fw->split(self::TOKEN) as $type)
                 $txt=$this->{'_'.$type}($txt);
-            $this->fw->write($php,$txt);
+            $fw->write($php,$txt);
         }
         return $php;
     }

@@ -72,7 +72,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 		E_Route="Can't find route handler: %s@%s",
 		E_Forward="Can't forward route handler: %s",
 		E_View="Can't find view file: %s";
-	public
+	protected
 		// Store all framework variables
 		$hive;
 
@@ -1123,19 +1123,20 @@ final class Alit extends \Factory implements \ArrayAccess {
 //!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class Preview extends \Factory {
     protected
-		$fw,
+		// UI directory
     	$ui,
+		// Template blocks
 		$block,
+		// Template stacks
 		$stack;
 
 	// Class constructor
     function __construct() {
         $fw=\Alit::instance();
-		$this->fw=$fw;
 		$this->block=[];
 		$this->stack=[];
-        $this->ui=str_replace('/',DIRECTORY_SEPARATOR,$fw->hive['ROOT'].
-        	str_replace('./','',$fw->hive['UI']));
+        $this->ui=str_replace('/',DIRECTORY_SEPARATOR,$fw->get('ROOT').
+        	str_replace('./','',$fw->get('UI')));
     }
 
 	/**

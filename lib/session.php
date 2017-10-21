@@ -15,8 +15,6 @@ if (!defined('ALIT')) die('Direct file access is not allowed.');
 class Session {
 
     protected
-        // Framework instance
-        $fw,
         // Database object
         $db,
         // Table name
@@ -28,10 +26,9 @@ class Session {
 
     // Class constructor
     function __construct($db,$table='_session',$cookie='_cookie') {
-        $this->fw=\Alit::instance();
         $this->db=$db;
         $this->table=$table;
-        $this->fw->hive['SESSION']['cookie']=$cookie;
+        \Alit::instance()->set('SESSION.cookie',$cookie);
         $this->exists=false;
         $this->started=false;
         $this->start();
@@ -51,32 +48,33 @@ class Session {
     // Create a session data
     protected function create() {
         $token=sha1(base64_encode(md5(utf8_encode(microtime(true)))));
-        $this->fw->hive['SESSION']['token']=substr($token,0,20);
+        \Alit::instance()->set('SESSION.token',substr($token,0,20));
     }
 
     // Checking session existance
     protected function check() {
-        $cookie=$this->cookie($this->fw->hive['SESSION']['cookie']);
+        $fw=\Alit::instance();
+        $cookie=$this->cookie($fw->get('SESSION.cookie'));
         if ($cookie==false)
             return false;
         $token=base64_decode($cookie);
-        $res=(array)$this->db->table($this->table)
+        $res=$this->db->table($this->table)
             ->where('token',$token)
             ->one();
-        if ($res!==false) {
-            $res['userdata']=unserialize($res['userdata']);
-            $this->fw->hive['SESSION']['token']=$res['token'];
-            if ($res['ip']==$this->fw->ip()) {
-                if (count($res['userdata'])>0) {
+        if (count($res)>0) {
+            $res->userdata=unserialize($res->userdata);
+            $fw->set('SESSION.token',$res->token);
+            if ($res->ip==$fw->ip()) {
+                if (count($res->userdata)>0) {
                     $this->exists=true;
-                    foreach ($res['userdata'] as $key=>$val) {
+                    foreach ($res->userdata as $key=>$val) {
                         if (is_array($key))
                             foreach ($key as $k=>$v)
-                                $this->fw->hive['SESSION'][$k]=$v;
-                        else $this->fw->hive['SESSION'][$key]=$val;
+                                $fw->set("SESSION.{$k}",$v);
+                        else $fw->get("SESSION.{$key}",$val);
                     }
                 }
-                $this->fw->hive['SESSION']['accessed']=time();
+                $fw->set('SESSION.accessed',time());
                 return true;
             }
             else $this->destroy();
@@ -90,21 +88,21 @@ class Session {
     *   @param   $val   mixed
     */
     function set($name,$val=null) {
+        $fw=\Alit::instance();
         if (is_array($name))
             foreach ($name as $key=>$val)
-                $this->fw->hive['SESSION'][$key]=$val;
-        else $this->fw->hive['SESSION'][$name]=$val;
-        $cookie=base64_encode($this->fw->hive['SESSION']['token']);
-        $this->setcookie($this->fw->hive['SESSION']['cookie'],$cookie);
+                $fw->set("SESSION.{$key}",$val);
+        else $fw->set("SESSION.{$name}",$val);
+        $cookie=base64_encode($fw->get('SESSION.token'));
+        $this->setcookie($fw->get('SESSION.cookie'),$cookie);
         $data=[
-            'token'=>$this->fw->hive['SESSION']['token'],
-            'ip'=>$this->fw->ip(),
+            'token'=>$fw->get('SESSION.token'),
+            'ip'=>$fw->ip(),
             'accessed'=>time()
         ];
         if ($this->exists==false) {
-            $data['userdata']=serialize($this->fw->hive['SESSION']);
-            $this->db->table($this->table)
-                ->insert($data);
+            $data['userdata']=serialize($fw->get('SESSION'));
+            $this->db->table($this->table)->insert($data);
         }
         else return $this->update();
         if ($this->db->num_rows()>0)
@@ -114,10 +112,11 @@ class Session {
 
     // Destroy session and remove user data from database
     function destroy() {
-        $id=base64_encode($this->fw->hive['SESSION']['token']);
-        $this->setcookie($this->fw->hive['SESSION']['cookie'],$id,time()-1);
+        $fw=\Alit::instance();
+        $id=base64_encode($fw->get('SESSION.token'));
+        $this->setcookie($fw->get('SESSION.cookie'),$id,time()-1);
         $this->db->table($this->table)
-            ->where('token',$this->fw->hive['SESSION']['token'])
+            ->where('token',$fw->get('SESSION.token'))
             ->delete();
         $this->data=[];
         $this->started=false;
@@ -132,8 +131,9 @@ class Session {
     *   @return  mixed
     */
     function get($name) {
-        if (isset($this->fw->hive['SESSION'][$name]))
-            return $this->fw->hive['SESSION'][$name];
+        $fw=\Alit::instance();
+        if (null!==($fw->get("SESSION.{$name}")))
+            return $fw->get("SESSION.{$name}");
         return null;
     }
 
@@ -143,27 +143,29 @@ class Session {
     *   @return  bool
     */
     function erase($name) {
-        $this->fw->split($name);
-        foreach ($name as $k)
-            unset($this->fw->hive['SESSION'][$k]);
+        $fw=\Alit::instance();
+        if (is_array($name))
+            foreach ($name as $k)
+                $fw->erase("SESSION.{$k}");
+        $fw->erase("SESSION.{$name}");
     }
 
     // Update session data
     protected function update() {
-        $id=serialize($this->fw->hive['SESSION']);
+        $fw=\Alit::instance();
+        $id=serialize($fw->get('SESSION'));
         $data=[
             'accessed'=>time(),
             'userdata'=>$id
         ];
         return $this->db->table($this->table)
-            ->where('token',$this->fw->hive['SESSION']['token'])
+            ->where('token',$fw->get('SESSION.token'))
             ->update($data);
     }
 
     // Create session table if not exists
     private function maketable() {
-        $table=$this->table;
-        $sql="CREATE TABLE IF NOT EXISTS `{$table}` (
+        $sql="CREATE TABLE IF NOT EXISTS `{$this->table}` (
           `id`       INT(11)      NOT NULL AUTO_INCREMENT,
           `token`    VARCHAR(25)  NOT NULL DEFAULT '',
           `ip`       VARCHAR(50)  DEFAULT NULL,
@@ -194,7 +196,7 @@ class Session {
     */
     function setcookie($name,$val,$time=null) {
         if($time===null)
-            $time=(time()+(60*60*24*365));
-        setcookie($name,$val,$time,$this->fw->hive['TEMP']);
+            $time=(time()+(60*60*24));
+        setcookie($name,$val,$time,\Alit::instance()->get('TEMP'));
     }
 }

@@ -15,8 +15,6 @@ if (!defined('ALIT')) die('Direct file access is not allowed.');
 class SQL {
 
     protected
-        // Framework instance
-        $fw,
         // Class properties
         $numrows=0,
         $result=[],
@@ -50,14 +48,13 @@ class SQL {
 
     // Class constructor
     function __construct(array $config) {
-        $this->fw=\Alit::instance();
         $config['driver']=(isset($config['driver'])?$config['driver']:'mysql');
         $config['host']=(isset($config['host'])?$config['host']:'localhost');
         $config['charset']=(isset($config['charset'])?$config['charset']:'utf8');
         $config['collation']=(isset($config['collation'])?$config['collation']:'utf8_general_ci');
         $config['port']=(strstr($config['host'],':')?explode(':',$config['host'])[1]:'');
         $this->prefix=(isset($config['prefix'])?$config['prefix']:'');
-        $this->cachedir=(isset($config['cachedir'])?$config['cachedir']:$this->fw->hive['TEMP']);
+        $this->cachedir=(isset($config['cachedir'])?$config['cachedir']:\Alit::instance()->get('TEMP'));
         $dsn='';
         if ($config['driver']=='mysql'
         ||$config['driver']==''
@@ -172,7 +169,7 @@ class SQL {
         $on=$field1;
         $table=$this->prefix.$table;
         if (!is_null($op))
-            $on=(!in_array($op,$this->fw->split(self::OPERATORS))
+            $on=(!in_array($op,\Alit::instance()->split(self::OPERATORS))
                 ?$this->prefix.$field1.' = '.$this->prefix.$op
                 :$this->prefix.$field1.' '.$op.' '.$this->prefix.$field2);
         if (is_null($this->join))
@@ -278,7 +275,7 @@ class SQL {
                         $w.=$type.$v.(isset($op[$k])?$this->escape($op[$k]):'');
                 $where=$w;
             }
-            elseif (!in_array($op,$this->fw->split(self::OPERATORS))||$op==false)
+            elseif (!in_array($op,\Alit::instance()->split(self::OPERATORS))||$op==false)
                 $where=$type.$where.' = '.$this->escape($op);
             else $where=$type.$where.' '.$op.' '.$this->escape($val);
         }
@@ -568,7 +565,7 @@ class SQL {
                     $w.=$v.(isset($op[$k])?$this->escape($op[$k]):'');
             $this->having=$w;
         }
-        elseif (!in_array($op,$this->fw->split(self::OPERATORS)))
+        elseif (!in_array($op,\Alit::instance()->split(self::OPERATORS)))
             $this->having=$field.'> '.$this->escape($op);
         else $this->having=$field.' '.$op.' '.$this->escape($val);
         return $this;
@@ -589,7 +586,7 @@ class SQL {
         $msg='<h3>Database Error</h3>';
         $msg.='<b>Query:</b><pre>'.$this->query.'</pre><br/>';
         $msg.='<b>Error:</b><pre>'.$this->error.'</pre><br/>';
-        if ($this->fw->hive['DEBUG']>0)
+        if (Alit::instance()->get('ROOT')>0)
             trigger_error(vsprintf(self::E_LastError,[$this->query,$this->error]),E_ERROR);
         else trigger_error(vsprintf("%s. (%s)",[$this->error,$this->query]),E_ERROR);
     }
@@ -885,7 +882,7 @@ class SQLCache {
             return false;
         $target=$this->cachedir.$this->filename($sql).'.cache';
         if (file_exists($target)) {
-            $cache=json_decode($this->fw->read($target),$array);
+            $cache=json_decode(\Alit::instance()->read($target),$array);
             if (($array?$cache['finish']:$cache->finish)<time()) {
                 unlink($target);
                 return;

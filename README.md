@@ -72,7 +72,7 @@ Supported methods: `CONNECT` `DELETE` `GET` `HEAD` `OPTIONS` `PATCH` `POST` `PUT
 Regex pattern is also supported:
 
 ```php
-$app->route('GET /test(/\w+)?',function($param1) use($app) {
+$app->route('GET /test/(\w+)?',function($param1) use($app) {
     echo 'Hello from '.(!isset($param1)
             ? '/test'
             : '/test/'.$param1).' !';
@@ -104,7 +104,7 @@ Then, register it to your route:
 
 ```php
 $app->route('GET /','Welcome@home');
-$app->route('GET /profile(/\w+)','Welcome@profile');
+$app->route('GET /profile/(\w+)?','Welcome@profile');
 ```
 
 Or even further, you can specify routes in a config file, like this:
@@ -157,8 +157,11 @@ user.ini = true
 [books]
 price = 1000
 discount = 0.2
+store.name = Happy Bookstore
+store.address.street = Walikukun, Ngawi
+store.address.postal = 63256
 ```
-You can define your own flags, as much as you want!
+And much more!
 
 
 ### Playing with Hive
@@ -177,7 +180,6 @@ $app->set('profile',[
     ]
 ]);
 $app->set('profile.family.son','John Roe');
-$app->hive['profile']['family']['wife']='Jane Doe';
 ```
 
 Multiple set:
@@ -197,11 +199,11 @@ _Tip: You can also setting hive value from config file_
 
 Get a value:
 ```php
-$app->get('profile')['uname']; // johndoe
-$app->get('profile.surname'); // John Doe
-$app->get('profile.interest.1'); // football
-$app->get('profile.family.son'); // John Roe
-$app->hive['entry']['title']; // Lorem ipsum
+$app->get('profile')['uname'];    // johndoe
+$app->get('profile.surname');     // John Doe
+$app->get('profile.interest.1');  // football
+$app->get('profile.family.son');  // John Roe
+$app->hive()['entry']['title'];   // Lorem ipsum
 ```
 
 Add a value or array of value:
@@ -228,10 +230,8 @@ $app->erase(['profile.age','profile.uname']);
 
 
 #### Framework Variables
-All framework variables are stored in `$hive` property, So, you can fump this variable to see available vars:
+All framework variables are stored in `$hive` property, So, you can dump this variable to see available vars:
 ```php
-print_r($app->hive);
-// or
 print_r($app->hive());
 // or
 print_r($app);
@@ -306,6 +306,11 @@ $db->table('profile')
    ->select('id,name,address')
    ->where('age','>',15)
    ->many();
+
+$db->table('profile')
+  ->select('id,name,address')
+  ->where('age','>',15)
+  ->one();
 ```
 
 
@@ -359,16 +364,11 @@ And the last step is creating the `ui/mytemplate.knife.php` file:
 
 ```php
 // file: ui/mytemplate.knife.php
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <title>My Template</title>
-    </head>
+@include('the-header')
     <body>
         Hello {{ $name }}, how are you today?
     </body>
-</html>
+@include('the-footer')
 ```
 
 
