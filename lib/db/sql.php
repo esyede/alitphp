@@ -586,7 +586,7 @@ class SQL {
         $msg='<h3>Database Error</h3>';
         $msg.='<b>Query:</b><pre>'.$this->query.'</pre><br/>';
         $msg.='<b>Error:</b><pre>'.$this->error.'</pre><br/>';
-        if (Alit::instance()->get('ROOT')>0)
+        if (\Alit::instance()->get('DEBUG')>0)
             trigger_error(vsprintf(self::E_LastError,[$this->query,$this->error]),E_ERROR);
         else trigger_error(vsprintf("%s. (%s)",[$this->error,$this->query]),E_ERROR);
     }
