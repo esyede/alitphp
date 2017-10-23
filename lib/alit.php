@@ -71,7 +71,8 @@ final class Alit extends \Factory implements \ArrayAccess {
 		E_Redirect="Can't redirect to specified url: %s",
 		E_Route="Can't find route handler: %s@%s",
 		E_Forward="Can't forward route handler: %s",
-		E_View="Can't find view file: %s";
+		E_View="Can't find view file: %s",
+		E_Notfound="The page you have requested can not be found on this server";
 	protected
 		// Store all framework variables
 		$hive;
@@ -87,7 +88,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 		$methods=$request[0];
 		$pattern=$request[1];
         foreach ($this->split($methods) as $method)
-            $this->hive['ALIT']['before'][$method][]=['pattern'=>$pattern,'handler'=>$handler];
+            $this->set('ALIT.before.'.$method,[['pattern'=>$pattern,'handler'=>$handler]]);
     }
 
 	/**
@@ -101,7 +102,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 		$methods=$request[0];
 		$pattern=$request[1];
         foreach ($this->split($methods) as $method)
-            $this->hive['ALIT']['after'][$method][]=['pattern'=>$pattern,'handler'=>$handler];
+            $this->set('ALIT.after.'.$method,[['pattern'=>$pattern,'handler'=>$handler]]);
     }
 
 	/**
@@ -117,7 +118,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	    foreach ($this->split($methods) as $method) {
 			if (!in_array($method,$this->split(self::METHODS)))
 				user_error(vsprintf(self::E_Method,[$method]),E_USER_ERROR);
-	        $this->hive['ALIT']['route'][$method][]=['pattern'=>$pattern,'handler'=>$handler];
+			$this->set('ALIT.route.'.$method,[['pattern'=>$pattern,'handler'=>$handler]]);
 		}
 	}
 
@@ -165,37 +166,29 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@return  bool
 	*/
     function run() {
-        $this->hive['ALIT']['method']=$this->method();
+		$this->set('ALIT.method',$this->method());
 		// Execute before-route middleware if any
-        if (isset($this->hive['ALIT']['before'][$this->hive['ALIT']['method']]))
-            $this->handle($this->hive['ALIT']['before'][$this->hive['ALIT']['method']]);
+        if (isset($this->get('ALIT.before')[$this->get('ALIT.method')]))
+            $this->handle($this->get('ALIT.before')[$this->get('ALIT.method')]);
         $handled=0;
 		// Execute user-defined routes
-        if (isset($this->hive['ALIT']['route'][$this->hive['ALIT']['method']]))
-            $handled=$this->handle($this->hive['ALIT']['route'][$this->hive['ALIT']['method']],true);
+        if (isset($this->get('ALIT.route')[$this->get('ALIT.method')]))
+            $handled=$this->handle($this->get('ALIT.route')[$this->get('ALIT.method')],true);
 			// No route specified
         if ($handled===0) {
 			// Call notfound handler if any
-            if ($this->hive['ALIT']['notfound']
-			&&is_callable($this->hive['ALIT']['notfound']))
-                call_user_func($this->hive['ALIT']['notfound']);
+            if ($this->has('ALIT.notfound')
+			&&is_callable($this->get('ALIT.notfound')))
+                call_user_func($this->get('ALIT.notfound'));
             else {
-				if ($this->hive['AJAX'])
-					echo json_encode([
-						'response'=>[
-							'status'=>'error',
-							'data'=>[
-								'code'=>500,
-								'reason'=>'The page you have requested can not be found on this server'
-							]
-						]
-					]);
-				else $this->abort(404,"The page you have requested can not be found on this server");
+				if (false!==$this->get('AJAX'))
+					echo json_encode(['status'=>404,'data'=>self::E_Notfound]);
+				else $this->abort(404,self::E_Notfound);
 			}
         }
 		// Execute after-route middleware if any
-        else if (isset($this->hive['ALIT']['after'][$this->hive['ALIT']['method']]))
-            $this->handle($this->hive['ALIT']['after'][$this->hive['ALIT']['method']]);
+        else if (isset($this->get('ALIT.after')[$this->get('ALIT.method')]))
+            $this->handle($this->get('ALIT.after')[$this->get('ALIT.method')]);
         if ($_SERVER['REQUEST_METHOD']=='HEAD')
         	ob_end_clean();
         if ($handled===0)
@@ -208,12 +201,12 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@param  $handler  object|callable
 	*/
     function notfound($handler=null) {
-		$this->hive['ALIT']['notfound']=$handler;
+		$this->set('ALIT.notfound',$handler);
 
     }
 
 	/**
-	*	Handler for common php errors
+	*	Trigger error message
 	*	@param  $code    int
 	*	@param  $reason  string|null
 	*	@param  $file    string|null
@@ -229,7 +222,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 			foreach (explode("\n",$trace) as $log)
 				if ($log)
 					error_log($log);
-			$this->hive['ERROR']=[
+			$this->set('ERROR',[
 				'status'=>$hdrmsg,
 				'code'=>$code,
 				'text'=>"{$code} {$hdrmsg}",
@@ -238,29 +231,24 @@ final class Alit extends \Factory implements \ArrayAccess {
 				'reason'=>$reason,
 				'trace'=>$trace,
 				'level'=>$level
-			];
+			]);
 			// Write error to file if debugger active
 			$debug='[ERROR]'.PHP_EOL;
-			if ($this->hive['SYSLOG']===true) {
-				$err=$this->hive['ERROR'];
+			if (false!==$this->get('SYSLOG')) {
+				$err=$this->get('ERROR');
 				if (array_key_exists('trace',$err))
 					unset($err['trace']);
 				foreach ($err as $k=>$v)
 					$debug.="{$k}: {$v}".PHP_EOL;
-				$this->log($debug,$this->hive['TEMP'].'syslog.log');
+				$this->log($debug,$this->get('TEMP').'syslog.log');
 			}
 			ob_start();
 			if (!headers_sent())
 				header($_SERVER['SERVER_PROTOCOL'].' '.$code.' '.$hdrmsg);
 			// if DEBUG value larger than 0
-			if ((int)$this->hive['DEBUG']>0) {
-				if ($this->hive['AJAX'])
-					echo json_encode([
-						'response'=>[
-							'status'=>'error',
-							'data'=>$this->hive['ERROR']
-						]
-					]);
+			if ((int)$this->get('DEBUG')>0) {
+				if (false!==$this->get('AJAX'))
+					echo json_encode(['status'=>500,'data'=>$this->get('ERROR')]);
 				else {
 					echo "<!DOCTYPE html>\n<html>".
 						"\n\t<head>\n\t\t<title>{$code} {$hdrmsg}</title>\n\t</head>".
@@ -277,19 +265,10 @@ final class Alit extends \Factory implements \ArrayAccess {
 				}
 			}
 			else {
-				if ($this->hive['AJAX'])
-					echo json_encode([
-						'response'=>[
-							'status'=>'error',
-							'data'=>[
-								'code'=>$code,
-								'reason'=>$reason,
-								'file'=>$file,
-								'line'=>$line,
-								'level'=>$leveL
-							]
-						]
-					]);
+				if (false!==$this->get('AJAX')) {
+					$data=['code'=>$code,'reason'=>$reason,'file'=>$file,'line'=>$line,'level'=>$leveL];
+					echo json_encode(['status'=>500,'data'=>$data]);
+				}
 				else {
 					echo "<!DOCTYPE html>\n<html>".
 						"\n\t<head>\n\t\t<title>{$code} {$hdrmsg}</title>\n\t</head>".
@@ -303,7 +282,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 				}
 			}
             ob_end_flush();
-            die();
+            die(1);
 		}
 	}
 
@@ -321,7 +300,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 			&&$stack['file']==__FILE__)
 				array_shift($trace);
 		}
-		$debug=$this->hive['DEBUG'];
+		$debug=$this->get('DEBUG');
 		$trace=array_filter($trace,
 			function($stack) use ($debug) {
 				return isset($stack['file'])
@@ -369,7 +348,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@param  $wait  int
 	*/
 	function redirect($url=null,$permanent=true) {
-		$base=$this->hive['PROTO'].'://'.rtrim($this->hive['BASE'],'/');
+		$base=$this->get('PROTO').'://'.rtrim($this->get('BASE'),'/');
 		$url=filter_var($url,FILTER_SANITIZE_URL);
 		if (!is_null($url)) {
 			if (preg_match('|^(http(s)?://)?[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(/.*)?$|i',$url)
@@ -398,7 +377,7 @@ final class Alit extends \Factory implements \ArrayAccess {
     private function handle($routes,$quit=false) {
         $handled=0;
         foreach ($routes as $route) {
-            if (preg_match_all('~^'.$route['pattern'].'$~',$this->hive['URI'],$matches,PREG_OFFSET_CAPTURE)) {
+            if (preg_match_all('~^'.$route['pattern'].'$~',$this->get('URI'),$matches,PREG_OFFSET_CAPTURE)) {
                 $matches=array_slice($matches,1);
                 $params=array_map(function ($match,$index) use ($matches) {
                     if (isset($matches[$index+1])
@@ -432,7 +411,7 @@ final class Alit extends \Factory implements \ArrayAccess {
     *   @param  $data  null|array
     */
 	function render($name,$data=null) {
-		$file=$this->hive['BASE'].str_replace('./','',$this->hive['UI'].$name);
+		$file=$this->get('BASE').str_replace('./','',$this->get('UI').$name);
 		$file=str_replace('/',DIRECTORY_SEPARATOR,$file);
 		if (!file_exists($file))
 			user_error(vsprintf(self::E_View,[$name]),E_USER_ERROR);
@@ -461,7 +440,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 					if ($match['child']) {
 						$child=$match['child'];
 						if (preg_match('/^(?!(?:global|config|route|before|after)\b)((?:\.?\w)+)/i',$child,$gchild)
-						&&!$this->exists($gchild[0],$this->hive))
+						&&!$this->exists($gchild[0],$this->hive()))
 							$this->set($gchild[0],null);
 						preg_match('/^(config|route|before|after)\b|^((?:\.?\w)+)\s*\>\s*(.*)/i',$child,$fn);
 						continue;
@@ -530,7 +509,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*/
 	function log($data,$file,$multi=false) {
 		$ts=time();
-		$date=new \DateTime('now',new \DateTimeZone($this->hive['TZ']));
+		$date=new \DateTime('now',new \DateTimeZone($this->get('TZ')));
 		$date->setTimestamp($ts);
 		(!file_exists($file)||strlen($this->read($file)<1))?$add=true:$add=false;
 		return $this->write($file,"[".$date->format('d/m/y H:i:s')."]".($multi?PHP_EOL:" ").$data.PHP_EOL,true);
@@ -542,7 +521,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@return  string
 	*/
 	function base($suffix=null) {
-		$base=rtrim($this->hive['PROTO'].'://'.$this->get('BASE'),'/');
+		$base=rtrim($this->get('PROTO').'://'.$this->get('BASE'),'/');
 		return is_null($suffix)?$base:$base.$suffix;
 	}
 
@@ -653,7 +632,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	protected function autoloader($class) {
 		$class=$this->slash(ltrim($class,'\\'));
 		$fn=null;
-		foreach ($this->split($this->hive['LIB'].'|./') as $auto) {
+		foreach ($this->split($this->get('LIB').'|./') as $auto) {
 			if (is_file($file=$auto.$class.'.php')
 			||is_file($file=$auto.strtolower($class).'.php')
 			||is_file($file=strtolower($auto.$class).'.php'))
@@ -1040,16 +1019,16 @@ final class Alit extends \Factory implements \ArrayAccess {
 		$fw=$this;
 		// Exception handler
 		set_exception_handler(function($obj) {
-			$fw->hive['EXCEPTION']=$obj;
+			$fw->set('EXCEPTION',$obj);
 			// Write exception to file if debugger active
 			$debug='[ERROR]'.PHP_EOL;
-			if ($this->hive['SYSLOG']===true) {
-				foreach ($this->hive['EXCEPTION'] as $k=>$v)
+			if (false!==$this->get('SYSLOG')) {
+				foreach ($this->get('EXCEPTION') as $k=>$v)
 					$debug.="$k: $v".PHP_EOL;
-				$this->log($debug,$this->hive['TEMP'].'syslog.log');
+				$this->log($debug,$this->get('TEMP').'syslog.log');
 			}
 			$this->abort(500,
-				$obj->getMessage().' in '.
+				$obj->getMessage().' <br>in '.
 				$obj->getFile().':'.
 				'<font color=red>'.$obj->getLine().'</font>',
 				$obj->getTrace(),
@@ -1061,12 +1040,12 @@ final class Alit extends \Factory implements \ArrayAccess {
 			if ($level & error_reporting()) {
 				// Write error to file if debugger active
 				$err=null;
-				if ($this->hive['SYSLOG']===true) {
+				if (false!==$this->get('SYSLOG')) {
 					$err=['reason'=>$reason,'file'=>$file,'line'=>$line];
 					$debug='[ERROR]'.PHP_EOL;
 					foreach ($err as $k=>$v)
 						$debug.="$k: $v".PHP_EOL;
-					$this->log($debug,$this->hive['TEMP'].'syslog.log');
+					$this->log($debug,$this->get('TEMP').'syslog.log');
 				}
 				$this->abort(500,$reason,$file,$line);
 			}
