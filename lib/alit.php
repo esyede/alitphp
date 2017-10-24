@@ -946,12 +946,12 @@ final class Alit extends \Factory implements \ArrayAccess {
     }
 
 	/**
-	*	Store an array as a reference
-	*	@param  $arr  array
+	*	Store a key as reference
+	*	@param  $key  string
+	*	@param  $val  mixed|null
 	*/
-    function ref(&$arr) {
-        if ($this->accessible($arr))
-        	$this->hive=&$arr;
+    function ref($key,&$val=null) {
+        $this->set($key,&$val);
     }
 
 	/**
