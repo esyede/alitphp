@@ -19,9 +19,8 @@ final class Alit extends \Factory implements \ArrayAccess {
 	const
 		// Package and version info
 		PACKAGE='Alit PHP',
-		VERSION='1.0.0-stable',
-		// Valid request methods
-		METHODS='CONNECT|DELETE|GET|HEAD|OPTIONS|PATCH|POST|PUT';
+		VERSION='1.0.0-stable';
+
 	const
 		// HTTP status codes
 		HTTP_100='Continue',
@@ -73,6 +72,11 @@ final class Alit extends \Factory implements \ArrayAccess {
 		E_Forward="Can't forward route handler: %s",
 		E_View="Can't find view file: %s",
 		E_Notfound="The page you have requested can not be found on this server";
+
+	const
+		// Valid request methods
+		METHODS='CONNECT|DELETE|GET|HEAD|OPTIONS|PATCH|POST|PUT';
+
 	protected
 		// Store all framework variables
 		$hive;
@@ -951,7 +955,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@param  $val  mixed|null
 	*/
     function ref($key,&$val=null) {
-        $this->set($key,&$val);
+        $this->hive[$key]=&$val;
     }
 
 	/**
