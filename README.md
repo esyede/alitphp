@@ -65,6 +65,24 @@ $app->route('GET /test/(\w+)?',function($param1) use($app) {
 });
 ```
 
+Do you need middleware? Yes, it's yours!
+
+```php
+$app->route('GET /admin',function() use($app) {
+    echo "Hello world !";
+});
+
+
+$app->before('GET /admin',function() use($app) {
+    echo "Before route here!<br/>";
+});
+
+$app->after('GET /admin',function() use($app) {
+    echo "<br/>After route here!";
+});
+```
+
+
 #### Dealing with OOP
 
 Firstly, you must create the handler class:
@@ -92,11 +110,9 @@ Then, register it to your route:
 $app->route('GET /','Welcome@home');
 $app->route('GET /profile/(\w+)?','Welcome@profile');
 ```
-**Wait, routing to namespaced class?**
-
-Yes, you can!
+Wait, routing to namespaced class? Yes, you can!
 ```php
-// file: app/cintrollers/test.php
+// file: app/controllers/test.php
 namespace App\Controllers;
 
 class Test {
@@ -106,7 +122,7 @@ class Test {
         // get the framework instance
         $this->app=\Alit::instance();
         // we add `\` (backslash) on core-class instantiation
-        // because on alit, 'lib/' dir is a base namespace
+        // because on alit, 'lib/' dir is the base namespace
     }
 
     function index() {
@@ -131,7 +147,7 @@ Or even further, you can specify routes in a config file, like this:
 [route]
 GET /                 = Welcome@home
 GET /profile(/\w+)    = Welcome@profile
-GET|POST|PUT /hello   = Welcome@hello
+GET|POST|PUT /test    = App\Controllers\Test@index
 ```
 
 And your _index.php_ will be even simpler:
@@ -141,7 +157,29 @@ $app=require('lib/alit.php');
 $app->config('config.ini');
 $app->run();
 ```
-Wait, 3 lines? Woohoo !!
+_Wait, Am i missing something?_
+
+Ah, yes. Where is my class middleware ?!
+
+Uhm, sorry, my bad. This is it!
+```php
+class Test {
+
+    function index() {
+        echo "Hello world !<br/>";
+    }
+
+
+    // Yes, you can define middleware inside controller class
+    function before() {
+        echo "Before route here!<br/>";
+    }
+
+    function after() {
+        echo "<br/>After route here!";
+    }
+}
+```
 
 
 ### Config Flags
@@ -153,15 +191,8 @@ UI = ui/
 
 ; for automatic route definition
 [route]
-GET / = Welcome@home
-
-; for automatic befoure-route middleware definition
-[before]
-GET / = Welcome@authenticate
-
-; for automatic after-route middleware definition
-[after]
-GET / = Welcome@render_view
+GET /     = Welcome@home
+GET /test = App\Controllers\Test@index
 
 ; for including other config file
 [config]
@@ -241,7 +272,7 @@ $app->erase('entry.by');
 // $app->get('entry.by'); // null
 $app->erase(['profile.age','profile.uname']);
 ```
-..and much more.
+..and much more!
 
 
 #### Framework Variables
@@ -434,6 +465,18 @@ Possible value for debug is:
  * 1 : prints files & lines
  * 2 : prints classes & functions as well
  * 3 : prints detailed infos of the objects as well
+
+
+### System Log
+You can enable system log by setting the `SYSLOG` hive to `true`
+and alit will log your system errors to  `syslog.log` file inside your `TEMP` directory
+```php
+$app->set('SYSLOG',true);
+```
+Need a custom logger? do this:
+```php
+$app->log('[info] 3 users currently logged in','test.log');
+```
 
 
 ### Documentation
