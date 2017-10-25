@@ -89,10 +89,8 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*/
 	function before($request,$handler) {
         $request=explode(' ',preg_replace('/\s+/',' ',$request));
-		$methods=$request[0];
-		$pattern=$request[1];
-        foreach ($this->split($methods) as $method)
-            $this->set('ALIT.before.'.$method,[['pattern'=>$pattern,'handler'=>$handler]]);
+        foreach ($this->split($request[0]) as $method)
+            $this->hive['ALIT']['before'][$method][]=['pattern'=>$request[1],'handler'=>$handler];
     }
 
 	/**
@@ -103,10 +101,8 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*/
 	function after($request,$handler) {
         $request=explode(' ',preg_replace('/\s+/',' ',$request));
-		$methods=$request[0];
-		$pattern=$request[1];
-        foreach ($this->split($methods) as $method)
-            $this->set('ALIT.after.'.$method,[['pattern'=>$pattern,'handler'=>$handler]]);
+        foreach ($this->split($request[0]) as $method)
+            $this->hive['ALIT']['after'][$method][]=['pattern'=>$request[1],'handler'=>$handler];
     }
 
 	/**
@@ -117,12 +113,10 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*/
 	function route($request,$handler) {
         $request=explode(' ',preg_replace('/\s+/',' ',$request));
-		$methods=$request[0];
-		$pattern=$request[1];
-	    foreach ($this->split($methods) as $method) {
+	    foreach ($this->split($request[0]) as $method) {
 			if (!in_array($method,$this->split(self::METHODS)))
 				user_error(vsprintf(self::E_Method,[$method]),E_USER_ERROR);
-			$this->set('ALIT.route.'.$method,[['pattern'=>$pattern,'handler'=>$handler]]);
+			$this->hive['ALIT']['route'][$method][]=['pattern'=>$request[1],'handler'=>$handler];
 		}
 	}
 
@@ -326,7 +320,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 			if (isset($stack['function']))
 				$line.=$stack['function'].'('.($debug>2&&isset($stack['args'])?$stack['args']:'').')';
 			$src=$this->slash(str_replace($_SERVER['DOCUMENT_ROOT'].'/','',$stack['file'])).
-				':<font color=red>'.$stack['line'].'</font>';
+				':<font color="red">'.$stack['line'].'</font>';
 			$out.='['.$src.'] '.$line.$nl;
 		}
 		return $out;
@@ -355,7 +349,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 		$base=$this->get('PROTO').'://'.rtrim($this->get('BASE'),'/');
 		$url=filter_var($url,FILTER_SANITIZE_URL);
 		if (!is_null($url)) {
-			if (preg_match('|^(http(s)?://)?[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(/.*)?$|i',$url)
+			if (preg_match('~^(http(s)?://)?[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(/.*)?$~i',$url)
 			||filter_var($url,FILTER_VALIDATE_URL))
 				$url=$url;
 			else $url=$base.$url;

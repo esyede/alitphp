@@ -22,27 +22,13 @@ Lightweight, blazing fast micro framework
 
 ### Apache Configuration:
 ```apache
-# Enable rewrite engine
 RewriteEngine On
-
-# Some server needs to specify base directory for rewriting
 # RewriteBase /
-
-# Continue if a match is not an existing file, directory or symlink
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-l
 
-# Redirect all request to index.php,
-# append any query string from original url,
-# and then stop processing this
 RewriteRule ^(.*)$ index.php [QSA,L]
-
-# Give 404 error when accessing /tmp dir or
-# .cache, .ini, or .log files
-RewriteRule ^(tmp)\/|\.(cache|ini|log)$ - [R=404]
-# Disable directory listing of php files
-IndexIgnore *.php
 ```
 
 
@@ -106,6 +92,35 @@ Then, register it to your route:
 $app->route('GET /','Welcome@home');
 $app->route('GET /profile/(\w+)?','Welcome@profile');
 ```
+**Wait, routing to namespaced class?**
+
+Yes, you can!
+```php
+// file: app/cintrollers/test.php
+namespace App\Controllers;
+
+class Test {
+    protected $app;
+
+    function __construct() {
+        // get the framework instance
+        $this->app=\Alit::instance();
+        // we add `\` (backslash) on core-class instantiation
+        // because on alit, 'lib/' dir is a base namespace
+    }
+
+    function index() {
+        echo "Hello from test class! you're using {$this->app->method()} method";
+    }
+    // ...
+}
+```
+Then, register it to your route:
+
+```php
+$app->route('GET /test','App\Controllers\Test@index');
+```
+
 
 Or even further, you can specify routes in a config file, like this:
 
