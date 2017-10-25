@@ -69,6 +69,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 		E_Method="Invalid method supplied: %s",
 		E_Redirect="Can't redirect to specified url: %s",
 		E_Route="Can't find route handler: %s@%s",
+		E_Middleware="Can't execute %s-route middleware in %s@%s",
 		E_Forward="Can't forward route handler: %s",
 		E_View="Can't find view file: %s",
 		E_Notfound="The page you have requested can not be found on this server";
@@ -389,9 +390,19 @@ final class Alit extends \Factory implements \ArrayAccess {
                 elseif (stripos($route['handler'],'@')!==false) {
                     list($controller,$method)=explode('@',$route['handler']);
                     if (class_exists($controller)) {
-                        if (call_user_func_array([new $controller,$method],$params)===false)
+						$class=new $controller;
+						// Execute before-route middleware inside controller class
+						if (method_exists($class,'before'))
+							if (call_user_func([$class,'before'])===false)
+								trigger_error(vsprintf(self::E_Middleware,['before',$controller,$method]));
+						// Execute actual route method
+                        if (call_user_func_array([$class,$method],$params)===false)
                         	if (forward_static_call_array([$controller,$method],$params)===false)
 								trigger_error(vsprintf(self::E_Forward,[$route['handler']]),E_ERROR);
+						// Execute after-route middleware inside controller class
+						if (method_exists($class,'after'))
+							if (call_user_func([$class,'after'])===false)
+								trigger_error(vsprintf(self::E_Middleware,['after',$controller,$method]));
 					}
 					else trigger_error(vsprintf(self::E_Route,[$controller,$method]),E_ERROR);
                 }
@@ -437,10 +448,10 @@ final class Alit extends \Factory implements \ArrayAccess {
 				foreach ($matches as $match) {
 					if ($match['child']) {
 						$child=$match['child'];
-						if (preg_match('/^(?!(?:global|config|route|before|after)\b)((?:\.?\w)+)/i',$child,$gchild)
+						if (preg_match('/^(?!(?:global|config|route)\b)((?:\.?\w)+)/i',$child,$gchild)
 						&&!$this->exists($gchild[0],$this->hive()))
 							$this->set($gchild[0],null);
-						preg_match('/^(config|route|before|after)\b|^((?:\.?\w)+)\s*\>\s*(.*)/i',$child,$fn);
+						preg_match('/^(config|route)\b|^((?:\.?\w)+)\s*\>\s*(.*)/i',$child,$fn);
 						continue;
 					}
 					if (!empty($fn))
