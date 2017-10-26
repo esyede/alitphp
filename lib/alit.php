@@ -122,23 +122,6 @@ final class Alit extends \Factory implements \ArrayAccess {
 	}
 
 	/**
-	*	Get all request headers.
-	*	@return array
-	*/
-    function headers() {
-        if (function_exists('getallheaders'))
-            return getallheaders();
-        $res=[];
-        foreach ($_SERVER as $key=>$val)
-            if ((substr($k,0,5)=='HTTP_')
-			||($key=='CONTENT_TYPE')
-			||($key=='CONTENT_LENGTH'))
-                $res[str_replace([' ','Http'],['-','HTTP'],
-					ucwords(strtolower(str_replace('_',' ',substr($key,5)))))]=$val;
-        return $res;
-    }
-
-	/**
 	*	Get the request method used, taking overrides into account.
 	*	@return  string
 	*/
@@ -151,7 +134,7 @@ final class Alit extends \Factory implements \ArrayAccess {
             $method='GET';
         } // If it's a POST request, check for a method override header
         elseif ($_SERVER['REQUEST_METHOD']=='POST') {
-            $headers=$this->headers();
+            $headers=$this->get('HEADERS');
             if (isset($headers['X-HTTP-Method-Override'])
 			&&in_array($headers['X-HTTP-Method-Override'],['PUT','DELETE','PATCH']))
                 $method=$headers['X-HTTP-Method-Override'];
@@ -532,105 +515,6 @@ final class Alit extends \Factory implements \ArrayAccess {
 	function base($suffix=null) {
 		$base=rtrim($this->get('PROTO').'://'.$this->get('BASE'),'/');
 		return is_null($suffix)?$base:$base.$suffix;
-	}
-
-	/**
-	*	Get client's ip
-	*	@return  string
-	*/
-	function ip() {
-		$ip=null;
-		if (isset($_SERVER['HTTP_CLIENT_IP'])
-		&&$this->ipvalid($_SERVER['HTTP_CLIENT_IP']))
-			$ip=$_SERVER['HTTP_CLIENT_IP'];
-		elseif (isset($_SERVER['HTTP_X_FORWARDED_FOR'])
-		&&!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-			$ipx=explode(',',$_SERVER['HTTP_X_FORWARDED_FOR']);
-			foreach ($ipx as $ipv) {
-				if ($this->ipvalid($ipv)) {
-					$ip=$ipv;
-					break;
-				}
-			}
-		}
-		elseif (isset($_SERVER['HTTP_X_FORWARDED'])
-		&&$this->ipvalid($_SERVER['HTTP_X_FORWARDED']))
-			$ip=$_SERVER['HTTP_X_FORWARDED'];
-		elseif (isset($_SERVER['HTTP_X_CLUSTER_CLIENT_IP'])
-		&&$this->ipvalid($_SERVER['HTTP_X_CLUSTER_CLIENT_IP']))
-			$ip=$_SERVER['HTTP_X_CLUSTER_CLIENT_IP'];
-		elseif (isset($_SERVER['HTTP_FORWARDED_FOR'])
-		&&$this->ipvalid($_SERVER['HTTP_FORWARDED_FOR']))
-			$ip=$_SERVER['HTTP_FORWARDED_FOR'];
-		elseif (isset($_SERVER['HTTP_FORWARDED'])
-		&&$this->ipvalid($_SERVER['HTTP_FORWARDED']))
-			$ip=$_SERVER['HTTP_FORWARDED'];
-		elseif (isset($_SERVER['HTTP_VIA'])
-		&&$this->ipvalid($_SERVER['HTTP_VIAD']))
-			$ip=$_SERVER['HTTP_VIA'];
-		elseif (isset($_SERVER['REMOTE_ADDR'])
-		&&!empty($_SERVER['REMOTE_ADDR']))
-			$ip=$_SERVER['REMOTE_ADDR'];
-		if ($ip===false)
-			$ip='0.0.0.0';
-		// Force local ip to ipv4
-		if ($ip=='::1')
-			$ip='127.0.0.1';
-		return $ip;
-	}
-
-	/**
-	*	Validate ip address
-	*	@param   $ip   string
-	*	@return  bool
-	*/
-	function ipvalid($ip) {
-		$ip=trim($ip);
-		if (!empty($ip)&&ip2long($ip)!=-1) {
-			$range=[
-				['0.0.0.0','2.255.255.255'],
-				['10.0.0.0','10.255.255.255'],
-				['127.0.0.0','127.255.255.255'],
-				['169.254.0.0','169.254.255.255'],
-				['172.16.0.0','172.31.255.255'],
-				['192.0.2.0','192.0.2.255'],
-				['192.168.0.0','192.168.255.255'],
-				['255.255.255.0','255.255.255.255']
-			];
-			foreach ($range as $r)
-				if ((ip2long($ip)>=ip2long($r[0]))
-				&&(ip2long($ip)<=ip2long($r[1])))
-					return false;
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	*	Determine whether request is ajax or not
-	*	@return  bool
-	*/
-	function isajax() {
-		return (isset($_SERVER['HTTP_X_REQUESTED_WITH'])
-		&&$_SERVER['HTTP_X_REQUESTED_WITH']==='XMLHttpRequest')?true:false;
-	}
-
-	/**
-	*	Determine server protocol
-	*	@return  string
-	*/
-	function protocol() {
-		$proto='http';
-		if (isset($_SERVER['HTTPS'])
-		&&$_SERVER['HTTPS']=='on'
-		||$_SERVER['SERVER_PORT']==443)
-			$proto='https';
-		elseif (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])
-		&&$_SERVER['HTTP_X_FORWARDED_PROTO']=='https'
-		||!empty($_SERVER['HTTP_X_FORWARDED_SSL'])
-		&&$_SERVER['HTTP_X_FORWARDED_SSL']=='on')
-			$proto='https';
-		return $proto;
 	}
 
 	/**
@@ -1065,6 +949,41 @@ final class Alit extends \Factory implements \ArrayAccess {
         if (strstr($uri,'?'))
 			$uri=substr($uri,0,strpos($uri,'?'));
 		$uri='/'.trim($uri,'/');
+        // Get all headers
+        $headers=[];
+		if (function_exists('getallheaders')) {
+			foreach (getallheaders() as $key=>$val) {
+				$tmp=strtoupper(strtr($key,'-','_'));
+				$key=strtr(ucwords(strtolower(strtr($key,'-',' '))),' ','-');
+				$headers[$key]=$val;
+				if (isset($_SERVER['HTTP_'.$tmp]))
+					$headers[$key]=&$_SERVER['HTTP_'.$tmp];
+			}
+		}
+		else {
+			if (isset($_SERVER['CONTENT_LENGTH']))
+				$headers['Content-Length']=&$_SERVER['CONTENT_LENGTH'];
+			if (isset($_SERVER['CONTENT_TYPE']))
+				$headers['Content-Type']=&$_SERVER['CONTENT_TYPE'];
+			foreach (array_keys($_SERVER) as $key)
+				if (substr($key,0,5)=='HTTP_')
+					$headers[strtr(ucwords(strtolower(strtr(substr($key,5),'_',' '))),' ','-')]=&$_SERVER[$key];
+		}
+        // Get client ip
+		$ip=isset($headers['Client-IP'])
+        ?$headers['Client-IP']
+        :(isset($headers['X-Forwarded-For'])
+            ?explode(',',$headers['X-Forwarded-For'])[0]
+            :(isset($_SERVER['REMOTE_ADDR'])
+                ?$_SERVER['REMOTE_ADDR']:''));
+        // Get server protocol
+		$proto=isset($_SERVER['HTTPS'])
+        &&$_SERVER['HTTPS']=='on'
+        ||isset($headers['X-Forwarded-Proto'])
+        &&$headers['X-Forwarded-Proto']=='https'?'https':'http';
+        // Determine ajax request
+        $isajax=(isset($_SERVER['HTTP_X_REQUESTED_WITH'])
+		&&$_SERVER['HTTP_X_REQUESTED_WITH']==='XMLHttpRequest')?true:false;
 		// Assign default value to route variables
 		$fw->hive['ALIT']=[
 			'before'=>[],
@@ -1075,16 +994,17 @@ final class Alit extends \Factory implements \ArrayAccess {
 		];
 		// Assign default value to system variables
 		$fw->hive+=[
-			'AJAX'=>$fw->isajax(),
+			'AJAX'=>$isajax,
 			'BASE'=>$_SERVER['SERVER_NAME'].$base,
 			'DEBUG'=>0,
 			'ERROR'=>null,
 			'EXCEPTION'=>null,
+			'HEADERS'=>&$headers,
 			'HOST'=>$_SERVER['SERVER_NAME'],
-			'IP'=>$fw->ip(),
+			'IP'=>$ip,
 			'LIB'=>$fw->slash(__DIR__).'/',
 			'PACKAGE'=>self::PACKAGE,
-			'PROTO'=>$fw->protocol(),
+			'PROTO'=>$proto,
 			'ROOT'=>$_SERVER['DOCUMENT_ROOT'].$base,
 			'SESSION'=>null,
 			'SYSLOG'=>false,
