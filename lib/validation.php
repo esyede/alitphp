@@ -165,7 +165,7 @@ class Validation extends \Factory {
         $method='validate_'.$rule;
         if (method_exists(__CLASS__,$method)
         ||isset(self::$validation_methods[$rule]))
-            user_error(vsprintf(self::E_Validator_RuleExist,[$rule]),E_USER_ERROR);
+            \Alit::instance()->abort(500,vsprintf(self::E_Validator_RuleExist,[$rule]));
         self::$validation_methods[$rule]=$callback;
         if ($err_msg)
             self::$validation_methods_errors[$rule]=$err_msg;
@@ -182,7 +182,7 @@ class Validation extends \Factory {
         $method='filter_'.$rule;
         if (method_exists(__CLASS__,$method)
         ||isset(self::$filter_methods[$rule]))
-            user_error(vsprintf(self::E_Filter_RuleExist,[$rule]),E_USER_ERROR);
+            \Alit::instance()->abort(500,vsprintf(self::E_Filter_RuleExist,[$rule]));
         self::$filter_methods[$rule]=$callback;
         return true;
     }
@@ -336,7 +336,7 @@ class Validation extends \Factory {
                             $arg=$rule[1];
                             // Check if $arg is regex then throw error message
                             if (preg_match("/^\/.+\/[a-z]*$/i",$arg))
-                                user_error(vsprintf(self::E_Arg_isRegex,[$rule]),E_USER_ERROR);
+                                \Alit::instance()->abort(500,vsprintf(self::E_Arg_isRegex,[$rule]));
                             $rule=$rule[0];
                             if (preg_match('/(?:(?:^|;)_([a-z_]+))/',$arg,$found))
                                 if (isset($ipt[$found[1]]))
@@ -360,7 +360,7 @@ class Validation extends \Factory {
                                         'param'=>$arg
                                     ];
                         }
-                        else user_error(vsprintf(self::E_Validator_Inexist,[$method]),E_USER_ERROR);
+                        else \Alit::instance()->abort(500,vsprintf(self::E_Validator_Inexist,[$method]));
                     }
                 }
             }
@@ -442,7 +442,7 @@ class Validation extends \Factory {
                 );
                 $resp[]=$msg;
             }
-            else user_error(vsprintf(self::E_Rule_NoMsg,[$e['rule']]),E_USER_ERROR);
+            else \Alit::instance()->abort(500,vsprintf(self::E_Rule_NoMsg,[$e['rule']]));
         }
         if (!$to_string)
             return $resp;
@@ -482,7 +482,7 @@ class Validation extends \Factory {
                     $resp[$e['field']]=$msg;
                 }
             }
-            else user_error(vsprintf(self::E_Rule_NoMsg,[$e['rule']]),E_USER_ERROR);
+            else \Alit::instance()->abort(500,vsprintf(self::E_Rule_NoMsg,[$e['rule']]));
         }
         return $resp;
     }
@@ -517,7 +517,7 @@ class Validation extends \Factory {
                         $val=$filter($val);
                     elseif (isset(self::$filter_methods[$filter]))
                         $val=call_user_func(self::$filter_methods[$filter],$val,$args);
-                    else user_error(vsprintf(self::E_Filter_Inexist,[$filter]),E_USER_ERROR);
+                    else \Alit::instance()->abort(500,vsprintf(self::E_Filter_Inexist,[$filter]));
                 }
             }
         }

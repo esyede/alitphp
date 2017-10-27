@@ -197,6 +197,6 @@ class Session {
     function setcookie($name,$val,$time=null) {
         if($time===null)
             $time=(time()+(60*60*24));
-        setcookie($name,$val,$time,\Alit::instance()->get('TEMP'));
+        setcookie($name,$val,$time,Alit::instance()->get('TEMP'));
     }
 }

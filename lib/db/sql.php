@@ -72,7 +72,7 @@ class SQL {
             $this->conn->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE,\PDO::FETCH_OBJ);
         }
         catch(\PDOException $e) {
-            trigger_error(vsprintf(self::E_Connection,[$e->getMessage()]),E_ERROR);
+            \Alit::instance()->abort(500,vsprintf(self::E_Connection,[$e->getMessage()]));
         }
         return $this->conn;
     }
@@ -587,8 +587,8 @@ class SQL {
         $msg.='<b>Query:</b><pre>'.$this->query.'</pre><br/>';
         $msg.='<b>Error:</b><pre>'.$this->error.'</pre><br/>';
         if (\Alit::instance()->get('DEBUG')>0)
-            trigger_error(vsprintf(self::E_LastError,[$this->query,$this->error]),E_ERROR);
-        else trigger_error(vsprintf("%s. (%s)",[$this->error,$this->query]),E_ERROR);
+            \Alit::instance()->abort(500,vsprintf(self::E_LastError,[$this->query,$this->error]));
+        else \Alit::instance()->abort(500,vsprintf("%s. (%s)",[$this->error,$this->query]));
     }
 
     /**
