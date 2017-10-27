@@ -110,7 +110,7 @@ Then, register it to your route:
 $app->route('GET /','Welcome@home');
 $app->route('GET /profile/(\w+)?','Welcome@profile');
 ```
-Wait, routing to namespaced class? Yes, you can!
+#### Wait, what about routing to namespaced class? Yes, you can!
 ```php
 // file: app/controllers/test.php
 namespace App\Controllers;
@@ -133,7 +133,7 @@ class Test {
 ```
 Then you **must** push class directory to `VENDORS` directive in order to help autoloader find your classes
 ```php
-$app->set('VENDORS','app/controllers/'); // note: you must add trailing slash to the end it
+$app->set('VENDORS','app/controllers/'); // note: you must add trailing slash to the end of it
 ```
 
 And finally, you can register it to your route:
