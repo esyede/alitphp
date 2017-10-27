@@ -131,7 +131,12 @@ class Test {
     // ...
 }
 ```
-Then, register it to your route:
+Then you **must** push class directory to `VENDORS` directive in order to help autoloader find your classes
+```php
+$app->set('VENDORS','app/controllers/'); // note: you must add trailing slash to the end it
+```
+
+And finally, you can register it to your route:
 
 ```php
 $app->route('GET /test','App\Controllers\Test@index');
