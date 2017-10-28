@@ -504,7 +504,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	protected function autoloader($class) {
 		$class=$this->slash(ltrim($class,'\\'));
 		$fn=null;
-		if (is_array($loc=$this->hive['VENDORS'])
+		if (is_array($loc=$this->hive['MODULES'])
 		&&isset($loc[1])
 		&&is_callable($loc[1]))
 			list($loc,$fn)=$loc;
@@ -701,18 +701,6 @@ final class Alit extends \Factory implements \ArrayAccess {
 	}
 
 	/**
-	*	Return the given key as an array
-	*	@param  $key  string|array
-	*/
-	protected function items($key) {
-		if ($key instanceof \ArrayAccess
-		||is_array($key))
-			return $key;
-		return (array)$key;
-
-	}
-
-	/**
 	*	Merge a given array with the given key
 	*	@param  $key  mixed
 	*/
@@ -721,7 +709,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 			$this->hive=array_merge($this->hive,$key);
 		elseif (is_string($key)) {
 			$item=(array)$this->get($key);
-			$val=array_merge($item,$this->items($val));
+			$val=array_merge($item,($val instanceof \ArrayAccess||is_array($val))?$val:(array)$val);
 			$this->set($key,$val);
 		}
 	}
@@ -1000,6 +988,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 			'IP'=>$ip,
 			'LIB'=>$fw->slash(__DIR__).'/',
 			'METHOD'=>$method,
+			'MODULES'=>null,
 			'PACKAGE'=>self::PACKAGE,
 			'PROTO'=>$proto,
 			'ROOT'=>$_SERVER['DOCUMENT_ROOT'].$base,
@@ -1010,7 +999,6 @@ final class Alit extends \Factory implements \ArrayAccess {
 			'TZ'=>@date_default_timezone_get(),
 			'UI'=>'./',
 			'URI'=>$uri,
-			'VENDORS'=>null,
 			'VERSION'=>self::VERSION,
 		];
 		// Set default timezone
