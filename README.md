@@ -131,9 +131,9 @@ class Test {
     // ...
 }
 ```
-Then you **must** push class directory to `VENDORS` directive in order to help autoloader find your classes
+Then you **must** push class directory to `MODULES` directive in order to help autoloader find your classes
 ```php
-$app->set('VENDORS','app/controllers/'); // note: you must add trailing slash to the end of it
+$app->set('MODULES','app/controllers/'); // note: you must add trailing slash to the end of it
 ```
 
 And finally, you can register it to your route:
@@ -145,7 +145,7 @@ $app->route('GET /test','App\Controllers\Test@index');
 
 Or even further, you can specify routes in a config file, like this:
 
-```txt
+```ini
 ; file: config.ini
 ; [route] is a flag for automatic routing definition
 
