@@ -70,8 +70,8 @@ class Session {
                     foreach ($res->userdata as $key=>$val) {
                         if (is_array($key))
                             foreach ($key as $k=>$v)
-                                $fw->set("SESSION.{$k}",$v);
-                        else $fw->get("SESSION.{$key}",$val);
+                                $fw->set('SESSION.'.$k,$v);
+                        else $fw->get('SESSION.'.$key,$val);
                     }
                 }
                 $fw->set('SESSION.accessed',time());
@@ -91,15 +91,11 @@ class Session {
         $fw=\Alit::instance();
         if (is_array($name))
             foreach ($name as $key=>$val)
-                $fw->set("SESSION.{$key}",$val);
-        else $fw->set("SESSION.{$name}",$val);
+                $fw->set('SESSION.'.$k,$val);
+        else $fw->set('SESSION.'.$name,$val);
         $cookie=base64_encode($fw->get('SESSION.token'));
         $this->setcookie($fw->get('SESSION.cookie'),$cookie);
-        $data=[
-            'token'=>$fw->get('SESSION.token'),
-            'ip'=>$fw->ip(),
-            'accessed'=>time()
-        ];
+        $data=['token'=>$fw->get('SESSION.token'),'ip'=>$fw->ip(),'accessed'=>time()];
         if ($this->exists==false) {
             $data['userdata']=serialize($fw->get('SESSION'));
             $this->db->table($this->table)->insert($data);
@@ -132,8 +128,8 @@ class Session {
     */
     function get($name) {
         $fw=\Alit::instance();
-        if (null!==($fw->get("SESSION.{$name}")))
-            return $fw->get("SESSION.{$name}");
+        if (null!==($fw->get('SESSION.'.$name)))
+            return $fw->get('SESSION.'.$name);
         return null;
     }
 
@@ -146,18 +142,15 @@ class Session {
         $fw=\Alit::instance();
         if (is_array($name))
             foreach ($name as $k)
-                $fw->erase("SESSION.{$k}");
-        $fw->erase("SESSION.{$name}");
+                $fw->erase('SESSION.'.$k);
+        $fw->erase('SESSION.'.$name);
     }
 
     // Update session data
     protected function update() {
         $fw=\Alit::instance();
         $id=serialize($fw->get('SESSION'));
-        $data=[
-            'accessed'=>time(),
-            'userdata'=>$id
-        ];
+        $data=['accessed'=>time(),'userdata'=>$id];
         return $this->db->table($this->table)
             ->where('token',$fw->get('SESSION.token'))
             ->update($data);

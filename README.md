@@ -337,15 +337,16 @@ You can use DB\SQL library by passing config array on class instantiation:
 
 ```php
 $config=[
-    'driver'=>'mysql',
-    'host'=>'localhost',
     'username'=>'johndoe',
     'password'=>'s3cr3t',
     'database'=>'my_database',
-    'port'=>3306,                  // optional
-    'prefix'=>'',                  // optional
-    'charset'=>'utf8',             // optional
-    'collation'=>'utf8_general_ci' // optional
+    'host'=>'localhost',            // optional, default to 'localhost'
+    'driver'=>'mysql',              // optional, default to 'mysql'
+    'port'=>3306,                   // optional, default to 'null'
+    'prefix'=>'',                   // optional, default to 'null'
+    'charset'=>'utf8',              // optional, default to 'utf8'
+    'collation'=>'utf8_general_ci', // optional, default to 'utf8_general_ci'
+    'cachedir'=>null,               // optional, default to temp dir.
 ];
 $db=new DB\SQL($config);
 ```
@@ -353,11 +354,13 @@ $db=new DB\SQL($config);
 Now you can use all DB\SQL methods, for example:
 
 ```php
+// Get multiple results
 $db->table('profile')
    ->select('id,name,address')
    ->where('age','>',15)
    ->many();
 
+// Get single result
 $db->table('profile')
   ->select('id,name,address')
   ->where('age','>',15)
@@ -423,6 +426,14 @@ And the last step is creating the `ui/mytemplate.knife.php` file:
 ```
 
 
+#### Loading 3rd-party Library
+Since alit treats external class as modules (including your controller classes),
+you can load external modules by adding the containing-path of your library to the `MODULES` directive, for example:
+```php
+$app->set('MODULES','app/controllers/|thirdparty/')
+```
+
+
 #### Unit-testing Tool
 You can use Unit-testing library by instantiate the class, like this:
 ```php
@@ -435,9 +446,9 @@ The `$level` takes the following values: `RL_FALSE`, `RL_TRUE`, `RL_BOTH`, which
 Then you can do unit testing like:
 
 ```php
-// function hello() {
-//     return "hello!";
-// }
+function hello() {
+    return "hello!";
+}
 
 $hello=hello();
 $test->expect(!empty($hello),'Something was returned');
@@ -450,7 +461,7 @@ $test->expect(is_array($hello),'Return value is array');
 
 // Display the results
 foreach ($test->results() as $res) {
-    echo $res['text'].'<br>';
+    echo $res['message'].'<br>';
     echo $res['status']
         ?"Test passed"
         :"Fail ({$res['source']})";

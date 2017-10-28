@@ -19,6 +19,7 @@ class Bench extends \Factory {
         $start=[],
         // Stopped time
         $stop=[];
+        
     const
         // Error messages
         E_Key="Benchmark key '%s' not found";

@@ -878,22 +878,21 @@ final class Alit extends \Factory implements \ArrayAccess {
 		ini_set('default_charset',$charset='UTF-8');
 		if (extension_loaded('mbstring'))
 			mb_internal_encoding($charset);
-		// Turn-off standard error reporting (remove duplicate report)
+		// Turn-off standard error reporting
 		ini_set('display_errors',0);
 		// Exception handler
 		set_exception_handler(function($obj) {
 			$this->set('EXCEPTION',$obj);
 			// Write exception to file if debugger active
-			$debug='[ERROR]'.PHP_EOL;
+			$debug='[EXCEPTION]'.PHP_EOL;
 			if (false!==$this->get('SYSLOG')) {
 				foreach ($this->get('EXCEPTION') as $k=>$v)
-					$debug.="$k: $v".PHP_EOL;
+					$debug.=ucfirst($k).': '.$v.PHP_EOL;
 				$this->log($debug,$this->get('TEMP').'syslog.log');
 			}
 			$this->abort(500,
-				$obj->getMessage().'<br/> in '.
-				$obj->getFile().':'.
-				'<font color="red">'.$obj->getLine().'</font>',
+				$obj->getMessage().'<br/>'.
+				$obj->getFile().':'.'<font color="red">'.$obj->getLine().'</font>',
 				$obj->getTrace(),
 				$obj->getCode()
 			);
@@ -907,7 +906,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 					$err=['reason'=>$reason,'file'=>$file,'line'=>$line];
 					$debug='[ERROR]'.PHP_EOL;
 					foreach ($err as $k=>$v)
-						$debug.="$k: $v".PHP_EOL;
+						$debug.=ucfirst($k).': '.$v.PHP_EOL;
 					$this->log($debug,$this->get('TEMP').'syslog.log');
 				}
 				$this->abort(500,$reason,$file,$line);

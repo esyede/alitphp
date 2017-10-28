@@ -19,6 +19,7 @@ class Knife extends \Preview {
         $cache,
         // Output format
         $format;
+        
     const
         // Command-type tokens
         TOKEN='command|comment|echo';

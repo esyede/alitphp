@@ -19,6 +19,7 @@ class Validation extends \Factory {
         $filter_methods=[],
         $validation_methods=[],
         $validation_methods_errors=[];
+
     protected
         // Rules and error message
         $lang,
@@ -26,12 +27,14 @@ class Validation extends \Factory {
         $filter_rules=[],
         $validation_rules=[],
         $field_char_to_remove=['_','-'];
+
     static
         // Basic html tag to remove
         $basic_tags='
             <br><p><a><strong><b><i><em><img>'.
             '<blockquote><code><dd><dl><hr><h1><h2><h3>'.
             '<h4><h5><h6><label><ul><li><span><sub><sup>';
+
     static
         // English noise words to remove
         $en_noise_words="
@@ -43,6 +46,7 @@ class Validation extends \Factory {
             "the,their,them,then,there,these,they,this,those,through,to,too,under,up,".
             "very,was,way,we,well,were,what,where,which,while,who,with,would,you,your,a,".
             "b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,$,1,2,3,4,5,6,7,8,9,0,_";
+
     static
         // Validation error messages
         $err_msg=[
@@ -88,6 +92,7 @@ class Validation extends \Factory {
             'validate_valid_array_size_lesser'  => 'The {field} fields needs to be an array with a size, equal to, or lower than {param}',
             'validate_valid_array_size_equal'   => 'The {field} fields needs to be an array with a size equal to {param}',
         ];
+
     const
         // Error messages
         E_Validator_Inexist="Validation method doesn't exists: %s",

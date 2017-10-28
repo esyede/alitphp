@@ -35,13 +35,16 @@ class SQL {
         $insertid=null,
         $cachedir=null,
         $grouped=false;
+
     const
         // Error messages
         E_Connection="Cannot connect to Database.<br><br>%s",
         E_LastError="<h3>Database Error</h3><b>Query:</b><pre>%s</pre><br><b>Error:</b><pre>%s</pre><br>";
+
     const
         // Comparison operators
         OPERATORS='=|!=|<|>|<=|>=|<>';
+
     public
         // Database connection object
         $conn=null;
