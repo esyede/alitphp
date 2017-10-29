@@ -31,14 +31,14 @@ RewriteCond %{REQUEST_FILENAME} !-l
 
 RewriteRule ^(.*)$ index.php [QSA,L]
 ```
-NGINX
+NginX
 ```nginx
-location /{
+location / {
     try_files $uri index.php;
 }
 ```
 IIS
-```iis
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <system.webServer>
