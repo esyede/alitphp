@@ -20,7 +20,8 @@ Lightweight, blazing fast micro framework
  * Writable access to `tmp/` dir, for temporary files.
 
 
-### Apache Configuration:
+### Webserver Configuration:
+Apache
 ```apache
 RewriteEngine On
 # RewriteBase /
@@ -29,6 +30,32 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-l
 
 RewriteRule ^(.*)$ index.php [QSA,L]
+```
+NGINX
+```nginx
+location /{
+    try_files $uri index.php;
+}
+```
+IIS
+```iis
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <system.webServer>
+        <rewrite>
+            <rules>
+                <rule name="Main Rule" stopProcessing="true">
+                    <match url=".*" />
+                    <conditions logicalGrouping="MatchAll">
+                        <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+                        <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+                    </conditions>
+                    <action type="Rewrite" url="index.php" />
+                </rule>
+            </rules>
+        </rewrite>
+    </system.webServer>
+</configuration>
 ```
 
 

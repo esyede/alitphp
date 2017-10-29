@@ -91,7 +91,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	function before($request,$handler) {
         $request=explode(' ',preg_replace('/\s+/',' ',$request));
         foreach ($this->split($request[0]) as $method)
-            $this->hive['ALIT']['before'][$method][]=['pattern'=>$request[1],'handler'=>$handler];
+            $this->hive['BEFORE'][$method][]=['pattern'=>$request[1],'handler'=>$handler];
     }
 
 	/**
@@ -103,7 +103,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	function after($request,$handler) {
         $request=explode(' ',preg_replace('/\s+/',' ',$request));
         foreach ($this->split($request[0]) as $method)
-            $this->hive['ALIT']['after'][$method][]=['pattern'=>$request[1],'handler'=>$handler];
+            $this->hive['AFTER'][$method][]=['pattern'=>$request[1],'handler'=>$handler];
     }
 
 	/**
@@ -111,7 +111,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@param  $handler  object|callable
 	*/
     function notfound($handler=null) {
-		$this->set('ALIT.notfound',$handler);
+		$this->set('NOTFOUND',$handler);
 
     }
 
@@ -126,7 +126,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	    foreach ($this->split($request[0]) as $method) {
 			if (!in_array($method,$this->split(self::METHODS)))
 				user_error(vsprintf(self::E_Method,[$method]),E_USER_ERROR);
-			$this->hive['ALIT']['route'][$method][]=['pattern'=>$request[1],'handler'=>$handler];
+			$this->hive['ROUTES'][$method][]=['pattern'=>$request[1],'handler'=>$handler];
 		}
 	}
 
@@ -136,20 +136,19 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@return  bool
 	*/
     function run() {
-		$this->set('ALIT.method',$this->get('METHOD'));
 		// Execute before-route middleware if any
-        if (isset($this->get('ALIT.before')[$this->get('ALIT.method')]))
-            $this->execute($this->get('ALIT.before')[$this->get('ALIT.method')]);
+        if (isset($this->get('BEFORE')[$this->get('METHOD')]))
+            $this->execute($this->get('BEFORE')[$this->get('METHOD')]);
         $handled=0;
 		// Execute user-defined routes
-        if (isset($this->get('ALIT.route')[$this->get('ALIT.method')]))
-            $handled=$this->execute($this->get('ALIT.route')[$this->get('ALIT.method')],true);
+        if (isset($this->get('ROUTES')[$this->get('METHOD')]))
+            $handled=$this->execute($this->get('ROUTES')[$this->get('METHOD')],true);
 			// No route specified
         if ($handled===0) {
 			// Call notfound handler if any
-            if ($this->has('ALIT.notfound')
-			&&is_callable($this->get('ALIT.notfound')))
-                call_user_func($this->get('ALIT.notfound'));
+            if ($this->has('NOTFOUND')
+			&&is_callable($this->get('NOTFOUND')))
+                call_user_func($this->get('NOTFOUND'));
             else {
 				if (false!==$this->get('AJAX'))
 					echo json_encode(['status'=>404,'data'=>self::E_Notfound]);
@@ -157,8 +156,8 @@ final class Alit extends \Factory implements \ArrayAccess {
 			}
         }
 		// Execute after-route middleware if any
-        else if (isset($this->get('ALIT.after')[$this->get('ALIT.method')]))
-            $this->execute($this->get('ALIT.after')[$this->get('ALIT.method')]);
+        else if (isset($this->get('AFTER')[$this->get('METHOD')]))
+            $this->execute($this->get('AFTER')[$this->get('METHOD')]);
         if ($_SERVER['REQUEST_METHOD']=='HEAD')
         	ob_end_clean();
         if ($handled===0)
@@ -939,6 +938,13 @@ final class Alit extends \Factory implements \ArrayAccess {
 				if (substr($key,0,5)=='HTTP_')
 					$headers[strtr(ucwords(strtolower(strtr(substr($key,5),'_',' '))),' ','-')]=&$_SERVER[$key];
 		}
+		// Get user-agent
+		$ua=isset($headers['X-Operamini-Phone-UA'])
+		?$headers['X-Operamini-Phone-UA']
+		:(isset($headers['X-Skyfire-Phone'])
+			?$headers['X-Skyfire-Phone']
+			:(isset($headers['User-Agent'])
+				?$headers['User-Agent']:''));
         // Get client ip
 		$ip=isset($headers['Client-IP'])
         ?$headers['Client-IP']
@@ -967,13 +973,12 @@ final class Alit extends \Factory implements \ArrayAccess {
         // Determine ajax request
         $isajax=(isset($_SERVER['HTTP_X_REQUESTED_WITH'])
 		&&$_SERVER['HTTP_X_REQUESTED_WITH']==='XMLHttpRequest')?true:false;
-		// Assign default value to route variables
-		$fw->hive['ALIT']=[
-			'before'=>[],
-			'after'=>[],
-			'method'=>'',
-			'notfound'=>null,
-			'route'=>[],
+		// Assign default value to router-related variables
+		$fw->hive=[
+			'ROUTES'=>[],
+			'BEFORE'=>[],
+			'AFTER'=>[],
+			'NOTFOUND'=>null,
 		];
 		// Assign default value to system variables
 		$fw->hive+=[
@@ -996,6 +1001,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 			'TEMP'=>'tmp/',
 			'TIME'=>&$_SERVER['REQUEST_TIME_FLOAT'],
 			'TZ'=>@date_default_timezone_get(),
+			'UA'=>$ua,
 			'UI'=>'./',
 			'URI'=>$uri,
 			'VERSION'=>self::VERSION,
