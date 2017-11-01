@@ -11,28 +11,44 @@
 if (!defined('ALIT')) die('Direct file access is not allowed.');
 
 
-
 class Session {
 
     protected
-        // Database object
+        // Database connection object
         $db,
         // Table name
         $table,
-        // Session existance indicator
-        $exists,
+        // Cookie name
+        $cookie,
+        // Session data
+        $data=[],
+        // Data exist?
+        $existed,
         // Session start indicator
-        $started;
+        $started=false;
 
-    // Class constructor
-    function __construct($db,$table='_session',$cookie='_cookie') {
+    const
+        // Error messages
+        E_Database="You must pass database connection object to use session library",
+        E_TableOrCookie="Table and cookie param can only accept string";
+
+    /**
+    *   Class constructor
+    *   @param  $db      object
+    *   @param  $table   string
+    *   @param  $cookie  string
+    */
+    function __construct($db,$table='session',$cookie='cookies') {
+        if (!is_object($db))
+            \Alit::instance()->abort(500,self::E_Database);
+        if (!is_string($table)||!is_string($cookie))
+            \Alit::instance()->abort(500,self::E_TableOrCookie);
         $this->db=$db;
         $this->table=$table;
-        \Alit::instance()->set('SESSION.cookie',$cookie);
-        $this->exists=false;
-        $this->started=false;
         $this->start();
         $this->maketable();
+        $this->cookie=$cookie;
+        $this->existed=false;
         if (!$this->check())
             $this->create();
     }
@@ -45,36 +61,29 @@ class Session {
         }
     }
 
-    // Create a session data
+    // Create a session token
     protected function create() {
-        $token=sha1(base64_encode(md5(utf8_encode(microtime(true)))));
-        \Alit::instance()->set('SESSION.token',substr($token,0,20));
+        $this->data['token']=substr(sha1(base64_encode(md5(utf8_encode(microtime(1))))),0,20);
     }
 
     // Checking session existance
     protected function check() {
-        $fw=\Alit::instance();
-        $cookie=$this->cookie($fw->get('SESSION.cookie'));
-        if ($cookie==false)
+        $cookie=$this->cookie($this->cookie);
+        if ($cookie===false)
             return false;
         $token=base64_decode($cookie);
-        $res=$this->db->table($this->table)
+        $result=(array)$this->db->table($this->table)
             ->where('token',$token)
             ->one();
-        if (count($res)>0) {
-            $res->userdata=unserialize($res->userdata);
-            $fw->set('SESSION.token',$res->token);
-            if ($res->ip==$fw->ip()) {
-                if (count($res->userdata)>0) {
-                    $this->exists=true;
-                    foreach ($res->userdata as $key=>$val) {
-                        if (is_array($key))
-                            foreach ($key as $k=>$v)
-                                $fw->set('SESSION.'.$k,$v);
-                        else $fw->get('SESSION.'.$key,$val);
-                    }
-                }
-                $fw->set('SESSION.accessed',time());
+        if ($this->db->num_rows()>0) {
+            $this->existed=true;
+            $result['userdata']=unserialize($result['userdata']);
+            $this->data['token']=$result['token'];
+            if ($result['ip']==\Alit::instance()->get('IP')) {
+                if (count($result['userdata'])>0)
+                    foreach($result['userdata'] as $key=>$val)
+                        $this->set($key,$val);
+                $this->data['accessed']=time();
                 return true;
             }
             else $this->destroy();
@@ -82,37 +91,11 @@ class Session {
         return false;
     }
 
-    /**
-    *   Set/store session to database
-    *   @param   $name  string
-    *   @param   $val   mixed
-    */
-    function set($name,$val=null) {
-        $fw=\Alit::instance();
-        if (is_array($name))
-            foreach ($name as $key=>$val)
-                $fw->set('SESSION.'.$k,$val);
-        else $fw->set('SESSION.'.$name,$val);
-        $cookie=base64_encode($fw->get('SESSION.token'));
-        $this->setcookie($fw->get('SESSION.cookie'),$cookie);
-        $data=['token'=>$fw->get('SESSION.token'),'ip'=>$fw->ip(),'accessed'=>time()];
-        if ($this->exists==false) {
-            $data['userdata']=serialize($fw->get('SESSION'));
-            $this->db->table($this->table)->insert($data);
-        }
-        else return $this->update();
-        if ($this->db->num_rows()>0)
-            return true;
-        return false;
-    }
-
     // Destroy session and remove user data from database
     function destroy() {
-        $fw=\Alit::instance();
-        $id=base64_encode($fw->get('SESSION.token'));
-        $this->setcookie($fw->get('SESSION.cookie'),$id,time()-1);
-        $this->db->table($this->table)
-            ->where('token',$fw->get('SESSION.token'))
+        $this->setcookie($this->cookie,base64_encode($this->data['token']),time()-1);
+            $this->db->table($this->table)
+            ->where('token',$this->data['token'])
             ->delete();
         $this->data=[];
         $this->started=false;
@@ -127,10 +110,46 @@ class Session {
     *   @return  mixed
     */
     function get($name) {
-        $fw=\Alit::instance();
-        if (null!==($fw->get('SESSION.'.$name)))
-            return $fw->get('SESSION.'.$name);
+        if (isset($this->data[$name]))
+            return $this->data[$name];
         return null;
+    }
+
+    /**
+    *   Set/store session to database
+    *   @param   $name  string
+    *   @param   $val   mixed
+    */
+    function set($name,$val=null) {
+        if (is_array($name))
+            foreach ($name as $key=>$val)
+                $this->data[$key]=$val;
+        else $this->data[$name]=$val;
+        $cdata=base64_encode($this->data['token']);
+        $this->setcookie($this->cookie,$cdata);
+        $data=[
+            'token'=>$this->data['token'],
+            'ip'=>\Alit::instance()->get('IP'),
+            'accessed'=>time()
+        ];
+        if ($this->existed==false) {
+            $data['userdata']=serialize($this->data);
+            $this->db->table($this->table)->insert($data);
+            $result=$this->db->num_rows();
+        }
+        else return $this->renew();
+        if ($result>0)
+            return true;
+        return false;
+    }
+
+    /**
+    *   Check session existance
+    *   @param   $name  string
+    *   @return  bool
+    */
+    function exists($name) {
+        return array_key_exists($name,$this->data);
     }
 
     /**
@@ -139,21 +158,23 @@ class Session {
     *   @return  bool
     */
     function erase($name) {
-        $fw=\Alit::instance();
-        if (is_array($name))
-            foreach ($name as $k)
-                $fw->erase('SESSION.'.$k);
-        $fw->erase('SESSION.'.$name);
+        unset($this->data[$name]);
     }
 
-    // Update session data
-    protected function update() {
-        $fw=\Alit::instance();
-        $id=serialize($fw->get('SESSION'));
-        $data=['accessed'=>time(),'userdata'=>$id];
+    // Renew/update session data
+    protected function renew() {
+        $data=[
+            'accessed'=>time(),
+            'userdata'=>serialize($this->data)
+        ];
         return $this->db->table($this->table)
-            ->where('token',$fw->get('SESSION.token'))
+            ->where('token',$this->data['token'])
             ->update($data);
+    }
+
+    // Get all session data
+    function data() {
+        return $this->data;
     }
 
     // Create session table if not exists
@@ -190,6 +211,6 @@ class Session {
     function setcookie($name,$val,$time=null) {
         if($time===null)
             $time=(time()+(60*60*24));
-        setcookie($name,$val,$time,Alit::instance()->get('TEMP'));
+        setcookie($name,$val,$time,\Alit::instance()->get('TEMP'));
     }
 }

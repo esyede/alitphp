@@ -39,7 +39,8 @@ class SQL {
     const
         // Error messages
         E_Connection="Cannot connect to Database.<br><br>%s",
-        E_LastError="<h3>Database Error</h3><b>Query:</b><pre>%s</pre><br><b>Error:</b><pre>%s</pre><br>";
+        E_Production="There is an error on the database, please contact administrator.",
+        E_LastError="<b>DB Error:</b><pre>%s</pre><br><b>Query:</b><pre>%s</pre><br>";
 
     const
         // Comparison operators
@@ -586,12 +587,13 @@ class SQL {
 
     // Get last database error message
     function error() {
-        $msg='<h3>Database Error</h3>';
-        $msg.='<b>Query:</b><pre>'.$this->query.'</pre><br/>';
-        $msg.='<b>Error:</b><pre>'.$this->error.'</pre><br/>';
-        if (\Alit::instance()->get('DEBUG')>0)
-            \Alit::instance()->abort(500,vsprintf(self::E_LastError,[$this->query,$this->error]));
-        else \Alit::instance()->abort(500,vsprintf("%s. (%s)",[$this->error,$this->query]));
+        $fw=\Alit::instance();
+        if ($fw->get('DEBUG')==0)
+            $fw->abort(500,self::E_Production);
+        elseif ($fw->get('DEBUG')==1)
+            $fw->abort(500,vsprintf("%s",[$this->error]));
+        elseif ($fw->get('DEBUG')>1)
+            $fw->abort(500,vsprintf(self::E_LastError,[$this->error,$this->query]));
     }
 
     /**

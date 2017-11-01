@@ -825,6 +825,34 @@ final class Alit extends \Factory implements \ArrayAccess {
         return $this->hive;
     }
 
+	/**
+	*	Grab POST variable by key
+	*	@param   $key         string
+	*	@param   $escape      bool
+	*	@return  string|null
+	*/
+	function post($key,$escape=true) {
+		if (isset($_POST[$key]))
+			return ($escape===true)
+				?filter_var($_POST[$key],FILTER_SANITIZE_STRING)
+				:$_POST[$key];
+		return null;
+	}
+
+	/**
+	*	Grab uri segment
+	*	@param   $key         int
+	*	@return  string|null
+	*/
+	function segment($key) {
+		$uri=explode('/',$this->get('URI'));
+		unset($uri[0]);
+		$uri=array_values($uri);
+		if (array_key_exists($key,$uri))
+			return $uri[$key];
+		return null;
+	}
+
 
 //!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //! ArrayAccess Interface's Methods
