@@ -8,7 +8,7 @@
 *   @author      Suyadi <suyadi.1992@gmail.com>
 */
 // Prohibit direct access to file
-if (!defined('ALIT')) die('Direct file access is not allowed.');
+if (!defined('DS')) die('Direct file access is not allowed.');
 
 
 class Session {
@@ -72,16 +72,16 @@ class Session {
         if ($cookie===false)
             return false;
         $token=base64_decode($cookie);
-        $result=(array)$this->db->table($this->table)
+        $res=(array)$this->db->table($this->table)
             ->where('token',$token)
             ->one();
         if ($this->db->num_rows()>0) {
             $this->existed=true;
-            $result['userdata']=unserialize($result['userdata']);
-            $this->data['token']=$result['token'];
-            if ($result['ip']==\Alit::instance()->get('IP')) {
-                if (count($result['userdata'])>0)
-                    foreach($result['userdata'] as $key=>$val)
+            $res['userdata']=unserialize($res['userdata']);
+            $this->data['token']=$res['token'];
+            if ($res['ip']==\Alit::instance()->get('IP')) {
+                if (count($res['userdata'])>0)
+                    foreach($res['userdata'] as $key=>$val)
                         $this->set($key,$val);
                 $this->data['accessed']=time();
                 return true;
@@ -106,25 +106,25 @@ class Session {
 
     /**
     *   Get session data from database
-    *   @param   $name   string
+    *   @param   $key   string
     *   @return  mixed
     */
-    function get($name) {
-        if (isset($this->data[$name]))
-            return $this->data[$name];
+    function get($key) {
+        if (isset($this->data[$key]))
+            return $this->data[$key];
         return null;
     }
 
     /**
     *   Set/store session to database
-    *   @param   $name  string
-    *   @param   $val   mixed
+    *   @param   $key  string
+    *   @param   $val  mixed
     */
-    function set($name,$val=null) {
-        if (is_array($name))
-            foreach ($name as $key=>$val)
-                $this->data[$key]=$val;
-        else $this->data[$name]=$val;
+    function set($key,$val=null) {
+        if (is_array($key))
+            foreach ($key as $k=>$v)
+                $this->data[$k]=$v;
+        else $this->data[$key]=$val;
         $cdata=base64_encode($this->data['token']);
         $this->setcookie($this->cookie,$cdata);
         $data=[
@@ -135,38 +135,35 @@ class Session {
         if ($this->existed==false) {
             $data['userdata']=serialize($this->data);
             $this->db->table($this->table)->insert($data);
-            $result=$this->db->num_rows();
+            $res=$this->db->num_rows();
         }
         else return $this->renew();
-        if ($result>0)
+        if ($res>0)
             return true;
         return false;
     }
 
     /**
     *   Check session existance
-    *   @param   $name  string
+    *   @param   $key  string
     *   @return  bool
     */
-    function exists($name) {
-        return array_key_exists($name,$this->data);
+    function exists($key) {
+        return array_key_exists($key,$this->data);
     }
 
     /**
     *   Erase/unset session
-    *   @param   $name  string
+    *   @param   $key  string
     *   @return  bool
     */
-    function erase($name) {
-        unset($this->data[$name]);
+    function erase($key) {
+        unset($this->data[$key]);
     }
 
     // Renew/update session data
     protected function renew() {
-        $data=[
-            'accessed'=>time(),
-            'userdata'=>serialize($this->data)
-        ];
+        $data=['accessed'=>time(),'userdata'=>serialize($this->data)];
         return $this->db->table($this->table)
             ->where('token',$this->data['token'])
             ->update($data);
@@ -192,25 +189,25 @@ class Session {
 
     /**
     *   Get cookie data from global $_COOKIE
-    *   @param   $name    string
+    *   @param   $key     string
     *   @return  string
     */
-    function cookie($name) {
-        if (isset($_COOKIE[$name]))
-            return htmlentities($_COOKIE[$name]);
+    function cookie($key) {
+        if (isset($_COOKIE[$key]))
+            return htmlentities($_COOKIE[$key]);
         return false;
     }
 
     /**
     *   Set a cookie
-    *   @param   $name   string
+    *   @param   $key    string
     *   @param   $val    mixed
-    *   @param   $time   int|null
+    *   @param   $ttl    int|null
     *   @return  string
     */
-    function setcookie($name,$val,$time=null) {
-        if($time===null)
-            $time=(time()+(60*60*24));
-        setcookie($name,$val,$time,\Alit::instance()->get('TEMP'));
+    function setcookie($key,$val,$ttl=null) {
+        if ($ttl===null)
+            $ttl=time()+(60*60*24);
+        setcookie($key,$val,$ttl,\Alit::instance()->get('TEMP'));
     }
 }

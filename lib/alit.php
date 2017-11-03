@@ -8,7 +8,7 @@
 *   @author      Suyadi <suyadi.1992@gmail.com>
 */
 // Define framework constant to prohibit direct file access
-if (!defined('ALIT')) define('ALIT',true);
+if (!defined('DS')) define('DS',DIRECTORY_SEPARATOR);
 
 
 //!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -382,7 +382,7 @@ final class Alit extends \Factory implements \ArrayAccess {
     */
 	function render($name,$data=null) {
 		$file=$this->get('BASE').str_replace('./','',$this->get('UI').$name);
-		$file=str_replace('/',DIRECTORY_SEPARATOR,$file);
+		$file=str_replace('/',DS,$file);
 		if (!file_exists($file))
 			user_error(vsprintf(self::E_View,[$name]),E_USER_ERROR);
         ob_start();
@@ -834,7 +834,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	function post($key,$escape=true) {
 		if (isset($_POST[$key]))
 			return ($escape===true)
-				?filter_var($_POST[$key],FILTER_SANITIZE_STRING)
+				?\Validation::instance()->xss_clean($_POST[$key])
 				:$_POST[$key];
 		return null;
 	}
@@ -1024,7 +1024,6 @@ final class Alit extends \Factory implements \ArrayAccess {
 			'PACKAGE'=>self::PACKAGE,
 			'PROTO'=>$proto,
 			'ROOT'=>$_SERVER['DOCUMENT_ROOT'].$base,
-			'SESSION'=>null,
 			'SYSLOG'=>false,
 			'TEMP'=>'tmp/',
 			'TIME'=>&$_SERVER['REQUEST_TIME_FLOAT'],
@@ -1062,7 +1061,7 @@ class Preview extends \Factory {
         $fw=\Alit::instance();
 		$this->block=[];
 		$this->stack=[];
-        $this->ui=str_replace('/',DIRECTORY_SEPARATOR,$fw->get('ROOT').
+        $this->ui=str_replace('/',DS,$fw->get('ROOT').
         	str_replace('./','',$fw->get('UI')));
     }
 

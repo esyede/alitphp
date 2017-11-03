@@ -8,7 +8,7 @@
 *   @author      Suyadi <suyadi.1992@gmail.com>
 */
 // Prohibit direct access to file
-if (!defined('ALIT')) die('Direct file access is not allowed.');
+if (!defined('DS')) die('Direct file access is not allowed.');
 
 
 
@@ -19,7 +19,7 @@ class Bench extends \Factory {
         $start=[],
         // Stopped time
         $stop=[];
-        
+
     const
         // Error messages
         E_Key="Benchmark key '%s' not found";

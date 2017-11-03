@@ -8,7 +8,7 @@
 *   @author      Suyadi <suyadi.1992@gmail.com>
 */
 // Prohibit direct access to file
-if (!defined('ALIT')) die('Direct file access is not allowed.');
+if (!defined('DS')) die('Direct file access is not allowed.');
 
 
 
@@ -19,6 +19,7 @@ class Test {
 		RL_FALSE=0,
 		RL_TRUE=1,
 		RL_BOTH=2;
+
 	protected
 		// Test results
 		$data=[],

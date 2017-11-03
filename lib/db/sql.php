@@ -9,7 +9,7 @@
 */
 namespace DB;
 // Prohibit direct access to file
-if (!defined('ALIT')) die('Direct file access is not allowed.');
+if (!defined('DS')) die('Direct file access is not allowed.');
 
 
 class SQL {
@@ -50,7 +50,10 @@ class SQL {
         // Database connection object
         $conn=null;
 
-    // Class constructor
+        /**
+        *   Class constructor
+        *   @param  $config  array
+        */
     function __construct(array $config) {
         $config['driver']=(isset($config['driver'])?$config['driver']:'mysql');
         $config['host']=(isset($config['host'])?$config['host']:'localhost');
@@ -316,7 +319,7 @@ class SQL {
     }
 
     /**
-    *   Build WEHRE NOT statement
+    *   Build OR NOT WEHRE statement
     *   @param  $where   string
     *   @param  $op      string|null
     *   @param  $val     string|null
@@ -597,7 +600,7 @@ class SQL {
     }
 
     /**
-    *   Get only one row af data
+    *   Get only one/first row af data
     *   @param   $type  bool
     *   @return  array|object
     */

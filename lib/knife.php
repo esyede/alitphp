@@ -8,7 +8,7 @@
 *   @author      Suyadi <suyadi.1992@gmail.com>
 */
 // Prohibit direct access to file
-if (!defined('ALIT')) die('Direct file access is not allowed.');
+if (!defined('DS')) die('Direct file access is not allowed.');
 
 
 
@@ -19,7 +19,7 @@ class Knife extends \Preview {
         $cache,
         // Output format
         $format;
-        
+
     const
         // Command-type tokens
         TOKEN='command|comment|echo';
@@ -55,7 +55,7 @@ class Knife extends \Preview {
         $fw=\Alit::instance();
         $tpl=$this->ui.$name.'.knife.php';
         $tpl=preg_replace('/\s+/','',$tpl);
-        $php=$this->cache.DIRECTORY_SEPARATOR.md5($name).'.knife.php';
+        $php=$this->cache.DS.md5($name).'.knife.php';
         if (!file_exists($php)||filemtime($tpl)>filemtime($php)) {
             $txt=preg_replace('/@BASE/',$fw->base(),$fw->read($tpl));
             foreach ($fw->split(self::TOKEN) as $type)
