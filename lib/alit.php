@@ -834,7 +834,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	function post($key,$escape=true) {
 		if (isset($_POST[$key]))
 			return ($escape===true)
-				?\Validation::instance()->xss_clean($_POST[$key])
+				?\Validation::instance()->xss_clean([$_POST[$key]])
 				:$_POST[$key];
 		return null;
 	}
