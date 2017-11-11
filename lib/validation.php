@@ -95,12 +95,13 @@ class Validation extends \Factory {
 
     const
         // Error messages
+        E_InvSetLang="Ivalid language supplied, language must be an array",
         E_Validator_Inexist="Validation method doesn't exists: %s",
         E_Validator_RuleExist="Vlaidation rule already exists: %s",
         E_Filter_Inexist="Filter method doesn't exists: %s",
         E_Filter_RuleExist="Filter rule already exists: %s",
         E_Rule_NoMsg="Rule doesn't have Error message: %s",
-        E_Arg_isRegex="You can't use regex as an function arguments";
+        E_Arg_isRegex="You can't use regex as function argument";
 
     // Class constructor
     function __construct() {
@@ -111,7 +112,9 @@ class Validation extends \Factory {
     static function setlang(array $errors) {
         $eval=self::instance();
         if (is_array($errors)&&count($errors)>0)
-            $eval->lang=$errors;
+            foreach ($errors as $k=>$v)
+                $eval->lang[$k]=$v;
+        else \Alit::instance()->abort(500,self::E_InvSetLang);
 
     }
 

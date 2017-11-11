@@ -77,7 +77,7 @@ Multiple methods is supported:
 
 ```php
 $app->route('GET|POST|PUT /',function() use($app) {
-    echo "You're using {$app->method()} method !";
+    echo "You're using {$app->get('METHOD')} method !";
 });
 ```
 Supported methods: `CONNECT` `DELETE` `GET` `HEAD` `OPTIONS` `PATCH` `POST` `PUT`
@@ -153,7 +153,7 @@ class Test {
     }
 
     function index() {
-        echo "Hello from test class! you're using {$this->app->method()} method";
+        echo "Hello from test class! you're using {$this->app->get('METHOD')} method";
     }
     // ...
 }
@@ -450,6 +450,24 @@ And the last step is creating the `ui/mytemplate.knife.php` file:
         Hello {{ $name }}, how are you today?
     </body>
 @include('the-footer')
+```
+
+
+#### Benchmark Library
+And again you have to instantiate benchmark class to before using this library:
+```php
+$bench=Bench::instance();
+```
+And then use the benchmark library as follow:
+```php
+$bench->start('my-app');
+
+// some code to benchmark here
+
+$bench->elapsed('my-app'); // Return: 0.012
+$bench->memory(); // Return: 768 KB
+
+$bench->stop('my-app'); // stop the benchmark
 ```
 
 

@@ -826,7 +826,25 @@ final class Alit extends \Factory implements \ArrayAccess {
     }
 
 	/**
-	*	Grab POST variable by key
+	*	Recursively convert array to object
+	*	@param   $arr    array
+	*	@return  object
+	*/
+	function arr2obj($arr) {
+	    return json_decode(json_encode($arr));
+	}
+
+	/**
+	*	Recursively convert object to array
+	*	@param   $obj    object
+	*	@return  array
+	*/
+	function obj2arr($obj) {
+	    return json_decode(json_encode($obj),true);
+	}
+
+	/**
+	*	Grab POST data by key
 	*	@param   $key         string
 	*	@param   $escape      bool
 	*	@return  string|null
@@ -838,6 +856,30 @@ final class Alit extends \Factory implements \ArrayAccess {
 				:$_POST[$key];
 		return null;
 	}
+
+    /**
+    *   Grab COOKIE data by key
+    *   @param   $key     string
+    *   @return  string
+    */
+    function cookie($key) {
+        if (isset($_COOKIE[$key]))
+            return htmlentities($_COOKIE[$key]);
+        return false;
+    }
+
+    /**
+    *   Set a cookie
+    *   @param   $key    string
+    *   @param   $val    mixed
+    *   @param   $ttl    int|null
+    *   @return  string
+    */
+    function setcookie($key,$val,$ttl=null) {
+        if ($ttl===null)
+            $ttl=time()+(60*60*24);
+        setcookie($key,$val,$ttl,$this->get('TEMP'));
+    }
 
 	/**
 	*	Grab uri segment
