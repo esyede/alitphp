@@ -39,10 +39,11 @@ class Session {
     *   @param  $cookie  string
     */
     function __construct($db,$table='session',$cookie='cookies') {
+        $fw=\Alit::instance();
         if (!is_object($db))
-            \Alit::instance()->abort(500,self::E_Database);
+            $fw->abort(500,self::E_Database);
         if (!is_string($table)||!is_string($cookie))
-            \Alit::instance()->abort(500,self::E_TableOrCookie);
+            $fw->abort(500,self::E_TableOrCookie);
         $this->db=$db;
         $this->table=$table;
         $this->start();
@@ -68,22 +69,23 @@ class Session {
 
     // Checking session existance
     protected function check() {
-        $cookie=$this->cookie($this->cookie);
+        $fw=\Alit::instance();
+        $cookie=$fw->cookie($this->cookie);
         if ($cookie===false)
             return false;
         $token=base64_decode($cookie);
-        $res=(array)$this->db->table($this->table)
+        $res=$this->db->table($this->table)
             ->where('token',$token)
             ->one();
         if ($this->db->num_rows()>0) {
             $this->existed=true;
-            $res['userdata']=unserialize($res['userdata']);
-            $this->data['token']=$res['token'];
-            if ($res['ip']==\Alit::instance()->get('IP')) {
-                if (count($res['userdata'])>0)
-                    foreach($res['userdata'] as $key=>$val)
+            $res->data=unserialize($res->data);
+            $this->data['token']=$res->token;
+            if ($res->ip==$fw->get('IP')) {
+                if (count($res->data)>0)
+                    foreach($res->data as $key=>$val)
                         $this->set($key,$val);
-                $this->data['accessed']=time();
+                $this->data['seen']=time();
                 return true;
             }
             else $this->destroy();
@@ -93,7 +95,7 @@ class Session {
 
     // Destroy session and remove user data from database
     function destroy() {
-        $this->setcookie($this->cookie,base64_encode($this->data['token']),time()-1);
+        \Alit::instance()->setcookie($this->cookie,base64_encode($this->data['token']),time()-1);
             $this->db->table($this->table)
             ->where('token',$this->data['token'])
             ->delete();
@@ -110,9 +112,7 @@ class Session {
     *   @return  mixed
     */
     function get($key) {
-        if (isset($this->data[$key]))
-            return $this->data[$key];
-        return null;
+        return isset($this->data[$key])?$this->data[$key]:null;
     }
 
     /**
@@ -121,26 +121,25 @@ class Session {
     *   @param   $val  mixed
     */
     function set($key,$val=null) {
+        $fw=\Alit::instance();
         if (is_array($key))
             foreach ($key as $k=>$v)
                 $this->data[$k]=$v;
         else $this->data[$key]=$val;
         $cdata=base64_encode($this->data['token']);
-        $this->setcookie($this->cookie,$cdata);
+        $fw->setcookie($this->cookie,$cdata);
         $data=[
             'token'=>$this->data['token'],
-            'ip'=>\Alit::instance()->get('IP'),
-            'accessed'=>time()
+            'ip'=>$fw->get('IP'),
+            'seen'=>time()
         ];
-        if ($this->existed==false) {
-            $data['userdata']=serialize($this->data);
+        if ($this->existed===false) {
+            $data['data']=serialize($this->data);
             $this->db->table($this->table)->insert($data);
             $res=$this->db->num_rows();
         }
         else return $this->renew();
-        if ($res>0)
-            return true;
-        return false;
+        return ($res>0);
     }
 
     /**
@@ -163,51 +162,27 @@ class Session {
 
     // Renew/update session data
     protected function renew() {
-        $data=['accessed'=>time(),'userdata'=>serialize($this->data)];
         return $this->db->table($this->table)
             ->where('token',$this->data['token'])
-            ->update($data);
+            ->update(['seen'=>time(),'data'=>serialize($this->data)]);
     }
 
     // Get all session data
     function data() {
-        return $this->data;
+        $fw=\Alit::instance();
+        return $fw->arr2obj($fw->arrsort($this->data));
     }
 
     // Create session table if not exists
     private function maketable() {
         $sql="CREATE TABLE IF NOT EXISTS `{$this->table}` (
-          `id`       INT(11)      NOT NULL AUTO_INCREMENT,
-          `token`    VARCHAR(25)  NOT NULL DEFAULT '',
-          `ip`       VARCHAR(50)  DEFAULT NULL,
-          `accessed` VARCHAR(50)  DEFAULT NULL,
-          `userdata` TEXT,
+          `id`    INT(11)      NOT NULL AUTO_INCREMENT,
+          `token` VARCHAR(25)  NOT NULL DEFAULT '',
+          `ip`    VARCHAR(50)  DEFAULT NULL,
+          `seen`  VARCHAR(50)  DEFAULT NULL,
+          `data`  TEXT,
           PRIMARY KEY (`id`,`token`)
         ) DEFAULT CHARSET=utf8;";
         return $this->db->query($sql);
-    }
-
-    /**
-    *   Get cookie data from global $_COOKIE
-    *   @param   $key     string
-    *   @return  string
-    */
-    function cookie($key) {
-        if (isset($_COOKIE[$key]))
-            return htmlentities($_COOKIE[$key]);
-        return false;
-    }
-
-    /**
-    *   Set a cookie
-    *   @param   $key    string
-    *   @param   $val    mixed
-    *   @param   $ttl    int|null
-    *   @return  string
-    */
-    function setcookie($key,$val,$ttl=null) {
-        if ($ttl===null)
-            $ttl=time()+(60*60*24);
-        setcookie($key,$val,$ttl,\Alit::instance()->get('TEMP'));
     }
 }
