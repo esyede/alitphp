@@ -478,15 +478,15 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	Write log message to file
 	*	@param   $file      string
 	*	@param   $data      mixed
-	*	@param   $multi     bool
-	*	@return  int|false
+	*	@param   $block     bool
+	*	@return  bool
 	*/
-	function log($data,$file,$multi=false) {
+	function log($data,$file,$block=false) {
 		$ts=time();
 		$date=new \DateTime('now',new \DateTimeZone($this->get('TZ')));
 		$date->setTimestamp($ts);
-		(!file_exists($file)||strlen($this->read($file)<1))?$add=true:$add=false;
-		return $this->write($file,"[".$date->format('y/m/d H:i:s')."]".($multi?PHP_EOL:" ").$data.PHP_EOL,true);
+		$append=(file_exists($file)&&strlen($this->read($file))>0);
+		return $this->write($file,"[".$date->format('y/m/d H:i:s')."]".($block?PHP_EOL:" ").$data.PHP_EOL,$append);
 	}
 
 	/**
