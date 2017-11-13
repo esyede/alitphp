@@ -71,7 +71,7 @@ class Knife extends \Preview {
     *   @return  mixed
     */
     protected function _command($vars) {
-        return preg_replace_callback('/\B@(\w+)([ \t]*)(\( ( (?>[^()]+) | (?3) )* \))?/x',function ($match) {
+        return preg_replace_callback('/\B@(\w+)([ \t]*)(\( ( (?>[^()]+) | (?3) )* \))?/x',function($match) {
             if (method_exists($this,$method='_'.strtolower($match[1])))
                 $match[0]=$this->$method(isset($match[3])?$match[3]:'');
             return isset($match[3])?$match[0]:$match[0].$match[2];

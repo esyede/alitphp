@@ -72,7 +72,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 		E_Middleware="Can't execute %s-route middleware in %s@%s",
 		E_Forward="Can't forward route handler: %s",
 		E_View="Can't find view file: %s",
-		E_Notfound="The page you have requested can not be found on this server";
+		E_Notfound="The page you have requested can not be found on this server.";
 
 	const
 		// Valid request methods
@@ -146,23 +146,29 @@ final class Alit extends \Factory implements \ArrayAccess {
 			// No route specified
         if ($handled===0) {
 			// Call notfound handler if any
-            if ($this->has('NOTFOUND')
-			&&is_callable($this->get('NOTFOUND')))
-                call_user_func($this->get('NOTFOUND'));
-            else {
-				if (false!==$this->get('AJAX'))
-					echo json_encode(['status'=>404,'data'=>self::E_Notfound]);
-				else $this->abort(404,self::E_Notfound);
+			$notfound=$this->get('NOTFOUND');
+			if (!is_null($notfound)) {
+				if (is_callable($notfound))
+	                call_user_func($notfound);
+				elseif (is_string($notfound)) {
+					if (stripos($notfound,'@')!==false) {
+						list($class,$method)=explode('@',$notfound);
+						if (class_exists($class))
+							call_user_func([new $class,$method]);
+						else trigger_error(vsprintf(self::E_Route,[$class,$method]),E_USER_ERROR);
+					}
+					else trigger_error(vsprintf(self::E_Route,[$class,$method]),E_USER_ERROR);
+				}
 			}
+			// Call default notfound message if notfound handler is not set
+			else $this->abort(404,self::E_Notfound);
         }
 		// Execute after-route middleware if any
         else if (isset($this->get('AFTER')[$this->get('METHOD')]))
             $this->execute($this->get('AFTER')[$this->get('METHOD')]);
-        if ($_SERVER['REQUEST_METHOD']=='HEAD')
+        if ($this->get('METHOD')=='HEAD')
         	ob_end_clean();
-        if ($handled===0)
-        	return false;
-        return true;
+		return ($handled!==0);
     }
 
 	/**
@@ -320,7 +326,6 @@ final class Alit extends \Factory implements \ArrayAccess {
 		if (!$format)
 			return $trace;
 		$out='';
-		$nl="\n";
 		// Analyze stack trace
 		foreach ($trace as $stack) {
 			$line='';
@@ -330,7 +335,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 				$line.=$stack['function'].'('.($debug>2&&isset($stack['args'])?$stack['args']:'').')';
 			$src=$this->slash(str_replace($_SERVER['DOCUMENT_ROOT'].'/','',$stack['file'])).
 				':<font color="red">'.$stack['line'].'</font>';
-			$out.='['.$src.'] '.$line.$nl;
+			$out.='['.$src.'] '.$line.PHP_EOL;
 		}
 		return $out;
 	}
@@ -376,13 +381,12 @@ final class Alit extends \Factory implements \ArrayAccess {
     }
 
 	/**
-    *   Render view using native template
+    *   Render view using native PHP template
     *   @param  $name  string
     *   @param  $data  null|array
     */
 	function render($name,$data=null) {
-		$file=$this->get('BASE').str_replace('./','',$this->get('UI').$name);
-		$file=str_replace('/',DS,$file);
+		$file=str_replace('/',DS,$this->get('BASE').str_replace('./','',$this->get('UI').$name));
 		if (!file_exists($file))
 			user_error(vsprintf(self::E_View,[$name]),E_USER_ERROR);
         ob_start();
@@ -771,10 +775,8 @@ final class Alit extends \Factory implements \ArrayAccess {
 					$val=$this->recsort(null,$val);
             return $this->arrsort($arr);
         }
-        elseif (is_string($key)) {
-            $vals=$this->get($key);
-            return $this->recsort(null,(array)$vals);
-        }
+        elseif (is_string($key))
+            return $this->recsort(null,(array)$this->get($key));
         elseif (is_null($key))
             return $this->recsort(null,$this->hive);
     }
@@ -876,8 +878,7 @@ final class Alit extends \Factory implements \ArrayAccess {
     *   @return  string
     */
     function setcookie($key,$val,$ttl=null) {
-        if ($ttl===null)
-            $ttl=time()+(60*60*24);
+        $ttl=is_null($ttl)?(time()+(60*60*24)):$ttl;
         setcookie($key,$val,$ttl,$this->get('TEMP'));
     }
 
@@ -890,9 +891,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 		$uri=explode('/',$this->get('URI'));
 		unset($uri[0]);
 		$uri=array_values($uri);
-		if (array_key_exists($key,$uri))
-			return $uri[$key];
-		return null;
+		return array_key_exists($key,$uri)?$uri[$key]:null;
 	}
 
 
@@ -1010,23 +1009,23 @@ final class Alit extends \Factory implements \ArrayAccess {
 		}
 		// Get user-agent
 		$ua=isset($headers['X-Operamini-Phone-UA'])
-		?$headers['X-Operamini-Phone-UA']
-		:(isset($headers['X-Skyfire-Phone'])
-			?$headers['X-Skyfire-Phone']
-			:(isset($headers['User-Agent'])
-				?$headers['User-Agent']:''));
+			?$headers['X-Operamini-Phone-UA']
+			:(isset($headers['X-Skyfire-Phone'])
+				?$headers['X-Skyfire-Phone']
+				:(isset($headers['User-Agent'])
+					?$headers['User-Agent']:''));
         // Get client ip
 		$ip=isset($headers['Client-IP'])
-        ?$headers['Client-IP']
-        :(isset($headers['X-Forwarded-For'])
-            ?explode(',',$headers['X-Forwarded-For'])[0]
-            :(isset($_SERVER['REMOTE_ADDR'])
-                ?$_SERVER['REMOTE_ADDR']:''));
+	        ?$headers['Client-IP']
+	        :(isset($headers['X-Forwarded-For'])
+	            ?explode(',',$headers['X-Forwarded-For'])[0]
+	            :(isset($_SERVER['REMOTE_ADDR'])
+	                ?$_SERVER['REMOTE_ADDR']:''));
         // Get server protocol
 		$proto=isset($_SERVER['HTTPS'])
-        &&$_SERVER['HTTPS']=='on'
-        ||isset($headers['X-Forwarded-Proto'])
-        &&$headers['X-Forwarded-Proto']=='https'?'https':'http';
+	        &&$_SERVER['HTTPS']=='on'
+	        ||isset($headers['X-Forwarded-Proto'])
+	        &&$headers['X-Forwarded-Proto']=='https'?'https':'http';
 		// Get request method
 		// if it's a HEAD request, override it to being GET and prevent any output
 		// @see: http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.4
@@ -1103,8 +1102,7 @@ class Preview extends \Factory {
         $fw=\Alit::instance();
 		$this->block=[];
 		$this->stack=[];
-        $this->ui=str_replace('/',DS,$fw->get('ROOT').
-        	str_replace('./','',$fw->get('UI')));
+        $this->ui=str_replace('/',DS,$fw->get('ROOT').str_replace('./','',$fw->get('UI')));
     }
 
 	/**
@@ -1133,8 +1131,7 @@ class Preview extends \Factory {
 	*/
     function retrieve($name,$data=[]) {
         $this->tpl[]=$name;
-        if (!empty($data))
-            extract($data);
+		$data=empty($data)?[]:extract($data);
         while ($file=array_shift($this->tpl)) {
             $this->beginblock('content');
             require ($this->tpl($file));

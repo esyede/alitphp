@@ -96,7 +96,7 @@ class Session {
     // Destroy session and remove user data from database
     function destroy() {
         \Alit::instance()->setcookie($this->cookie,base64_encode($this->data['token']),time()-1);
-            $this->db->table($this->table)
+        $this->db->table($this->table)
             ->where('token',$this->data['token'])
             ->delete();
         $this->data=[];
@@ -167,22 +167,21 @@ class Session {
             ->update(['seen'=>time(),'data'=>serialize($this->data)]);
     }
 
-    // Get all session data
+    // Get all session data as an object
     function data() {
-        $fw=\Alit::instance();
-        return $fw->arr2obj($fw->arrsort($this->data));
+        return $this->data;
     }
 
     // Create session table if not exists
     private function maketable() {
         $sql="CREATE TABLE IF NOT EXISTS `{$this->table}` (
-          `id`    INT(11)      NOT NULL AUTO_INCREMENT,
-          `token` VARCHAR(25)  NOT NULL DEFAULT '',
-          `ip`    VARCHAR(50)  DEFAULT NULL,
-          `seen`  VARCHAR(50)  DEFAULT NULL,
-          `data`  TEXT,
-          PRIMARY KEY (`id`,`token`)
-        ) DEFAULT CHARSET=utf8;";
+            `id`    INT(11)      NOT NULL AUTO_INCREMENT,
+            `token` VARCHAR(25)  NOT NULL DEFAULT '',
+            `ip`    VARCHAR(50)  DEFAULT NULL,
+            `seen`  VARCHAR(50)  DEFAULT NULL,
+            `data`  TEXT,
+            PRIMARY KEY (`id`,`token`)
+        );";
         return $this->db->query($sql);
     }
 }

@@ -86,9 +86,7 @@ class String extends \Factory implements \Serializable {
     *   @param  $chars  string
     */
     function trim($chars=null) {
-        if (is_null($chars))
-            $this->str=trim($this->str);
-        else $this->str=trim($this->str,$chars);
+        $this->str=is_null($chars)?trim($this->str):trim($this->str,$chars);
         return $this;
     }
 
@@ -99,9 +97,7 @@ class String extends \Factory implements \Serializable {
     *   @param $chars  string
     */
     function rtrim($chars=null) {
-        if (is_null($chars))
-            $this->str=rtrim($this->str);
-        else $this->str=rtrim($this->str,$chars);
+        $this->str=is_null($chars)?rtrim($this->str):rtrim($this->str,$chars);
         return $this;
     }
 
@@ -112,9 +108,7 @@ class String extends \Factory implements \Serializable {
     *   @param  $chars  string
     */
     function ltrim($chars=null) {
-        if (is_null($chars))
-            $this->str=ltrim($this->str);
-        else $this->str=ltrim($this->str,$chars);
+        $this->str=is_null($chars)?ltrim($this->str):ltrim($this->str,$chars);
         return $this;
     }
 
@@ -178,8 +172,8 @@ class String extends \Factory implements \Serializable {
     *   @param  $spaces  int
     */
     function detab($spaces=4) {
-        $this->replace('/(.*?)\t/',function (\String $w,\String $string) use($spaces) {
-            return $string.str_repeat(' ',$spaces-$string->length()%$spaces);
+        $this->replace('/(.*?)\t/',function (\String $w,\String $str) use($spaces) {
+            return $str.str_repeat(' ',$spaces-$str->length()%$spaces);
         });
         return $this;
     }
@@ -228,8 +222,7 @@ class String extends \Factory implements \Serializable {
     *   @return  object|array
     */
     function lines($pattern='/(\r?\n)/') {
-        $ln=preg_split($pattern,$this->str,-1,PREG_SPLIT_DELIM_CAPTURE);
-        $chunk=array_chunk($ln,2);
+        $chunk=array_chunk(preg_split($pattern,$this->str,-1,PREG_SPLIT_DELIM_CAPTURE),2);
         $res=[];
         foreach ($chunk as $v)
             $res[]=new \String(implode('',$v));
