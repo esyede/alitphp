@@ -485,18 +485,18 @@ final class Alit extends \Factory implements \ArrayAccess {
 		$ts=time();
 		$date=new \DateTime('now',new \DateTimeZone($this->get('TZ')));
 		$date->setTimestamp($ts);
-		$append=(file_exists($file)&&strlen($this->read($file))>0);
-		return $this->write($file,"[".$date->format('y/m/d H:i:s')."]".($block?PHP_EOL:" ").$data.PHP_EOL,$append);
+		return $this->write($file,"[".$date->format('y/m/d H:i:s')."]".((bool)$block?PHP_EOL:" ").
+			$data.PHP_EOL,file_exists($file));
 	}
 
 	/**
 	*	Return base url (with protocol)
-	*	@param   $suffix  string
+	*	@param   $suffix  string|null
 	*	@return  string
 	*/
 	function base($suffix=null) {
 		$base=rtrim($this->get('PROTO').'://'.$this->get('BASE'),'/');
-		return is_null($suffix)?$base:$base.$suffix;
+		return empty($suffix)?$base:$base.(string)$suffix;
 	}
 
 	/**
@@ -516,7 +516,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 			||is_file($file=$auto.$class.'.php')
 			||is_file($file=$auto.strtolower($class).'.php')
 			||is_file($file=strtolower($auto.$class).'.php'))
-					return require($file);
+				return require($file);
 	}
 
 	/**
@@ -833,7 +833,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@return  object
 	*/
 	function arr2obj($arr) {
-	    return json_decode(json_encode($arr));
+	    return json_decode(json_encode((array)$arr));
 	}
 
 	/**
@@ -842,7 +842,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@return  array
 	*/
 	function obj2arr($obj) {
-	    return json_decode(json_encode($obj),true);
+	    return json_decode(json_encode((object)$obj),true);
 	}
 
 	/**
@@ -865,9 +865,7 @@ final class Alit extends \Factory implements \ArrayAccess {
     *   @return  string
     */
     function cookie($key) {
-        if (isset($_COOKIE[$key]))
-            return htmlentities($_COOKIE[$key]);
-        return false;
+		return isset($_COOKIE[$key])?htmlentities($_COOKIE[$key]):false;
     }
 
     /**
@@ -888,15 +886,13 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@return  string|null
 	*/
 	function segment($key) {
-		$uri=explode('/',$this->get('URI'));
-		unset($uri[0]);
-		$uri=array_values($uri);
+		$uri=array_map('trim',preg_split('~/~',$app->get('URI'),0,PREG_SPLIT_NO_EMPTY));
 		return array_key_exists($key,$uri)?$uri[$key]:null;
 	}
 
 
 //!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//! ArrayAccess Interface's Methods
+//! ArrayAccess Interface Methods
 //!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     function offsetSet($offset,$val) {
         $this->set($offset,$val);
@@ -919,7 +915,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 
 
 //!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//! PHP's Magic Methods
+//! PHP Magic Methods
 //!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     function __set($key,$val=null) {
         $this->set($key,$val);
