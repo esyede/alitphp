@@ -85,7 +85,7 @@ Supported methods: `CONNECT` `DELETE` `GET` `HEAD` `OPTIONS` `PATCH` `POST` `PUT
 Regex pattern is also supported:
 
 ```php
-$app->route('GET /test/(\w+)?',function($param1) use($app) {
+$app->route('GET /test(/\w+)?',function($param1) use($app) {
     echo 'Hello from '.(!isset($param1)
             ? '/test'
             : '/test/'.$param1).' !';
@@ -96,16 +96,16 @@ Do you need middleware? Yes, it's yours!
 
 ```php
 $app->route('GET /admin',function() use($app) {
-    echo "Hello world !";
+    echo 'Actual route';
 });
 
 
 $app->before('GET /admin',function() use($app) {
-    echo "Before route here!<br/>";
+    echo 'before...<br/>';
 });
 
 $app->after('GET /admin',function() use($app) {
-    echo "<br/>After route here!";
+    echo '<br/>...after';
 });
 ```
 
@@ -115,18 +115,18 @@ $app->after('GET /admin',function() use($app) {
 Firstly, you must create the handler class:
 
 ```php
-// file: welcome.php
+// file: user.php
 
-class Welcome {
+class User {
 
     function home() {
-        echo "Welcome home dude !";
+        echo 'User home';
     }
 
     function profile($name) {
-        echo 'Welcome home '.(!isset($name)
-            ? 'dude'
-            : $name).' !';
+        echo 'Profile of: '.(isset($name)
+            ? $name
+            : 'unknown');
     }
 }
 ```
@@ -134,8 +134,8 @@ class Welcome {
 Then, register it to your route:
 
 ```php
-$app->route('GET /','Welcome@home');
-$app->route('GET /profile/(\w+)?','Welcome@profile');
+$app->route('GET /user','User@home');
+$app->route('GET /user/profile(/\w+)?','User@profile');
 ```
 #### Wait, what about routing to namespaced class? Yes, you can!
 ```php
@@ -153,12 +153,12 @@ class Test {
     }
 
     function index() {
-        echo "Hello from test class! you're using {$this->app->get('METHOD')} method";
+        echo "Hello from Test class! you're using {$this->app->get('METHOD')} method";
     }
     // ...
 }
 ```
-Then you **must** push class directory to `MODULES` directive in order to help autoloader find your classes
+Then you **must** append class directory to `MODULES` directive in order to help autoloader find your classes
 ```php
 $app->set('MODULES','app/controllers/'); // note: you must add trailing slash to the end of it
 ```
@@ -202,7 +202,7 @@ class Test {
     }
 
 
-    // Yes, you can define middleware inside controller class
+    // Yes, you can define before and after-middleware as a method inside controller class
     function before() {
         echo "Before route here!<br/>";
     }
@@ -270,6 +270,7 @@ $app->mset([
         'category'=>'Art',
     ],
     'categories'=>['General','Art'],
+    'settings.base.url'=>'http://myblog.com'
 ]);
 ```
 _Tip: You can also setting hive value from config file_
@@ -289,7 +290,7 @@ Add a value or array of value:
 $app->add('profile.nationality','Indonesia');
 $app->add([
     'profile.city'=>'Ngawi',
-    'profile.food'=>'Nasi goreng'
+    'profile.favorite.food'=>'Nasi goreng'
 ]);
 ```
 
@@ -302,17 +303,17 @@ Erase a hive path or array of hive paths:
 ```php
 $app->erase('entry.by');
 // $app->get('entry.by'); // null
-$app->erase(['profile.age','profile.uname']);
+$app->erase(['profile.city','profile.favorite.food']);
 ```
 ..and much more!
 
 
 #### Framework Variables
-All framework variables are stored in `$hive` property, So, you can dump this variable to see available vars:
+All framework variables are stored in `$hive` property, So, to see available vars:
 ```php
-print_r($app->hive());
+var_dump($app->hive());
 // or
-print_r($app);
+var_dump($app);
 ```
 
 
@@ -325,7 +326,8 @@ $str=String::instance();
 
 Then you will be able to use all available methods, for example:
 ```php
-$str->from('world')
+$text='world';
+$str->from($text)
     ->prepend('Hello ')
     ->wrap('#','??')
     ->append(' this is ')
@@ -354,7 +356,17 @@ $eval->isvalid($data,['email'=>'required|min_len,100']);
 // )
 ```
 
-Default error message is in english. To set error message you can use the `setlang()` method before calling the `isvalid()`.
+Default error message is in english. To set the error message you can use the `setlang()` method before calling the `isvalid()`.
+```php
+// ...some validation logic...
+$data=['email'=>'johndoe@gmail.com'];
+$lang=[
+    'validate_required'=>'Field {field} wajib diisi!',
+    'validate_min_len'=>'Kolom {field} setidaknya harus berisi {param} karakter'
+];
+$eval->setlang($lang);
+$eval->isvalid($data,['email'=>'required|min_len,100']);
+```
 
 
 
@@ -473,10 +485,11 @@ $bench->stop('my-app'); // stop the benchmark
 
 #### Loading 3rd-party Library
 Since alit treats external class as modules (including your controller classes),
-you can load external modules by adding the containing-path of your library to the `MODULES` directive, for example:
+you can load external modules by appending the containing-path of your library to the `MODULES` directive, for example:
 ```php
 $app->set('MODULES','app/controllers/|thirdparty/')
 ```
+Note that you must add `|` (pipe, or you can also use `,` or `;`) for each of supplied folder.
 
 
 #### Unit-testing Tool
@@ -542,15 +555,6 @@ $app->log('[info] 3 users currently logged in','test.log');
 
 ### Documentation
 Full documentation is still work in progress..
-
-
-### To-do List
-* Bug fixing
-* Add regex alias to route pattern
-* Add route-caching
-* Add CLI tool, ~~unit testing~~ (done!), ~~logger~~ (done!), etc.
-
-
 
 
 ### Contribute
