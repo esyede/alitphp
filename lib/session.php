@@ -167,7 +167,7 @@ class Session {
             ->update(['seen'=>time(),'data'=>serialize($this->data)]);
     }
 
-    // Get all session data as an object
+    // Get all session data as array
     function data() {
         return $this->data;
     }
