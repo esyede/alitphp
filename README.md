@@ -189,11 +189,9 @@ $app=require('lib/alit.php');
 $app->config('config.ini');
 $app->run();
 ```
-_Wait, Am i missing something?_
 
-Ah, yes. Where is my class middleware ?!
+You need the middleware? This is it!
 
-Uhm, sorry, my bad. This is it!
 ```php
 class Test {
 
@@ -273,7 +271,7 @@ $app->mset([
     'settings.base.url'=>'http://myblog.com'
 ]);
 ```
-_Tip: You can also setting hive value from config file_
+_Tip: You can also setting hive value from config file like we did above_
 
 
 Get a value:
@@ -361,13 +359,13 @@ Default error message is in english. To set the error message you can use the `s
 // ...some validation logic...
 $data=['email'=>'johndoe@gmail.com'];
 $lang=[
-    'validate_required'=>'Field {field} wajib diisi!',
-    'validate_min_len'=>'Kolom {field} setidaknya harus berisi {param} karakter'
+    'required'=>'Kolom {field} wajib diisi!',
+    'min_len'=>'Kolom {field} setidaknya harus berisi {param} karakter'
 ];
 $eval->setlang($lang);
 $eval->isvalid($data,['email'=>'required|min_len,100']);
 ```
-
+_Tip: you can see all available error languages by using `$eval->languages()` function._
 
 
 
