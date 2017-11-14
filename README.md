@@ -464,7 +464,7 @@ And the last step is creating the `ui/mytemplate.knife.php` file:
 
 
 #### Benchmark Library
-And again you have to instantiate benchmark class to before using this library:
+And again you have to instantiate benchmark class before using this library:
 ```php
 $bench=Bench::instance();
 ```
