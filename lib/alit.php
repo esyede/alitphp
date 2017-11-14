@@ -125,7 +125,7 @@ final class Alit extends \Factory implements \ArrayAccess {
         $request=explode(' ',preg_replace('/\s+/',' ',$request));
 	    foreach ($this->split($request[0]) as $method) {
 			if (!in_array($method,$this->split(self::METHODS)))
-				user_error(vsprintf(self::E_Method,[$method]),E_USER_ERROR);
+				user_error(vsprintf(self::E_Method,[$method]),E_ERROR);
 			$this->hive['ROUTES'][$method][]=['pattern'=>$request[1],'handler'=>$handler];
 		}
 	}
@@ -155,9 +155,9 @@ final class Alit extends \Factory implements \ArrayAccess {
 						list($class,$method)=explode('@',$notfound);
 						if (class_exists($class))
 							call_user_func([new $class,$method]);
-						else trigger_error(vsprintf(self::E_Route,[$class,$method]),E_USER_ERROR);
+						else trigger_error(vsprintf(self::E_Route,[$class,$method]),E_ERROR);
 					}
-					else trigger_error(vsprintf(self::E_Route,[$class,$method]),E_USER_ERROR);
+					else trigger_error(vsprintf(self::E_Route,[$class,$method]),E_ERROR);
 				}
 			}
 			// Call default notfound message if notfound handler is not set
@@ -198,17 +198,17 @@ final class Alit extends \Factory implements \ArrayAccess {
 						// Execute before-route middleware inside controller class
 						if (method_exists($class,'before'))
 							if (call_user_func([$class,'before'])===false)
-								trigger_error(vsprintf(self::E_Middleware,['before',$controller,$method]),E_USER_ERROR);
+								trigger_error(vsprintf(self::E_Middleware,['before',$controller,$method]),E_ERROR);
 						// Execute actual route method
                         if (call_user_func_array([$class,$method],$params)===false)
                         	if (forward_static_call_array([$controller,$method],$params)===false)
-								trigger_error(vsprintf(self::E_Forward,[$route['handler']]),E_USER_ERROR);
+								trigger_error(vsprintf(self::E_Forward,[$route['handler']]),E_ERROR);
 						// Execute after-route middleware inside controller class
 						if (method_exists($class,'after'))
 							if (call_user_func([$class,'after'])===false)
-								trigger_error(vsprintf(self::E_Middleware,['after',$controller,$method]),E_USER_ERROR);
+								trigger_error(vsprintf(self::E_Middleware,['after',$controller,$method]),E_ERROR);
 					}
-					else trigger_error(vsprintf(self::E_Route,[$controller,$method]),E_USER_ERROR);
+					else trigger_error(vsprintf(self::E_Route,[$controller,$method]),E_ERROR);
                 }
                 $handled++;
                 if ($quit)
@@ -376,7 +376,7 @@ final class Alit extends \Factory implements \ArrayAccess {
             exit;
         }
         catch (\Exception $ex) {
-			trigger_error(vsprintf(self::E_Redirect,[$url]),E_USER_ERROR);
+			trigger_error(vsprintf(self::E_Redirect,[$url]),E_ERROR);
         }
     }
 
@@ -388,7 +388,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	function render($name,$data=null) {
 		$file=str_replace('/',DS,$this->get('BASE').str_replace('./','',$this->get('UI').$name));
 		if (!file_exists($file))
-			user_error(vsprintf(self::E_View,[$name]),E_USER_ERROR);
+			user_error(vsprintf(self::E_View,[$name]),E_ERROR);
         ob_start();
         if (is_array($data))
         	extract($data);
@@ -405,8 +405,13 @@ final class Alit extends \Factory implements \ArrayAccess {
 			$source=$this->split($source);
 		foreach ($source as $file) {
 			preg_match_all(
-			'/(?<=^|\n)(?:\[(?<child>.+?)\]|(?<left>[^\h\r\n;].*?)\h*=\h*(?<right>(?:\\\\\h*\r?\n|.+?)*))(?=\r?\n|$)/',
-			$this->read($file),$matches,PREG_SET_ORDER);
+				'/(?<=^|\n)(?:'.
+				'\[(?<child>.+?)\]|'.
+				'(?<left>[^\h\r\n;].*?)\h*=\h*'.
+				'(?<right>(?:\\\\\h*\r?\n|.+?)*)'.
+				')(?=\r?\n|$)/',
+				$this->read($file),$matches,PREG_SET_ORDER
+			);
 			if ($matches) {
 				$child='global';
 				$fn=[];
@@ -432,19 +437,14 @@ final class Alit extends \Factory implements \ArrayAccess {
 							array_shift($tmp);
 							list($right)=$tmp;
 						}
+						// Remove invisible characters
+						$right=preg_replace('/[[:cntrl:]]/u','',$right);
 						// Mark quoted strings with 0x00 whitespace
 						str_getcsv(preg_replace('/(?<!\\\\)(")(.*?)\1/',"\\1\x00\\2\\1",trim($right)));
 						preg_match('/^(?<child>[^:]+)?/',$child,$node);
 						$custom=(strtolower($node['child']!='global'));
-						call_user_func_array(
-							// call set() method
-							[$this,'set'],
-							// keys (merged)
-							array_merge([($custom?($node['child'].'.'):'').
-								preg_replace('/\s+/','',$match['left'])],
-							// values
-							[$right])
-						);
+						$left=($custom?($node['child'].'.'):'').preg_replace('/\s+/','',$match['left']);
+						call_user_func_array([$this,'set'],array_merge([$left],[$right]));
 					}
 				}
 			}
