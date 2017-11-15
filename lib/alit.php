@@ -827,6 +827,28 @@ final class Alit extends \Factory implements \ArrayAccess {
         return $this->hive;
     }
 
+    /**
+	*	Return string representation of PHP value
+	*	@param   $key    mixed
+	*	@return  string
+	**/
+	function serialize($key) {
+		return (strtolower($this->get('SERIALIZER'))=='igbinary')
+			?igbinary_serialize($key)
+			:serialize($key);
+	}
+
+	/**
+	*	Return PHP value derived from string
+	*	@param   $key    mixed
+	*	@return  string
+	**/
+	function unserialize($key) {
+		return (strtolower($this->get('SERIALIZER'))=='igbinary')
+			?igbinary_unserialize($key)
+			:unserialize($key);
+	}
+
 	/**
 	*	Recursively convert array to object
 	*	@param   $arr    array
@@ -1038,6 +1060,8 @@ final class Alit extends \Factory implements \ArrayAccess {
         // Determine ajax request
         $isajax=(isset($_SERVER['HTTP_X_REQUESTED_WITH'])
 		&&$_SERVER['HTTP_X_REQUESTED_WITH']==='XMLHttpRequest')?true:false;
+		// Determine default serializer
+		$serializer=extension_loaded('igbinary')?'igbinary':'default';
 		// Assign default value to router-related variables
 		$fw->hive=[
 			'ROUTES'=>[],
@@ -1061,6 +1085,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 			'PACKAGE'=>self::PACKAGE,
 			'PROTO'=>$proto,
 			'ROOT'=>$_SERVER['DOCUMENT_ROOT'].$base,
+			'SERIALIZER'=>$serializer,
 			'SYSLOG'=>false,
 			'TEMP'=>'tmp/',
 			'TIME'=>&$_SERVER['REQUEST_TIME_FLOAT'],
