@@ -743,7 +743,7 @@ class SQL {
         }
         $cache=false;
         if (!is_null($this->cache))
-            $cache=$this->cache->getcache($this->query,$array);
+            $cache=$this->cache->get($this->query,$array);
         if (!$cache&&$str) {
             $sql=$this->conn->query($this->query);
             if ($sql) {
@@ -751,7 +751,9 @@ class SQL {
                 if (($this->numrows>0)) {
                     if ($all) {
                         $q=[];
-                        while ($result=($array==false)?$sql->fetchAll(\PDO::FETCH_OBJ):$sql->fetchAll(\PDO::FETCH_ASSOC))
+                        while ($result=($array==false)
+                        ?$sql->fetchAll(\PDO::FETCH_OBJ)
+                        :$sql->fetchAll(\PDO::FETCH_ASSOC))
                             $q[]=$result;
                         $this->result=$q[0];
                     }
@@ -761,7 +763,7 @@ class SQL {
                     }
                 }
                 if (!is_null($this->cache))
-                    $this->cache->setcache($this->query,$this->result);
+                    $this->cache->set($this->query,$this->result);
                 $this->cache=null;
             }
             else {
@@ -852,9 +854,12 @@ class SQL {
 class SQLCache {
 
     private
+        // SQL Cache directory
         $cachedir=null,
+        // Cache time
         $cache=null,
-        $finish=null;
+        // Elapsed cache time
+        $elapsed=null;
 
     // Class constructor
     function __construct($dir=null,$time=0) {
@@ -862,7 +867,7 @@ class SQLCache {
             mkdir($dir,0755);
         $this->cachedir=$dir;
         $this->cache=$time;
-        $this->finish=time()+$time;
+        $this->elapsed=time()+$time;
     }
 
     /**
@@ -870,13 +875,13 @@ class SQLCache {
     *   @param  $sql     string
     *   @param  $result  string
     */
-    function setcache($sql,$result) {
+    function set($sql,$result) {
         if (is_null($this->cache))
             return false;
-        $target=$this->cachedir.$this->filename($sql).'.cache';
+        $target=$this->cachedir.md5($this->filename($sql)).'.db.cache';
         $target=fopen($target,'w');
         if ($target)
-            fputs($target,json_encode(['data'=>$result,'finish'=>$this->finish]));
+            fputs($target,json_encode(['data'=>$result,'elapsed'=>$this->elapsed]));
         return;
     }
 
@@ -885,13 +890,13 @@ class SQLCache {
     *   @param  $sql    string
     *   @param  $array  bool
     */
-    function getcache($sql,$array=false) {
+    function get($sql,$array=false) {
         if (is_null($this->cache))
             return false;
-        $target=$this->cachedir.$this->filename($sql).'.cache';
+        $target=$this->cachedir.md5($this->filename($sql)).'.db.cache';
         if (file_exists($target)) {
             $cache=json_decode(\Alit::instance()->read($target),$array);
-            if (($array?$cache['finish']:$cache->finish)<time()) {
+            if (($array?$cache['elapsed']:$cache->finish)<time()) {
                 unlink($target);
                 return;
             }
