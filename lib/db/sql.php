@@ -50,10 +50,10 @@ class SQL {
         // Database connection object
         $conn=null;
 
-        /**
-        *   Class constructor
-        *   @param  $config  array
-        */
+    /**
+    *   Class constructor
+    *   @param  $config  array
+    */
     function __construct(array $config) {
         $config['driver']=(isset($config['driver'])?$config['driver']:'mysql');
         $config['host']=(isset($config['host'])?$config['host']:'localhost');
@@ -396,7 +396,7 @@ class SQL {
     }
 
     /**
-    *   Build BERWEEN statement
+    *   Build BETWEEN statement
     *   @param  $field   string
     *   @param  $value1  mixed
     *   @param  $value2  mixed
@@ -850,7 +850,9 @@ class SQL {
 
 
 
-
+//!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//! SQLCache - File-based caching class
+//!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class SQLCache {
 
     private

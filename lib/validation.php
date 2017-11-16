@@ -236,9 +236,7 @@ class Validation extends \Factory {
     static function field($key,array $arr,$default=null) {
         if (!is_array($arr))
             return null;
-        if (isset($arr[$key]))
-            return $arr[$key];
-        else return $default;
+        return isset($arr[$key])?$arr[$key]:$default;
     }
 
     /**
@@ -324,8 +322,7 @@ class Validation extends \Factory {
                     &&function_exists('mb_detect_encoding')
                     &&$utf8) {
                         $enc=mb_detect_encoding($val);
-                        if ($enc!='UTF-8'
-                        &&$enc!='UTF-16')
+                        if ($enc!='UTF-8'&&$enc!='UTF-16')
                             $val=iconv($enc,'UTF-8',$val);
                     }
                     $val=filter_var($val,FILTER_SANITIZE_STRING);
@@ -354,8 +351,7 @@ class Validation extends \Factory {
         $this->errors=[];
         foreach ($ruleset as $field=>$rules) {
             $rules=preg_split('/(?<!\\\)\|(?![^\|]+\))/',$rules);
-            $search=['required_file','required'];
-            if (count(array_intersect($search,$rules))>0
+            if (count(array_intersect(['required_file','required'],$rules))>0
             ||(isset($ipt[$field]))) {
                 if (isset($ipt[$field])) {
                     if (is_array($ipt[$field])
@@ -541,8 +537,7 @@ class Validation extends \Factory {
         foreach ($filterset as $field=>$filters) {
             if (!array_key_exists($field,$ipt))
                 continue;
-            $filters=explode('|',$filters);
-            foreach ($filters as $filter) {
+            foreach (explode('|',$filters) as $filter) {
                 $args=null;
                 if (strstr($filter,',')!==false) {
                     $filter=explode(',',$filter);
@@ -576,12 +571,10 @@ class Validation extends \Factory {
     *   @return  string
     */
     protected function filter_noise_words($val,$args=null) {
-        $val=preg_replace('/\s\s+/u',chr(32),$val);
-        $val=" $val ";
+        $val=' '.preg_replace('/\s\s+/u',chr(32),$val).' ';
         $words=explode(',',self::$en_noise_words);
         foreach ($words as $word) {
-            $word=trim($word);
-            $word=" $word ";
+            $word=' '.trim($word).' ';
             if (stripos($val,$word)!==false)
                 $val=str_ireplace($word,chr(32),$val);
         }
@@ -700,7 +693,8 @@ class Validation extends \Factory {
     *   @return  mixed
     */
     protected function validate_contains($field,$ipt,$arg=null) {
-        if (!isset($ipt[$field])) return;
+        if (!isset($ipt[$field]))
+            return;
         $arg=trim(strtolower($arg));
         $val=trim(strtolower($ipt[$field]));
         if (preg_match_all('#\'(.+?)\'#',$arg,$found,PREG_PATTERN_ORDER))
@@ -1186,9 +1180,7 @@ class Validation extends \Factory {
         ||empty($ipt[$field]))
             return;
         $num=preg_replace('/\D/','',$ipt[$field]);
-        if (function_exists('mb_strlen'))
-            $len=mb_strlen($num);
-        else $len=strlen($num);
+        $len=function_exists('mb_strlen')?mb_strlen($num):strlen($num);
         $parity=$len%2;
         $total=0;
         for ($i=0;$i<$len;++$i) {
@@ -1277,8 +1269,7 @@ class Validation extends \Factory {
                 'param'=>$arg
             ];
         $iban=str_replace(' ','',$ipt[$field]);
-        $iban=substr($iban,4).substr($iban,0,4);
-        $iban=strtr($iban,$chr);
+        $iban=strtr(substr($iban,4).substr($iban,0,4),$chr);
         if (bcmod($iban,97)!=1)
             return [
                 'field'=>$field,
@@ -1506,9 +1497,7 @@ class Validation extends \Factory {
     *   @return  mixed
     */
     private function trim_scalar($val) {
-        if (is_scalar($val))
-            $val=trim($val);
-        return $val;
+        return is_scalar($val)?trim($val):$val;
     }
 
     /**

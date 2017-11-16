@@ -1061,7 +1061,7 @@ final class Alit extends \Factory implements \ArrayAccess {
         $isajax=(isset($_SERVER['HTTP_X_REQUESTED_WITH'])
 		&&$_SERVER['HTTP_X_REQUESTED_WITH']==='XMLHttpRequest')?true:false;
 		// Determine default serializer
-		$serializer=extension_loaded('igbinary')?'igbinary':'default';
+		$serializer=extension_loaded('igbinary')?'igbinary':'php';
 		// Assign default value to router-related variables
 		$fw->hive=[
 			'ROUTES'=>[],

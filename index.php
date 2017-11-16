@@ -1,13 +1,13 @@
 <?php
-// framework instantiation
+// Framework instantiation
 $app=require('lib/alit.php');
-// load config file
+// Load config file
 $app->config('config.ini');
-// register a GET route to base url
+// Register a GET route to base url
 $app->route('GET /',function() use($app) {
-	// render the view
+    // Render the view
     Knife::instance()->render($app->get('myvar.view'),$app->get('myvar'));
 });
 
-// run the app
+// Run the app
 $app->run();

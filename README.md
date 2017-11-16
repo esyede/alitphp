@@ -80,7 +80,9 @@ $app->route('GET|POST|PUT /',function() use($app) {
     echo "You're using {$app->get('METHOD')} method !";
 });
 ```
+
 Supported methods: `CONNECT` `DELETE` `GET` `HEAD` `OPTIONS` `PATCH` `POST` `PUT`
+
 
 Regex pattern is also supported:
 
@@ -137,7 +139,9 @@ Then, register it to your route:
 $app->route('GET /user','User@home');
 $app->route('GET /user/profile(/\w+)?','User@profile');
 ```
+
 #### Wait, what about routing to namespaced class? Yes, you can!
+
 ```php
 // file: app/controllers/test.php
 namespace App\Controllers;
@@ -158,7 +162,9 @@ class Test {
     // ...
 }
 ```
+
 Then you **must** append class directory to `MODULES` directive in order to help autoloader find your classes
+
 ```php
 $app->set('MODULES','app/controllers/'); // note: you must add trailing slash to the end of it
 ```
@@ -214,6 +220,7 @@ class Test {
 
 ### Config Flags
 Alit provide some configuration flags such as:
+
 ```ini
 ; for global hive assignment
 [global]
@@ -237,6 +244,7 @@ store.name = Happy Bookstore
 store.address.street = Walikukun, Ngawi
 store.address.postal = 63256
 ```
+
 And much more!
 
 
@@ -246,6 +254,7 @@ Alit provide some method to play around with it. Let's take a look some of them:
 
 
 Set a value
+
 ```php
 $app->set('profile',[
     'uname'=>'johndoe',
@@ -259,6 +268,7 @@ $app->set('profile.family.son','John Roe');
 ```
 
 Multiple set:
+
 ```php
 $app->mset([
     'entry' =>[
@@ -271,10 +281,12 @@ $app->mset([
     'settings.base.url'=>'http://myblog.com'
 ]);
 ```
+
 _Tip: You can also setting hive value from config file like we did above_
 
 
 Get a value:
+
 ```php
 $app->get('profile')['uname'];    // johndoe
 $app->get('profile.surname');     // John Doe
@@ -284,6 +296,7 @@ $app->hive()['entry']['title'];   // Lorem ipsum
 ```
 
 Add a value or array of value:
+
 ```php
 $app->add('profile.nationality','Indonesia');
 $app->add([
@@ -293,26 +306,31 @@ $app->add([
 ```
 
 Check if hive path exists:
+
 ```php
 $app->has('profile.family.wife'); // true
 ```
 
 Erase a hive path or array of hive paths:
+
 ```php
 $app->erase('entry.by');
 // $app->get('entry.by'); // null
 $app->erase(['profile.city','profile.favorite.food']);
 ```
+
 ..and much more!
 
 
 #### Framework Variables
 All framework variables are stored in `$hive` property, So, to see available vars:
+
 ```php
 var_dump($app->hive());
 // or
 var_dump($app);
 ```
+
 
 
 ### String Manipulation Library
@@ -323,6 +341,7 @@ $str=String::instance();
 ```
 
 Then you will be able to use all available methods, for example:
+
 ```php
 $text='world';
 $str->from($text)
@@ -354,7 +373,9 @@ $eval->isvalid($data,['email'=>'required|min_len,100']);
 // )
 ```
 
-Default error message is in english. To set the error message you can use the `setlang()` method before calling the `isvalid()`.
+Default error message is in english. To set the error message you can use the `setlang()` method 
+before calling the `isvalid()`.
+
 ```php
 // ...some validation logic...
 $data=['email'=>'johndoe@gmail.com'];
@@ -365,6 +386,7 @@ $lang=[
 $eval->setlang($lang);
 $eval->isvalid($data,['email'=>'required|min_len,100']);
 ```
+
 _Tip: you can see all available error languages by using `$eval->languages()` function._
 
 
@@ -414,6 +436,7 @@ the session instantiation will looks like:
 ```php
 $sess=new Session($db,'mysession','mycookie');
 ```
+
 It will automatically create db table named `mysession` on your database and will set the cookie
 
 
@@ -465,10 +488,13 @@ And the last step is creating the `ui/mytemplate.knife.php` file:
 
 #### Benchmark Library
 And again you have to instantiate benchmark class before using this library:
+
 ```php
 $bench=Bench::instance();
 ```
+
 And then use the benchmark library as follow:
+
 ```php
 $bench->start('my-app');
 
@@ -483,15 +509,19 @@ $bench->stop('my-app'); // stop the benchmark
 
 #### Loading 3rd-party Library
 Since alit treats external class as modules (including your controller classes),
-you can load external modules by appending the containing-path of your library to the `MODULES` directive, for example:
+you can load external modules by appending the containing-path of your library 
+to the `MODULES` directive, for example:
+
 ```php
 $app->set('MODULES','app/controllers/|thirdparty/')
 ```
+
 Note that you must add `|` (pipe, or you can also use `,` or `;`) for each of supplied folder.
 
 
 #### Unit-testing Tool
 You can use Unit-testing library by instantiate the class, like this:
+
 ```php
 $test=new Test($level);
 ```
@@ -528,31 +558,38 @@ foreach ($test->results() as $res) {
 
 ### Debugging
 Alit provide a `DEBUG` directive that you can adjust to see more detailed error info:
+
 ```php
 $app->set('DEBUG',3);
 ```
-Possible value for debug is:
 
+Possible value for debug is:
  * 0 : suppresses prints of the stack trace (default)
  * 1 : prints files & lines
  * 2 : prints classes & functions as well
  * 3 : prints detailed infos of the objects as well
 
 
+
 ### System Log
 You can enable system log by setting the `SYSLOG` hive to `true`
 and alit will log your system errors to  `syslog.log` file inside your `TEMP` directory
+
 ```php
 $app->set('SYSLOG',true);
 ```
+
 Need a custom logger? do this:
+
 ```php
 $app->log('[info] 3 users currently logged in','test.log');
 ```
 
 
+
 ### Documentation
 Full documentation is still work in progress..
+
 
 
 ### Contribute
