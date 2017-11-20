@@ -151,7 +151,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 				// Call directly if it's a closure
 				if (is_callable($notfound))
 	                call_user_func($notfound);
-	            // If it's a class method, instantiate the class then call it's method 
+	            // If it's a class method, instantiate the class then call it's method
 				elseif (is_string($notfound)) {
 					if (stripos($notfound,'@')!==false) {
 						list($class,$method)=explode('@',$notfound);
@@ -233,7 +233,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	function abort($code,$reason=null,$file=null,$line=null,$trace=null,$level=0) {
 		if ($code) {
 			$hdrmsg=@constant('self::HTTP_'.$code);
-			error_log("{$code} {$hdrmsg}");
+			error_log($code.' '.$hdrmsg);
 			$trace=$this->backtrace($trace);
 			foreach (explode("\n",$trace) as $log)
 				if ($log)
@@ -241,7 +241,6 @@ final class Alit extends \Factory implements \ArrayAccess {
 			$this->set('ERROR',[
 				'status'=>$hdrmsg,
 				'code'=>$code,
-				'text'=>"{$code} {$hdrmsg}",
 				'file'=>$file,
 				'line'=>$line,
 				'reason'=>$reason,
@@ -250,12 +249,13 @@ final class Alit extends \Factory implements \ArrayAccess {
 			]);
 			// Write error to file if debugger active
 			$debug='[ERROR]'.PHP_EOL;
+			$debug.='---------------------------------------------'.PHP_EOL;
 			if (false!==$this->get('SYSLOG')) {
 				$err=$this->get('ERROR');
-				if (array_key_exists('trace',$err))
-					unset($err['trace']);
+				unset($err['level']);
+				unset($err['trace']);
 				foreach ($err as $k=>$v)
-					$debug.="{$k}: {$v}".PHP_EOL;
+					$debug.=ucfirst(((strlen($k)<=8)?$k.str_repeat(' ',(8-strlen($k))):$k)).': '.$v.PHP_EOL;
 				$this->log($debug,$this->get('TEMP').'syslog.log');
 			}
 			ob_start();
@@ -270,7 +270,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 						"\n\t<head>\n\t\t<title>{$code} {$hdrmsg}</title>\n\t</head>".
 						"\n\t<body>\n".
 						"\t\t<h1>{$code} {$hdrmsg}</h1>\n".
-						"\t\t<p>{$reason}</p>\n";
+						"\t\t<p>".ucfirst($reason)."</p>\n";
 						((!is_array($file)&&!is_null($file))
 							?$loc="\t\t<pre>{$file}:<font color=\"red\">{$line}</font></pre></br>\n"
 							:$loc="");
@@ -989,34 +989,17 @@ final class Alit extends \Factory implements \ArrayAccess {
 		// Exception handler
 		set_exception_handler(function($obj) {
 			$this->set('EXCEPTION',$obj);
-			// Write exception to file if debugger active
-			$debug='[EXCEPTION]'.PHP_EOL;
-			if (false!==$this->get('SYSLOG')) {
-				foreach ($this->get('EXCEPTION') as $k=>$v)
-					$debug.=ucfirst($k).': '.$v.PHP_EOL;
-				$this->log($debug,$this->get('TEMP').'syslog.log');
-			}
 			$this->abort(500,
-				$obj->getMessage().'<br/>'.
-				$obj->getFile().':'.'<font color="red">'.$obj->getLine().'</font>',
+				$obj->getMessage().' on '.
+				$obj->getFile().':'.$obj->getLine(),
 				$obj->getTrace(),
 				$obj->getCode()
 			);
 		});
 		// Error handler
 		set_error_handler(function($level,$reason,$file,$line) {
-			if ($level & error_reporting()) {
-				// Write error to file if debugger active
-				$err=null;
-				if (false!==$this->get('SYSLOG')) {
-					$err=['reason'=>$reason,'file'=>$file,'line'=>$line];
-					$debug='[ERROR]'.PHP_EOL;
-					foreach ($err as $k=>$v)
-						$debug.=ucfirst($k).': '.$v.PHP_EOL;
-					$this->log($debug,$this->get('TEMP').'syslog.log');
-				}
+			if ($level & error_reporting())
 				$this->abort(500,$reason,$file,$line);
-			}
 		});
 		$fw=$this;
 		if (null===$fw->hive['URI'])
@@ -1077,6 +1060,12 @@ final class Alit extends \Factory implements \ArrayAccess {
 			&&in_array($headers['X-HTTP-Method-Override'],['PUT','DELETE','PATCH']))
                 $method=$headers['X-HTTP-Method-Override'];
         }
+		// Determine server port
+		$port=80;
+		if (isset($headers['X-Forwarded-Port']))
+			$port=$headers['X-Forwarded-Port'];
+		elseif (isset($_SERVER['SERVER_PORT']))
+			$port=$_SERVER['SERVER_PORT'];
         // Determine ajax request
         $isajax=(isset($_SERVER['HTTP_X_REQUESTED_WITH'])
 			&&$_SERVER['HTTP_X_REQUESTED_WITH']==='XMLHttpRequest')?true:false;
@@ -1104,6 +1093,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 			'MODULES'=>null,
 			'PACKAGE'=>self::PACKAGE,
 			'PROTO'=>$proto,
+			'PORT'=>$port,
 			'ROOT'=>$_SERVER['DOCUMENT_ROOT'].$base,
 			'SERIALIZER'=>$serializer,
 			'SYSLOG'=>false,
