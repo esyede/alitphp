@@ -125,7 +125,7 @@ final class Alit extends \Factory implements \ArrayAccess {
         $request=explode(' ',preg_replace('/\s+/',' ',$request));
 	    foreach ($this->split($request[0]) as $method) {
 			if (!in_array($method,$this->split(self::METHODS)))
-				user_error(vsprintf(self::E_Method,[$method]),E_ERROR);
+				user_error(vsprintf(self::E_Method,[$method]),E_USER_ERROR);
 			$this->hive['ROUTES'][$method][]=['pattern'=>$request[1],'handler'=>$handler];
 		}
 	}
@@ -158,9 +158,9 @@ final class Alit extends \Factory implements \ArrayAccess {
 						if (class_exists($class))
 							call_user_func([new $class,$method]);
 						// Error, class or class-method cannot be found
-						else trigger_error(vsprintf(self::E_Route,[$class,$method]),E_ERROR);
+						else trigger_error(vsprintf(self::E_Route,[$class,$method]),E_USER_ERROR);
 					}
-					else trigger_error(vsprintf(self::E_Route,[$class,$method]),E_ERROR);
+					else trigger_error(vsprintf(self::E_Route,[$class,$method]),E_USER_ERROR);
 				}
 			}
 			// Call default notfound message if notfound handler is not set
@@ -201,17 +201,17 @@ final class Alit extends \Factory implements \ArrayAccess {
 						// Execute before-route middleware inside controller class
 						if (method_exists($class,'before'))
 							if (call_user_func([$class,'before'])===false)
-								trigger_error(vsprintf(self::E_Middleware,['before',$controller,$method]),E_ERROR);
+								trigger_error(vsprintf(self::E_Middleware,['before',$controller,$method]),E_USER_ERROR);
 						// Execute actual route method
                         if (call_user_func_array([$class,$method],$params)===false)
                         	if (forward_static_call_array([$controller,$method],$params)===false)
-								trigger_error(vsprintf(self::E_Forward,[$route['handler']]),E_ERROR);
+								trigger_error(vsprintf(self::E_Forward,[$route['handler']]),E_USER_ERROR);
 						// Execute after-route middleware inside controller class
 						if (method_exists($class,'after'))
 							if (call_user_func([$class,'after'])===false)
-								trigger_error(vsprintf(self::E_Middleware,['after',$controller,$method]),E_ERROR);
+								trigger_error(vsprintf(self::E_Middleware,['after',$controller,$method]),E_USER_ERROR);
 					}
-					else trigger_error(vsprintf(self::E_Route,[$controller,$method]),E_ERROR);
+					else trigger_error(vsprintf(self::E_Route,[$controller,$method]),E_USER_ERROR);
                 }
                 $handled++;
                 if ($quit)
@@ -379,7 +379,7 @@ final class Alit extends \Factory implements \ArrayAccess {
             exit();
         }
         catch (\Exception $ex) {
-			trigger_error(vsprintf(self::E_Redirect,[$url]),E_ERROR);
+			trigger_error(vsprintf(self::E_Redirect,[$url]),E_USER_ERROR);
         }
     }
 
@@ -391,7 +391,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	function render($name,$data=null) {
 		$file=str_replace('/',DS,$this->get('BASE').str_replace('./','',$this->get('UI').$name));
 		if (!file_exists($file))
-			user_error(vsprintf(self::E_View,[$name]),E_ERROR);
+			user_error(vsprintf(self::E_View,[$name]),E_USER_ERROR);
         ob_start();
         if (is_array($data))
         	extract($data);
@@ -870,25 +870,43 @@ final class Alit extends \Factory implements \ArrayAccess {
 	}
 
 	/**
-	*	Grab POST data by key
-	*	@param   $key         string
+	*	Retrieve POST data
+	*	@param   $key         string|null
 	*	@param   $escape      bool
 	*	@return  string|null
 	*/
-	function post($key,$escape=true) {
-		if (isset($_POST[$key]))
-			return ($escape===true)
-				?\Validation::instance()->xss_clean([$_POST[$key]]):$_POST[$key];
+	function post($key=null,$escape=true) {
+		$eval=\Validation::instance();
+		if (is_null($key)) {
+			$post=[];
+			if ($escape===true)
+				foreach ($_POST as $k=>$v)
+					$post[$k]=$eval->xss_clean([$v]);
+			return ($escape===true)?$post:$_POST;
+		}
+		elseif (isset($_POST[$key]))
+			return ($escape===true)?$eval->xss_clean([$_POST[$key]]):$_POST[$key];
 		return null;
 	}
 
     /**
-    *   Grab COOKIE data by key
-    *   @param   $key     string
-    *   @return  string
+    *   Retrieve COOKIE data
+    *   @param   $key          string
+    *   @param   $escape       bool
+    *   @return  string|false
     */
-    function cookie($key) {
-		return isset($_COOKIE[$key])?htmlentities($_COOKIE[$key]):false;
+    function cookie($key=null,$escape=true) {
+		$eval=\Validation::instance();
+		if (is_null($key)) {
+			$cookie=[];
+			if ($escape===true)
+				foreach ($_COOKIE as $k=>$v)
+					$cookie[$k]=$eval->xss_clean([$v]);
+			return ($escape===true)?$cookie:$_COOKIE;
+		}
+		elseif (isset($_COOKIE[$key]))
+			return ($escape===true)?$eval->xss_clean([$_COOKIE[$key]]):$_COOKIE[$key];
+		return false;
     }
 
     /**
@@ -904,7 +922,7 @@ final class Alit extends \Factory implements \ArrayAccess {
     }
 
 	/**
-	*	Grab uri segment
+	*	Retrieve parts of URI
 	*	@param   $key         int
 	*	@param   $default     string|null
 	*	@return  string|null

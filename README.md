@@ -22,6 +22,7 @@ Lightweight, blazing fast micro framework
 
 ### Webserver Configuration:
 Apache
+
 ```apache
 RewriteEngine On
 # RewriteBase /
@@ -31,13 +32,17 @@ RewriteCond %{REQUEST_FILENAME} !-l
 
 RewriteRule ^(.*)$ index.php [QSA,L]
 ```
+
 NginX
+
 ```nginx
 location / {
     try_files $uri index.php;
 }
 ```
+
 IIS
+
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>

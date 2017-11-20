@@ -79,7 +79,7 @@ class Session {
             ->one();
         if ($this->db->num_rows()>0) {
             $this->existed=true;
-            $res->data=unserialize($res->data);
+            $res->data=$fw->unserialize($res->data);
             $this->data['token']=$res->token;
             if ($res->ip==$fw->get('IP')) {
                 if (count($res->data)>0)
@@ -95,7 +95,8 @@ class Session {
 
     // Destroy session and remove user data from database
     function destroy() {
-        \Alit::instance()->setcookie($this->cookie,base64_encode($this->data['token']),time()-1);
+        $fw=\Alit::instance();
+        $fw->setcookie($this->cookie,base64_encode($this->data['token']),time()-1);
         $this->db->table($this->table)
             ->where('token',$this->data['token'])
             ->delete();
@@ -128,14 +129,10 @@ class Session {
                 $this->data[$k]=$v;
         else $this->data[$key]=$val;
         $fw->setcookie($this->cookie,base64_encode($this->data['token']));
-        $data=[
-            'token'=>$this->data['token'],
-            'ip'=>$fw->get('IP'),
-            'seen'=>time()
-        ];
+        $data=['token'=>$this->data['token'],'ip'=>$fw->get('IP'),'seen'=>time()];
         $res=0;
         if ($this->existed===false) {
-            $data['data']=serialize($this->data);
+            $data['data']=$fw->serialize($this->data);
             $this->db->table($this->table)->insert($data);
             $res=$this->db->num_rows();
         }
@@ -163,9 +160,10 @@ class Session {
 
     // Renew/update session data
     protected function renew() {
+        $fw=\Alit::instance();
         return $this->db->table($this->table)
             ->where('token',$this->data['token'])
-            ->update(['seen'=>time(),'data'=>serialize($this->data)]);
+            ->update(['seen'=>time(),'data'=>$fw->serialize($this->data)]);
     }
 
     // Get all session data as array

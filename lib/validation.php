@@ -113,11 +113,12 @@ class Validation extends \Factory {
 
 
     static function setlang(array $errors) {
+        $fw=\Alit::instance();
         $eval=self::instance();
         if (is_array($errors)&&count($errors)>0)
             foreach ($errors as $k=>$v)
                 $eval->lang['validate_'.$k]=$v;
-        else \Alit::instance()->abort(500,self::E_InvSetLang);
+        else $fw->abort(500,self::E_InvSetLang);
 
     }
 
@@ -201,10 +202,11 @@ class Validation extends \Factory {
     *   @return  bool
     */
     static function add_validator($rule,$callback,$err_msg=null) {
+        $fw=\Alit::instance();
         $method='validate_'.$rule;
         if (method_exists(__CLASS__,$method)
         ||isset(self::$validation_methods[$rule]))
-            \Alit::instance()->abort(500,vsprintf(self::E_Validator_RuleExist,[$rule]));
+            $fw->abort(500,vsprintf(self::E_Validator_RuleExist,[$rule]));
         self::$validation_methods[$rule]=$callback;
         if ($err_msg)
             self::$validation_methods_errors[$rule]=$err_msg;
@@ -218,10 +220,11 @@ class Validation extends \Factory {
     *   @return  bool
     */
     static function add_filter($rule,$callback) {
+        $fw=\Alit::instance();
         $method='filter_'.$rule;
         if (method_exists(__CLASS__,$method)
         ||isset(self::$filter_methods[$rule]))
-            \Alit::instance()->abort(500,vsprintf(self::E_Filter_RuleExist,[$rule]));
+            $fw->abort(500,vsprintf(self::E_Filter_RuleExist,[$rule]));
         self::$filter_methods[$rule]=$callback;
         return true;
     }
@@ -346,6 +349,7 @@ class Validation extends \Factory {
     *   @return  mixed
     */
     function validate(array $ipt,array $ruleset) {
+        $fw=\Alit::instance();
         $this->errors=[];
         foreach ($ruleset as $field=>$rules) {
             $rules=preg_split('/(?<!\\\)\|(?![^\|]+\))/',$rules);
@@ -369,7 +373,7 @@ class Validation extends \Factory {
                             $arg=$rule[1];
                             // Check if $arg is regex then throw error message, sorry!
                             if (preg_match("/^\/.+\/[a-z]*$/i",$arg))
-                                \Alit::instance()->abort(500,vsprintf(self::E_Arg_isRegex,[$rule]));
+                                $fw->abort(500,vsprintf(self::E_Arg_isRegex,[$rule]));
                             $rule=$rule[0];
                             if (preg_match('/(?:(?:^|;)_([a-z_]+))/',$arg,$found))
                                 if (isset($ipt[$found[1]]))
@@ -393,7 +397,7 @@ class Validation extends \Factory {
                                         'param'=>$arg
                                     ];
                         }
-                        else \Alit::instance()->abort(500,vsprintf(self::E_Validator_Inexist,[$method]));
+                        else $fw->abort(500,vsprintf(self::E_Validator_Inexist,[$method]));
                     }
                 }
             }
@@ -457,6 +461,7 @@ class Validation extends \Factory {
     *   @return  array|string
     */
     function get_readable_errors($to_string=false,$field_class='check-field',$err_class='error-message') {
+        $fw=\Alit::instance();
         if (empty($this->errors))
             return ((bool)$to_string)?null:[];
         $response=[];
@@ -478,7 +483,7 @@ class Validation extends \Factory {
                 );
                 $response[]=$msg;
             }
-            else \Alit::instance()->abort(500,vsprintf(self::E_Rule_NoMsg,[$err['rule']]));
+            else $fw->abort(500,vsprintf(self::E_Rule_NoMsg,[$err['rule']]));
         }
         if ((bool)$to_string===false)
             return $response;
@@ -496,6 +501,7 @@ class Validation extends \Factory {
     *   @return  array|null
     */
     function get_errors_array($to_string=false) {
+        $fw=\Alit::instance();
         if (empty($this->errors))
             return ((bool)$to_string)?null:[];
         $response=[];
@@ -520,7 +526,7 @@ class Validation extends \Factory {
                     $response[$err['field']]=$msg;
                 }
             }
-            else \Alit::instance()->abort(500,vsprintf(self::E_Rule_NoMsg,[$err['rule']]));
+            else $fw->abort(500,vsprintf(self::E_Rule_NoMsg,[$err['rule']]));
         }
         return $response;
     }
@@ -532,6 +538,7 @@ class Validation extends \Factory {
     *   @return  mixed
     */
     function filter(array $ipt,array $filterset) {
+        $fw=\Alit::instance();
         foreach ($filterset as $field=>$filters) {
             if (!array_key_exists($field,$ipt))
                 continue;
@@ -554,7 +561,7 @@ class Validation extends \Factory {
                         $val=$filter($val);
                     elseif (isset(self::$filter_methods[$filter]))
                         $val=call_user_func(self::$filter_methods[$filter],$val,$args);
-                    else \Alit::instance()->abort(500,vsprintf(self::E_Filter_Inexist,[$filter]));
+                    else $fw->abort(500,vsprintf(self::E_Filter_Inexist,[$filter]));
                 }
             }
         }
@@ -677,7 +684,7 @@ class Validation extends \Factory {
     *   @return  string
     */
     protected function filter_ms_word_characters($val,$args=null) {
-        return str_replace([
+        $val=str_replace([
                 "\xC2\xAB","\xC2\xBB","\xE2\x80\x98","\xE2\x80\x99",
                 "\xE2\x80\x9A","\xE2\x80\x9B","\xE2\x80\x9C","\xE2\x80\x9D",
                 "\xE2\x80\x9E","\xE2\x80\x9F","\xE2\x80\xB9","\xE2\x80\xBA",
@@ -691,6 +698,8 @@ class Validation extends \Factory {
             ],
             $val
         );
+        // Remove non-ascii chars
+        return preg_replace('/[^\x20-\x7E]*/','',$val);
     }
 
     /**

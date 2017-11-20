@@ -55,13 +55,14 @@ class SQL {
     *   @param  $config  array
     */
     function __construct(array $config) {
+        $fw=\Alit::instance();
         $config['driver']=(isset($config['driver'])?$config['driver']:'mysql');
         $config['host']=(isset($config['host'])?$config['host']:'localhost');
         $config['charset']=(isset($config['charset'])?$config['charset']:'utf8');
         $config['collation']=(isset($config['collation'])?$config['collation']:'utf8_general_ci');
         $config['port']=(strstr($config['host'],':')?explode(':',$config['host'])[1]:'');
         $this->prefix=(isset($config['prefix'])?$config['prefix']:'');
-        $this->cachedir=(isset($config['cachedir'])?$config['cachedir']:\Alit::instance()->get('TEMP'));
+        $this->cachedir=(isset($config['cachedir'])?$config['cachedir']:$fw->get('TEMP'));
         $dsn='';
         if ($config['driver']=='mysql'
         ||$config['driver']==''
@@ -79,7 +80,7 @@ class SQL {
             $this->conn->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE,\PDO::FETCH_OBJ);
         }
         catch(\PDOException $e) {
-            \Alit::instance()->abort(500,vsprintf(self::E_Connection,[$e->getMessage()]));
+            $fw->abort(500,vsprintf(self::E_Connection,[$e->getMessage()]));
         }
         return $this->conn;
     }
@@ -173,10 +174,11 @@ class SQL {
     *   @param  $type    string|null
     */
     function join($table,$field1=null,$op=null,$field2=null,$type='') {
+        $fw=\Alit::instance();
         $on=$field1;
         $table=$this->prefix.$table;
         if (!is_null($op))
-            $on=(!in_array($op,\Alit::instance()->split(self::OPERATORS))
+            $on=(!in_array($op,$fw->split(self::OPERATORS))
                 ?$this->prefix.$field1.' = '.$this->prefix.$op
                 :$this->prefix.$field1.' '.$op.' '.$this->prefix.$field2);
         if (is_null($this->join))
@@ -267,6 +269,7 @@ class SQL {
     *   @param  $and_or  string|null
     */
     function where($where,$op=null,$val=null,$type='',$and_or='AND') {
+        $fw=\Alit::instance();
         if (is_array($where)) {
             $_where=[];
             foreach ($where as $column=>$data)
@@ -282,7 +285,7 @@ class SQL {
                         $w.=$type.$v.(isset($op[$k])?$this->escape($op[$k]):'');
                 $where=$w;
             }
-            elseif (!in_array($op,\Alit::instance()->split(self::OPERATORS))||$op==false)
+            elseif (!in_array($op,$fw->split(self::OPERATORS))||$op==false)
                 $where=$type.$where.' = '.$this->escape($op);
             else $where=$type.$where.' '.$op.' '.$this->escape($val);
         }
@@ -564,6 +567,7 @@ class SQL {
     *   @param  $val    mixed|null
     */
     function having($field,$op=null,$val=null) {
+        $fw=\Alit::instance();
         if (is_array($op)) {
             $x=explode('?',$field);
             $w='';
@@ -572,7 +576,7 @@ class SQL {
                     $w.=$v.(isset($op[$k])?$this->escape($op[$k]):'');
             $this->having=$w;
         }
-        elseif (!in_array($op,\Alit::instance()->split(self::OPERATORS)))
+        elseif (!in_array($op,$fw->split(self::OPERATORS)))
             $this->having=$field.'> '.$this->escape($op);
         else $this->having=$field.' '.$op.' '.$this->escape($val);
         return $this;
@@ -893,16 +897,17 @@ class SQLCache {
     *   @param  $array  bool
     */
     function get($sql,$array=false) {
+        $fw=\Alit::instance();
         if (is_null($this->cache))
             return false;
         $target=$this->cachedir.md5($this->filename($sql)).'.db.cache';
         if (file_exists($target)) {
-            $cache=json_decode(\Alit::instance()->read($target),$array);
-            if (($array?$cache['elapsed']:$cache->finish)<time()) {
+            $cache=json_decode($fw->read($target),$array);
+            if ((($array===true)?$cache['elapsed']:$cache->finish)<time()) {
                 unlink($target);
                 return;
             }
-            else return ($array?$cache['data']:$cache->data);
+            else return (($array===true)?$cache['data']:$cache->data);
         }
         return false;
     }

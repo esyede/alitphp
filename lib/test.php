@@ -49,14 +49,14 @@ class Test {
     *	@return  object
 	*/
 	function expect($cond,$msg=null) {
+		$fw=\Alit::instance();
 		$out=(bool)$cond;
 		if ($this->level==$out
         ||$this->level==self::RL_BOTH) {
 			$data=['status'=>$out,'message'=>$msg,'source'=>null];
 			foreach (debug_backtrace() as $src)
 				if (isset($src['file'])) {
-					$data['source']=\Alit::instance()->slash($src['file']).
-						':<font color="red">'.$src['line'].'</font>';
+					$data['source']=$fw->slash($src['file']).':<font color="red">'.$src['line'].'</font>';
 					break;
 				}
 			$this->data[]=$data;
