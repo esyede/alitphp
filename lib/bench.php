@@ -42,7 +42,7 @@ class Bench extends \Factory {
     function elapsed($key,$round=3,$stop=false) {
         $fw=\Alit::instance();
         if (!isset($this->start[$key]))
-            $fw->abort(vsprintf(self::E_Key,[$key]));
+            $fw->abort(sprintf(self::E_Key,$key));
         else {
             if (!isset($this->stop[$key])&&$stop==true)
                 $this->stop[$key]=microtime(true);

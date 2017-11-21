@@ -348,12 +348,8 @@ And much more!
 All framework variables are stored in `$hive` and `$routes` property, So, you can do this to see available vars:
 
 ```php
-// See all hive vars
 var_dump($app->hive());
-// See all route vars
-var_dump($app->routes());
-
-// Or, see entire class properties
+// Or,
 var_dump($app);
 ```
 
@@ -404,7 +400,7 @@ $eval->isvalid($data,['email'=>'required|min_len,100']);
 // )
 ```
 
-Default error message is in english. To set the error message you can use the `setlang()` method 
+Default error message is in english. To set the error message you can use the `setlang()` method
 before calling the `isvalid()`.
 
 ```php
@@ -550,7 +546,7 @@ $bench->stop('my-app'); // Stop the benchmark
 ### Loading 3rd-party Library
 
 Since alit treats external class as modules (including your controller classes),
-you can load external modules by appending the containing-path of your library 
+you can load external modules by appending the containing-path of your library
 to the `MODULES` directive, for example:
 
 ```php
