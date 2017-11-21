@@ -206,7 +206,7 @@ class Validation extends \Factory {
         $method='validate_'.$rule;
         if (method_exists(__CLASS__,$method)
         ||isset(self::$validation_methods[$rule]))
-            $fw->abort(500,vsprintf(self::E_Validator_RuleExist,[$rule]));
+            $fw->abort(500,sprintf(self::E_Validator_RuleExist,$rule));
         self::$validation_methods[$rule]=$callback;
         if ($err_msg)
             self::$validation_methods_errors[$rule]=$err_msg;
@@ -224,7 +224,7 @@ class Validation extends \Factory {
         $method='filter_'.$rule;
         if (method_exists(__CLASS__,$method)
         ||isset(self::$filter_methods[$rule]))
-            $fw->abort(500,vsprintf(self::E_Filter_RuleExist,[$rule]));
+            $fw->abort(500,sprintf(self::E_Filter_RuleExist,$rule));
         self::$filter_methods[$rule]=$callback;
         return true;
     }
@@ -373,7 +373,7 @@ class Validation extends \Factory {
                             $arg=$rule[1];
                             // Check if $arg is regex then throw error message, sorry!
                             if (preg_match("/^\/.+\/[a-z]*$/i",$arg))
-                                $fw->abort(500,vsprintf(self::E_Arg_isRegex,[$rule]));
+                                $fw->abort(500,sprintf(self::E_Arg_isRegex,$rule));
                             $rule=$rule[0];
                             if (preg_match('/(?:(?:^|;)_([a-z_]+))/',$arg,$found))
                                 if (isset($ipt[$found[1]]))
@@ -397,7 +397,7 @@ class Validation extends \Factory {
                                         'param'=>$arg
                                     ];
                         }
-                        else $fw->abort(500,vsprintf(self::E_Validator_Inexist,[$method]));
+                        else $fw->abort(500,sprintf(self::E_Validator_Inexist,$method));
                     }
                 }
             }
@@ -483,7 +483,7 @@ class Validation extends \Factory {
                 );
                 $response[]=$msg;
             }
-            else $fw->abort(500,vsprintf(self::E_Rule_NoMsg,[$err['rule']]));
+            else $fw->abort(500,sprintf(self::E_Rule_NoMsg,$err['rule']));
         }
         if ((bool)$to_string===false)
             return $response;
@@ -526,7 +526,7 @@ class Validation extends \Factory {
                     $response[$err['field']]=$msg;
                 }
             }
-            else $fw->abort(500,vsprintf(self::E_Rule_NoMsg,[$err['rule']]));
+            else $fw->abort(500,sprintf(self::E_Rule_NoMsg,$err['rule']));
         }
         return $response;
     }
@@ -561,7 +561,7 @@ class Validation extends \Factory {
                         $val=$filter($val);
                     elseif (isset(self::$filter_methods[$filter]))
                         $val=call_user_func(self::$filter_methods[$filter],$val,$args);
-                    else $fw->abort(500,vsprintf(self::E_Filter_Inexist,[$filter]));
+                    else $fw->abort(500,sprintf(self::E_Filter_Inexist,$filter));
                 }
             }
         }

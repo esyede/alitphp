@@ -80,7 +80,7 @@ class SQL {
             $this->conn->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE,\PDO::FETCH_OBJ);
         }
         catch(\PDOException $e) {
-            $fw->abort(500,vsprintf(self::E_Connection,[$e->getMessage()]));
+            $fw->abort(500,sprintf(self::E_Connection,$e->getMessage()));
         }
         return $this->conn;
     }
@@ -598,9 +598,9 @@ class SQL {
         if ($fw->get('DEBUG')==0)
             $fw->abort(500,self::E_Production);
         elseif ($fw->get('DEBUG')==1)
-            $fw->abort(500,vsprintf("%s",[$this->error]));
+            $fw->abort(500,sprintf("%s",$this->error));
         elseif ($fw->get('DEBUG')>1)
-            $fw->abort(500,vsprintf(self::E_LastError,[$this->error,$this->query]));
+            $fw->abort(500,sprintf(self::E_LastError,$this->error,$this->query));
     }
 
     /**
