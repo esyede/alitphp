@@ -79,7 +79,9 @@ final class Alit extends \Factory implements \ArrayAccess {
 		METHODS='CONNECT|DELETE|GET|HEAD|OPTIONS|PATCH|POST|PUT';
 
 	protected
-		// Store all framework variables
+		// Stores all route variable
+		$routes,
+		// Stores all framework variable
 		$hive;
 
 	/**
@@ -91,7 +93,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	function before($request,$handler) {
         $request=explode(' ',preg_replace('/\s+/',' ',$request));
         foreach ($this->split($request[0]) as $method)
-            $this->hive['BEFORE'][$method][]=['pattern'=>$request[1],'handler'=>$handler];
+            $this->routes['BEFORE'][$method][]=['pattern'=>$request[1],'handler'=>$handler];
     }
 
 	/**
@@ -103,7 +105,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	function after($request,$handler) {
         $request=explode(' ',preg_replace('/\s+/',' ',$request));
         foreach ($this->split($request[0]) as $method)
-            $this->hive['AFTER'][$method][]=['pattern'=>$request[1],'handler'=>$handler];
+            $this->routes['AFTER'][$method][]=['pattern'=>$request[1],'handler'=>$handler];
     }
 
 	/**
@@ -111,7 +113,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@param  $handler  object|callable
 	*/
     function notfound($handler=null) {
-		$this->set('NOTFOUND',$handler);
+		$this->routes['NOTFOUND']=$handler;
 
     }
 
@@ -126,8 +128,16 @@ final class Alit extends \Factory implements \ArrayAccess {
 	    foreach ($this->split($request[0]) as $method) {
 			if (!in_array($method,$this->split(self::METHODS)))
 				user_error(vsprintf(self::E_Method,[$method]),E_USER_ERROR);
-			$this->hive['ROUTES'][$method][]=['pattern'=>$request[1],'handler'=>$handler];
+			$this->routes['MAIN'][$method][]=['pattern'=>$request[1],'handler'=>$handler];
 		}
+	}
+
+	/**
+	*	Get all defined routes
+	*	@return  array
+	*/
+	function routes() {
+		return $this->routes;
 	}
 
 	/**
@@ -136,17 +146,22 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@return  bool
 	*/
     function run() {
+    	// Get routes info
+    	$before=$this->routes['BEFORE'];
+    	$main=$this->routes['MAIN'];
+    	$after=$this->routes['AFTER'];
+    	$notfound=$this->routes['NOTFOUND'];
+    	$verb=$this->get('METHOD');
 		// Execute before-route middleware if any
-        if (isset($this->get('BEFORE')[$this->get('METHOD')]))
-            $this->execute($this->get('BEFORE')[$this->get('METHOD')]);
+        if (isset($before[$verb]))
+            $this->execute($before[$verb]);
         $handled=0;
-		// Execute user-defined routes
-        if (isset($this->get('ROUTES')[$this->get('METHOD')]))
-            $handled=$this->execute($this->get('ROUTES')[$this->get('METHOD')],true);
+		// Execute main routes
+        if (isset($main[$verb]))
+            $handled=$this->execute($main[$verb],true);
 			// No route specified or fail to handle routes
         if ($handled===0) {
 			// Call notfound handler if any
-			$notfound=$this->get('NOTFOUND');
 			if (!is_null($notfound)) {
 				// Call directly if it's a closure
 				if (is_callable($notfound))
@@ -167,9 +182,9 @@ final class Alit extends \Factory implements \ArrayAccess {
 			else $this->abort(404,self::E_Notfound);
         }
 		// Execute after-route middleware if any
-        else if (isset($this->get('AFTER')[$this->get('METHOD')]))
-            $this->execute($this->get('AFTER')[$this->get('METHOD')]);
-        if ($this->get('METHOD')=='HEAD')
+        else if (isset($after[$verb]))
+            $this->execute($after[$verb]);
+        if ($verb=='HEAD')
         	ob_end_clean();
 		return ($handled!==0);
     }
@@ -247,10 +262,10 @@ final class Alit extends \Factory implements \ArrayAccess {
 				'trace'=>$trace,
 				'level'=>$level
 			]);
-			// Write error to file if debugger active
+			// Write error to file if SYSLOG is activated
 			$debug='[ERROR]'.PHP_EOL;
 			$debug.='---------------------------------------------'.PHP_EOL;
-			if (false!==$this->get('SYSLOG')) {
+			if ($this->get('SYSLOG')) {
 				$err=$this->get('ERROR');
 				unset($err['level']);
 				unset($err['trace']);
@@ -259,43 +274,23 @@ final class Alit extends \Factory implements \ArrayAccess {
 				$this->log($debug,$this->get('TEMP').'syslog.log');
 			}
 			ob_start();
-			if (!headers_sent())
+			if (!headers_sent()) {
 				header($_SERVER['SERVER_PROTOCOL'].' '.$code.' '.$hdrmsg);
-			// if DEBUG value larger than 0
-			if ((int)$this->get('DEBUG')>0) {
-				if (false!==$this->get('AJAX'))
-					echo json_encode(['status'=>500,'data'=>$this->get('ERROR')]);
-				else {
-					echo "<!DOCTYPE html>\n<html>".
-						"\n\t<head>\n\t\t<title>{$code} {$hdrmsg}</title>\n\t</head>".
-						"\n\t<body>\n".
-						"\t\t<h1>{$code} {$hdrmsg}</h1>\n".
-						"\t\t<p>".ucfirst($reason)."</p>\n";
-						((!is_array($file)&&!is_null($file))
-							?$loc="\t\t<pre>{$file}:<font color=\"red\">{$line}</font></pre></br>\n"
-							:$loc="");
-					echo $loc."\t\t<b>Back Trace:</b><br>\n".
-						// Show backtrace
-						"\t\t<pre>{$trace}</pre>\n".
-						"\t</body>\n</html>";
-				}
+				header('X-Powered-By: '.$this->get('PACKAGE'));
 			}
+			if ($this->get('AJAX'))
+					echo json_encode(['status'=>500,'data'=>$this->get('ERROR')]);
 			else {
-				if (false!==$this->get('AJAX')) {
-					$data=['code'=>$code,'reason'=>$reason,'file'=>$file,'line'=>$line,'level'=>$leveL];
-					echo json_encode(['status'=>500,'data'=>$data]);
-				}
-				else {
-					echo "<!DOCTYPE html>\n<html>".
-						"\n\t<head>\n\t\t<title>{$code} {$hdrmsg}</title>\n\t</head>".
-						"\n\t<body>\n".
-						"\t\t<h1>{$code} {$hdrmsg}</h1>\n".
-						"\t\t<p>{$reason}</p>\n";
-						((!is_array($file)&&!is_null($file))
-							?$loc="\t\t<pre>{$file}:<font color=\"red\">{$line}</font></pre></br>\n"
-							:$loc="");
-					echo $loc."\t</body>\n</html>";
-				}
+				echo "<!DOCTYPE html>\n<html>".
+					"\n\t<head>\n\t\t<title>".$code." ".$hdrmsg."</title>\n\t</head>".
+					"\n\t<body>\n".
+					"\t\t<h1>".$code." ".$hdrmsg."</h1>\n".
+					"\t\t<p>".ucfirst($reason)."</p>\n";
+				echo "\t\t<pre>".$file.":<font color=\"red\">".$line."</font></pre><br>\n";
+				// Show backtrace if DEBUG is activated
+				if ((int)$this->get('DEBUG')>0)
+					echo "\t\t<b>Back Trace:</b><br>\n\t\t<pre>".$trace."</pre>\n";
+				echo "\t</body>\n</html>";
 			}
             ob_end_flush();
             die(1);
@@ -332,10 +327,12 @@ final class Alit extends \Factory implements \ArrayAccess {
 		// Analyze stack trace
 		foreach ($trace as $stack) {
 			$line='';
+			if (isset($stack['args']))
+				unset($stack['args']);
 			if (isset($stack['class']))
 				$line.=$stack['class'].$stack['type'];
 			if (isset($stack['function']))
-				$line.=$stack['function'].'('.($debug>2&&isset($stack['args'])?$stack['args']:'').')';
+				$line.=$stack['function'].'()';
 			$src=$this->slash(str_replace($_SERVER['DOCUMENT_ROOT'].'/','',$stack['file'])).
 				':<font color="red">'.$stack['line'].'</font>';
 			$out.='['.$src.'] '.$line.PHP_EOL;
@@ -489,7 +486,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 		$ts=time();
 		$date=new \DateTime('now',new \DateTimeZone($this->get('TZ')));
 		$date->setTimestamp($ts);
-		return $this->write($file,"[".$date->format('y/m/d H:i:s')."]".
+		return $this->write($file,"[".$date->format('Y/m/d H:i:s')."]".
 			((bool)$block?PHP_EOL:" ").$data.PHP_EOL,file_exists($file));
 	}
 
@@ -990,8 +987,9 @@ final class Alit extends \Factory implements \ArrayAccess {
 		set_exception_handler(function($obj) {
 			$this->set('EXCEPTION',$obj);
 			$this->abort(500,
-				$obj->getMessage().' on '.
-				$obj->getFile().':'.$obj->getLine(),
+				$obj->getMessage(),
+				$obj->getFile(),
+				$obj->getLine(),
 				$obj->getTrace(),
 				$obj->getCode()
 			);
@@ -999,10 +997,10 @@ final class Alit extends \Factory implements \ArrayAccess {
 		// Error handler
 		set_error_handler(function($level,$reason,$file,$line) {
 			if ($level & error_reporting())
-				$this->abort(500,$reason,$file,$line);
+				$this->abort(500,$reason,$file,$line,null,$level);
 		});
 		$fw=$this;
-		if (null===$fw->hive['URI'])
+		if (is_null($fw->hive['URI']))
 			$base=implode('/',array_slice(explode('/',$_SERVER['SCRIPT_NAME']),0,-1)).'/';
         $uri=substr($_SERVER['REQUEST_URI'],strlen($base));
         if (strstr($uri,'?'))
@@ -1072,14 +1070,14 @@ final class Alit extends \Factory implements \ArrayAccess {
 		// Determine default serializer
 		$serializer=extension_loaded('igbinary')?'igbinary':'default';
 		// Assign default value to router-related variables
-		$fw->hive=[
-			'ROUTES'=>[],
+		$fw->routes=[
 			'BEFORE'=>[],
+			'MAIN'=>[],
 			'AFTER'=>[],
 			'NOTFOUND'=>null,
 		];
 		// Assign default value to system variables
-		$fw->hive+=[
+		$fw->hive=[
 			'AJAX'=>$isajax,
 			'BASE'=>$_SERVER['SERVER_NAME'].$base,
 			'DEBUG'=>0,
