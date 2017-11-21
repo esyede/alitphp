@@ -2,8 +2,10 @@
 Lightweight, blazing fast micro framework
 
 
+
 ### Features
-* Clean routing engine
+
+* Clean and fully RESTful routing engine
 * Tiny laravel blade-like templating engine
 * INI style configuration
 * Dot-notation array ready
@@ -12,17 +14,20 @@ Lightweight, blazing fast micro framework
 * Tiny input validation library.
 
 
+
 ### Requirements
+
  * PHP 5.6+ (Untested on PHP7)
  * Apache webserver (optional, you can use php built-in webserver)
- * `mode_rewrite` if using apache webserver
+ * `mode_rewrite` if you use apache webserver
  * _PCRE_ 8.02+ (usually already bundled with php)
  * Writable access to `tmp/` dir, for temporary files.
 
 
-### Webserver Configuration:
-Apache
 
+### Webserver Configuration:
+
+Apache
 ```apache
 RewriteEngine On
 # RewriteBase /
@@ -64,8 +69,11 @@ IIS
 ```
 
 
+
 ### Routing Engine
+
 Alit routing engine can be used either procedural or Object Orirnted way
+
 
 #### Procedural routing
 ```php
@@ -99,7 +107,7 @@ $app->route('GET /test(/\w+)?',function($param1) use($app) {
 });
 ```
 
-Do you need middleware? Yes, it's yours!
+Do you need middleware?
 
 ```php
 $app->route('GET /admin',function() use($app) {
@@ -145,7 +153,8 @@ $app->route('GET /user','User@home');
 $app->route('GET /user/profile(/\w+)?','User@profile');
 ```
 
-#### Wait, what about routing to namespaced class? Yes, you can!
+
+#### Routing to namespaced class?
 
 ```php
 // file: app/controllers/test.php
@@ -201,7 +210,7 @@ $app->config('config.ini');
 $app->run();
 ```
 
-You need the middleware? This is it!
+Do you need the middleware?
 
 ```php
 class Test {
@@ -211,7 +220,7 @@ class Test {
     }
 
 
-    // Yes, you can define before and after-middleware as a method inside controller class
+    // Yes, you can define before and after-middleware as a method inside your controller class
     function before() {
         echo "Before route here!<br/>";
     }
@@ -223,37 +232,43 @@ class Test {
 ```
 
 
+
 ### Config Flags
+
 Alit provide some configuration flags such as:
 
 ```ini
-; for global hive assignment
+; Flag for global hive assignment
 [global]
 UI = ui/
 
-; for automatic route definition
+; Flag for automatic route definition
 [route]
 GET /     = Welcome@home
 GET /test = App\Controllers\Test@index
 
-; for including other config file
+; Flag for including other config file
 [config]
 database.ini = true
 user.ini = true
 
-; example of custom flags
+; Example of defining custom flag
 [books]
 price = 1000
 discount = 0.2
 store.name = Happy Bookstore
 store.address.street = Walikukun, Ngawi
 store.address.postal = 63256
+store.tagline.text   = This is an example \
+                        how to truncate long text \
+                        on your config file.
 ```
 
 And much more!
 
 
 ### Playing with Hive
+
 Hive is a variable that holds an array of whole system variables.
 Alit provide some method to play around with it. Let's take a look some of them:
 
@@ -262,14 +277,14 @@ Set a value
 
 ```php
 $app->set('profile',[
-    'uname'=>'johndoe',
-    'surname'=> 'John Doe',
+    'uname'=>'paijo77',
+    'surname'=> 'Paijo',
     'interest'=>['reading','football'],
     'family'=>[
-        'wife'=>'Jane Doe'
+        'wife'=>'Painem'
     ]
 ]);
-$app->set('profile.family.son','John Roe');
+$app->set('profile.family.son','Jarwo');
 ```
 
 Multiple set:
@@ -277,9 +292,9 @@ Multiple set:
 ```php
 $app->mset([
     'entry' =>[
-        'title'=>'Lorem ipsum',
+        'title'=>'Indonesia Raya',
         'posted'=>'14/10/2017',
-        'by'=>'johndoe',
+        'by'=>'paijo77',
         'category'=>'Art',
     ],
     'categories'=>['General','Art'],
@@ -293,11 +308,11 @@ _Tip: You can also setting hive value from config file like we did above_
 Get a value:
 
 ```php
-$app->get('profile')['uname'];    // johndoe
-$app->get('profile.surname');     // John Doe
+$app->get('profile')['uname'];    // paijo77
+$app->get('profile.surname');     // Paijo
 $app->get('profile.interest.1');  // football
-$app->get('profile.family.son');  // John Roe
-$app->hive()['entry']['title'];   // Lorem ipsum
+$app->get('profile.family.son');  // Jarwo
+$app->hive()['entry']['title'];   // Indonesia Raya
 ```
 
 Add a value or array of value:
@@ -306,7 +321,7 @@ Add a value or array of value:
 $app->add('profile.nationality','Indonesia');
 $app->add([
     'profile.city'=>'Ngawi',
-    'profile.favorite.food'=>'Nasi goreng'
+    'profile.favorite.food'=>'Nasi Goreng'
 ]);
 ```
 
@@ -324,21 +339,29 @@ $app->erase('entry.by');
 $app->erase(['profile.city','profile.favorite.food']);
 ```
 
-..and much more!
+And much more!
+
 
 
 #### Framework Variables
-All framework variables are stored in `$hive` property, So, to see available vars:
+
+All framework variables are stored in `$hive` and `$routes` property, So, you can do this to see available vars:
 
 ```php
+// See all hive vars
 var_dump($app->hive());
-// or
+// See all route vars
+var_dump($app->routes());
+
+// Or, see entire class properties
 var_dump($app);
 ```
 
 
 
+
 ### String Manipulation Library
+
 You can use string manipulation library after instantiate the class:
 
 ```php
@@ -349,6 +372,7 @@ Then you will be able to use all available methods, for example:
 
 ```php
 $text='world';
+
 $str->from($text)
     ->prepend('Hello ')
     ->wrap('#','??')
@@ -360,6 +384,7 @@ $str->from($text)
 
 
 ### Validation Library
+
 You can use validation library after instantiate the class:
 
 ```php
@@ -369,7 +394,8 @@ $eval=Validation::instance();
 Then you will be able to use all available methods, for example:
 
 ```php
-$data=['email'=>'johndoe@gmail.com'];
+$data=['email'=>'paijo77@gmail.com'];
+
 $eval->isvalid($data,['email'=>'required|valid_email']); // Return: true
 $eval->isvalid($data,['email'=>'required|min_len,100']);
 // Return:
@@ -382,12 +408,12 @@ Default error message is in english. To set the error message you can use the `s
 before calling the `isvalid()`.
 
 ```php
-// ...some validation logic...
-$data=['email'=>'johndoe@gmail.com'];
+$data=['email'=>'paijo77@gmail.com'];
 $lang=[
     'required'=>'Kolom {field} wajib diisi!',
     'min_len'=>'Kolom {field} setidaknya harus berisi {param} karakter'
 ];
+
 $eval->setlang($lang);
 $eval->isvalid($data,['email'=>'required|min_len,100']);
 ```
@@ -397,11 +423,12 @@ _Tip: you can see all available error languages by using `$eval->languages()` fu
 
 
 ### DB\SQL Library
+
 You can use DB\SQL library by passing config array on class instantiation:
 
 ```php
 $config=[
-    'username'=>'johndoe',
+    'username'=>'paijo77',
     'password'=>'s3cr3t',
     'database'=>'my_database',
     'host'=>'localhost',            // optional, default to 'localhost'
@@ -418,22 +445,23 @@ $db=new DB\SQL($config);
 Now you can use all DB\SQL methods, for example:
 
 ```php
-// Get multiple results
-$db->table('profile')
-   ->select('id,name,address')
-   ->where('age','>',15)
-   ->many();
-
 // Get single result
 $db->table('profile')
   ->select('id,name,address')
   ->where('age','>',15)
   ->one();
+
+// Get multiple results
+$db->table('profile')
+   ->select('id,name,address')
+   ->where('age','>',15)
+   ->many();
 ```
 
 
 
 ### Session Library
+
 To use the session library, you need to pass database connection object to session constructor.
 Let's assume we have database connection object saved in `$db` variable, like we did above, so
 the session instantiation will looks like:
@@ -442,15 +470,16 @@ the session instantiation will looks like:
 $sess=new Session($db,'mysession','mycookie');
 ```
 
-It will automatically create db table named `mysession` on your database and will set the cookie
+It will automatically create db table named `mysession` on your database and will set the cookie name as `mycookie`
 
 
 Then you can start using Session library like:
 
 ```php
-// store session data to database
+// Store session data to database
 $sess->set('role','administrator');
-// grab session data from database
+
+// Get session data from database
 $sess->get('role');    // Result: administrator
 $sess->erase('role');  // erase/unset the session
 $sess->destroy();      // destroy session and remove from db
@@ -459,6 +488,7 @@ $sess->destroy();      // destroy session and remove from db
 
 
 ### Knife (Template Library)
+
 As usual, do a instantiation first:
 
 ```php
@@ -468,7 +498,7 @@ $tpl=Knife::instance();
 Then you are ready to render the templates:
 
 ```php
-$data=['name'=>'John Doe'];
+$data=['name'=>'Paijo'];
 $tpl->render('mytemplate',$data);
 ```
 
@@ -482,16 +512,18 @@ before calling the `render()` function.
 And the last step is creating the `ui/mytemplate.knife.php` file:
 
 ```php
-// file: ui/mytemplate.knife.php
-@include('the-header')
+// File: ui/mytemplate.knife.php
+@include('the-header') // Including 'ui/header.knife.php'
     <body>
-        Hello {{ $name }}, how are you today?
+        Hello {{ $name }}, how are you today? // Printing variable
     </body>
-@include('the-footer')
+@include('the-footer') // Including 'ui/footer.knife.php'
 ```
 
 
-#### Benchmark Library
+
+### Benchmark Library
+
 And again you have to instantiate benchmark class before using this library:
 
 ```php
@@ -503,16 +535,20 @@ And then use the benchmark library as follow:
 ```php
 $bench->start('my-app');
 
-// some code to benchmark here
+// ...
+// Some code to benchmark here
+// ...
 
 $bench->elapsed('my-app'); // Return: 0.012
 $bench->memory(); // Return: 768 KB
 
-$bench->stop('my-app'); // stop the benchmark
+$bench->stop('my-app'); // Stop the benchmark
 ```
 
 
-#### Loading 3rd-party Library
+
+### Loading 3rd-party Library
+
 Since alit treats external class as modules (including your controller classes),
 you can load external modules by appending the containing-path of your library 
 to the `MODULES` directive, for example:
@@ -524,7 +560,9 @@ $app->set('MODULES','app/controllers/|thirdparty/')
 Note that you must add `|` (pipe, or you can also use `,` or `;`) for each of supplied folder.
 
 
-#### Unit-testing Tool
+
+### Unit-testing Tool
+
 You can use Unit-testing library by instantiate the class, like this:
 
 ```php
@@ -538,7 +576,7 @@ Then you can do unit testing like:
 
 ```php
 function hello() {
-    return "hello!";
+    return 'hello!';
 }
 
 $hello=hello();
@@ -561,7 +599,9 @@ foreach ($test->results() as $res) {
 ```
 
 
+
 ### Debugging
+
 Alit provide a `DEBUG` directive that you can adjust to see more detailed error info:
 
 ```php
@@ -577,6 +617,7 @@ Possible value for debug is:
 
 
 ### System Log
+
 You can enable system log by setting the `SYSLOG` hive to `true`
 and alit will log your system errors to  `syslog.log` file inside your `TEMP` directory
 
@@ -593,9 +634,11 @@ $app->log('[info] 3 users currently logged in','test.log');
 
 
 ### Documentation
+
 Full documentation is still work in progress..
 
 
 
 ### Contribute
+
 Please fork or pull request if you find this useful.
