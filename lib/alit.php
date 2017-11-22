@@ -89,7 +89,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@param  $handler  object|callable
 	*/
 	function before($request,$handler) {
-        $request=explode(' ',preg_replace('/\s+/',' ',$request));
+        $request=explode(' ',preg_replace('/\s\s+/',' ',$request));
         foreach ($this->split($request[0]) as $method)
             $this->hive['ROUTES']['Before'][$method][]=['pattern'=>$request[1],'handler'=>$handler];
     }
@@ -101,7 +101,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@param  $handler  object|callable
 	*/
 	function after($request,$handler) {
-        $request=explode(' ',preg_replace('/\s+/',' ',$request));
+        $request=explode(' ',preg_replace('/\s\s+/',' ',$request));
         foreach ($this->split($request[0]) as $method)
             $this->hive['ROUTES']['After'][$method][]=['pattern'=>$request[1],'handler'=>$handler];
     }
@@ -122,7 +122,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@param  $handler  object|callable
 	*/
 	function route($request,$handler) {
-        $request=explode(' ',preg_replace('/\s+/',' ',$request));
+        $request=explode(' ',preg_replace('/\s\s+/',' ',$request));
 	    foreach ($this->split($request[0]) as $method) {
 			if (!in_array($method,$this->split(self::METHODS)))
 				user_error(sprintf(self::E_Method,$method),E_USER_ERROR);
@@ -449,7 +449,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 						str_getcsv(preg_replace('/(?<!\\\\)(")(.*?)\1/',"\\1\x00\\2\\1",trim($right)));
 						preg_match('/^(?<child>[^:]+)?/',$child,$node);
 						$custom=(strtolower($node['child']!='global'));
-						$left=($custom?($node['child'].'.'):'').preg_replace('/\s+/','',$match['left']);
+						$left=($custom?($node['child'].'.'):'').preg_replace('/\s\s+/','',$match['left']);
 						// Set config array to hive
 						call_user_func_array([$this,'set'],array_merge([$left],[$right]));
 					}
@@ -1142,7 +1142,7 @@ class Preview extends \Factory {
 	*	@return  string
 	*/
     protected function tpl($name) {
-        return preg_replace('/\s+/','',$this->ui.$name);
+        return preg_replace('/\s\s+/','',$this->ui.$name);
     }
 
 	/**

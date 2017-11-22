@@ -53,7 +53,7 @@ class Knife extends \Preview {
     */
     protected function tpl($name) {
         $fw=\Alit::instance();
-        $tpl=preg_replace('/\s+/','',$this->ui.$name.'.knife.php');
+        $tpl=preg_replace('/\s\s+/','',$this->ui.$name.'.knife.php');
         $php=$this->cache.DS.md5($name).'.knife.php';
         if (!file_exists($php)||filemtime($tpl)>filemtime($php)) {
             $txt=preg_replace('/@BASE/',$fw->base(),$fw->read($tpl));
