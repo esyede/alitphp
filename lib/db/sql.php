@@ -38,6 +38,7 @@ class SQL {
 
     const
         // Error messages
+        E_DbAccount="At least you must provide username, password, and database name to your db config",
         E_Connection="Cannot connect to Database.<br><br>%s",
         E_Production="There is an error on the database, please contact administrator.",
         E_LastError="<b>DB Error:</b><pre>%s</pre><br><b>Query:</b><pre>%s</pre><br>";
@@ -63,12 +64,12 @@ class SQL {
         $config['port']=(strstr($config['host'],':')?explode(':',$config['host'])[1]:'');
         $this->prefix=(isset($config['prefix'])?$config['prefix']:'');
         $this->cachedir=(isset($config['cachedir'])?$config['cachedir']:$fw->get('TEMP'));
+        if (!in_array(['username','password','database'],$config))
+            $fw->abort(500,self::E_DbAccount);
         $dsn='';
-        if ($config['driver']=='mysql'
-        ||$config['driver']==''
-        ||$config['driver']=='pgsql')
+        if ($config['driver']=='mysql'||$config['driver']==''||$config['driver']=='pgsql')
             $dsn=$config['driver'].':host='.$config['host'].';'.
-                (($config['port'])!=''?'port='.$config['port'].';':'').'dbname='.$config['database'];
+                (($config['port']!='')?'port='.$config['port'].';':'').'dbname='.$config['database'];
         elseif ($config['driver']=='sqlite')
             $dsn='sqlite:'.$config['database'];
         elseif ($config['driver']=='oracle')
