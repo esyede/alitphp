@@ -87,7 +87,7 @@ class SQL {
     }
 
     /**
-    *   Table to aperate
+    *   Set table to operate
     *   @param  $table  string
     */
     function table($table) {
@@ -123,7 +123,7 @@ class SQL {
     }
 
     /**
-    *  Build  MIN statement
+    *  Build MIN statement
     *   @param  $fields  string
     *   @param  $name    string|null
     */
@@ -145,7 +145,7 @@ class SQL {
     }
 
     /**
-    *   Build COUNT statement
+    *   Build COUNT AS statement
     *   @param  $fields  string
     *   @param  $name    string|null
     */
@@ -175,11 +175,10 @@ class SQL {
     *   @param  $type    string|null
     */
     function join($table,$field1=null,$op=null,$field2=null,$type='') {
-        $fw=\Alit::instance();
         $on=$field1;
         $table=$this->prefix.$table;
         if (!is_null($op))
-            $on=(!in_array($op,$fw->split(self::OPERATORS))
+            $on=(!in_array($op,explode('|',self::OPERATORS))
                 ?$this->prefix.$field1.' = '.$this->prefix.$op
                 :$this->prefix.$field1.' '.$op.' '.$this->prefix.$field2);
         if (is_null($this->join))
@@ -237,7 +236,7 @@ class SQL {
     }
 
     /**
-    *   Build LEFT JOIN statement
+    *   Build LEFT OUTER JOIN statement
     *   @param  $table   string
     *   @param  $field1  string
     *   @param  $op      string|null
@@ -249,7 +248,7 @@ class SQL {
     }
 
     /**
-    *   Build RIGHT JOIN statement
+    *   Build RIGHT OUTER JOIN statement
     *   @param  $table   string
     *   @param  $field1  string
     *   @param  $op      string|null
@@ -270,7 +269,6 @@ class SQL {
     *   @param  $and_or  string|null
     */
     function where($where,$op=null,$val=null,$type='',$and_or='AND') {
-        $fw=\Alit::instance();
         if (is_array($where)) {
             $_where=[];
             foreach ($where as $column=>$data)
@@ -286,7 +284,7 @@ class SQL {
                         $w.=$type.$v.(isset($op[$k])?$this->escape($op[$k]):'');
                 $where=$w;
             }
-            elseif (!in_array($op,$fw->split(self::OPERATORS))||$op==false)
+            elseif (!in_array($op,explode('|',self::OPERATORS))||$op==false)
                 $where=$type.$where.' = '.$this->escape($op);
             else $where=$type.$where.' '.$op.' '.$this->escape($val);
         }
@@ -528,7 +526,7 @@ class SQL {
     *   @param  $perpage  int
     *   @param  $page     int
     */
-    function pagination($perpage,$page) {
+    function paginate($perpage,$page) {
         $this->limit=$perpage;
         $this->offset=($page-1)*$perpage;
         return $this;
@@ -568,7 +566,6 @@ class SQL {
     *   @param  $val    mixed|null
     */
     function having($field,$op=null,$val=null) {
-        $fw=\Alit::instance();
         if (is_array($op)) {
             $x=explode('?',$field);
             $w='';
@@ -577,7 +574,7 @@ class SQL {
                     $w.=$v.(isset($op[$k])?$this->escape($op[$k]):'');
             $this->having=$w;
         }
-        elseif (!in_array($op,$fw->split(self::OPERATORS)))
+        elseif (!in_array($op,explode('|',self::OPERATORS)))
             $this->having=$field.'> '.$this->escape($op);
         else $this->having=$field.' '.$op.' '.$this->escape($val);
         return $this;
@@ -605,7 +602,7 @@ class SQL {
     }
 
     /**
-    *   Get only one/first row af data
+    *   Get only one/first row of data
     *   @param   $type  bool
     *   @return  array|object
     */
@@ -822,7 +819,7 @@ class SQL {
         return $this->querycount;
     }
 
-    // Get builded strung of sql query
+    // Get builded string of sql query
     function sql() {
         return $this->query;
     }
@@ -898,12 +895,11 @@ class SQLCache {
     *   @param  $array  bool
     */
     function get($sql,$array=false) {
-        $fw=\Alit::instance();
         if (is_null($this->cache))
             return false;
         $target=$this->cachedir.md5($this->filename($sql)).'.db.cache';
         if (file_exists($target)) {
-            $cache=json_decode($fw->read($target),$array);
+            $cache=json_decode(\Alit::instance()->read($target),$array);
             if ((($array===true)?$cache['elapsed']:$cache->finish)<time()) {
                 unlink($target);
                 return;

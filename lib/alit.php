@@ -79,54 +79,54 @@ final class Alit extends \Factory implements \ArrayAccess {
 		METHODS='CONNECT|DELETE|GET|HEAD|OPTIONS|PATCH|POST|PUT';
 
 	protected
-		// Stores all framework variable
+		// Stores all framework variables
 		$hive;
 
 	/**
 	*	Set a before-route middleware and a handling function to be -
 	*	executed when accessed using one of the specified methods.
-	*	@param  $request  string
-	*	@param  $handler  object|callable
+	*	@param  $req  string
+	*	@param  $fn   object|callable
 	*/
-	function before($request,$handler) {
-        $request=explode(' ',preg_replace('/\s\s+/',' ',$request));
-        foreach ($this->split($request[0]) as $method)
-            $this->hive['ROUTES']['Before'][$method][]=['pattern'=>$request[1],'handler'=>$handler];
+	function before($req,$fn) {
+        $req=explode(' ',preg_replace('/\s\s+/',' ',$req));
+        foreach ($this->split($req[0]) as $verb)
+            $this->push('ROUTES.Before.'.$verb,['uri'=>$req[1],'fn'=>$fn]);
     }
 
 	/**
 	*	Set a after-route middleware and a handling function to be -
 	*	executed when accessed using one of the specified methods.
-	*	@param  $request  string
-	*	@param  $handler  object|callable
+	*	@param  $req  string
+	*	@param  $fn   object|callable
 	*/
-	function after($request,$handler) {
-        $request=explode(' ',preg_replace('/\s\s+/',' ',$request));
-        foreach ($this->split($request[0]) as $method)
-            $this->hive['ROUTES']['After'][$method][]=['pattern'=>$request[1],'handler'=>$handler];
+	function after($req,$fn) {
+        $req=explode(' ',preg_replace('/\s\s+/',' ',$req));
+        foreach ($this->split($req[0]) as $verb)
+            $this->push('ROUTES.After.'.$verb,['uri'=>$req[1],'fn'=>$fn]);
     }
 
 	/**
 	*	Set the page not found (404) handling function
-	*	@param  $handler  object|callable
+	*	@param  $fn  object|callable
 	*/
-    function notfound($handler=null) {
-		$this->set('ROUTES.Notfound',$handler);
+    function notfound($fn=null) {
+		$this->set('ROUTES.Notfound',$fn);
 
     }
 
 	/**
 	*	Store a route and a handling function to be executed -
 	*	when accessed using one of the specified methods.
-	*	@param  $methods  string
-	*	@param  $handler  object|callable
+	*	@param  $req  string
+	*	@param  $fn   object|callable
 	*/
-	function route($request,$handler) {
-        $request=explode(' ',preg_replace('/\s\s+/',' ',$request));
-	    foreach ($this->split($request[0]) as $method) {
-			if (!in_array($method,$this->split(self::METHODS)))
-				user_error(sprintf(self::E_Method,$method),E_USER_ERROR);
-			$this->hive['ROUTES']['Main'][$method][]=['pattern'=>$request[1],'handler'=>$handler];
+	function route($req,$fn) {
+        $req=explode(' ',preg_replace('/\s\s+/',' ',$req));
+	    foreach ($this->split($req[0]) as $verb) {
+			if (!in_array($verb,$this->split(self::METHODS)))
+				user_error(sprintf(self::E_Method,$verb),E_USER_ERROR);
+			$this->push('ROUTES.Main.'.$verb,['uri'=>$req[1],'fn'=>$fn]);
 		}
 	}
 
@@ -141,7 +141,7 @@ final class Alit extends \Factory implements \ArrayAccess {
     	$main=$this->get('ROUTES.Main');
     	$after=$this->get('ROUTES.After');
     	$notfound=$this->get('ROUTES.Notfound');
-    	$verb=$this->get('METHOD');
+    	$verb=$this->get('VERB');
 		// Execute before-route middleware if any
         if (isset($before[$verb]))
             $this->execute($before[$verb]);
@@ -153,19 +153,19 @@ final class Alit extends \Factory implements \ArrayAccess {
         if ($executed===0) {
 			// Call notfound handler if any
 			if (!is_null($notfound)) {
-				// Call directly if it's a closure
+				// Call directly if it's a callable (anonymous/lambda) function
 				if (is_callable($notfound))
 	                call_user_func($notfound);
 	            // If it's a class method, instantiate the class then call it's method
 				elseif (is_string($notfound)) {
 					if (stripos($notfound,'@')!==false) {
-						list($class,$method)=explode('@',$notfound);
+						list($class,$fn)=explode('@',$notfound);
 						if (class_exists($class))
-							call_user_func([new $class,$method]);
+							call_user_func([new $class,$fn]);
 						// Error, class or class-method cannot be found
-						else trigger_error(sprintf(self::E_Route,$class.'@'.$method),E_USER_ERROR);
+						else user_error(sprintf(self::E_Route,$class.'@'.$fn),E_USER_ERROR);
 					}
-					else trigger_error(sprintf(self::E_Route,$notfound),E_USER_ERROR);
+					else user_error(sprintf(self::E_Route,$notfound),E_USER_ERROR);
 				}
 			}
 			// Call default notfound message if notfound handler is not set
@@ -186,53 +186,54 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@return  int
 	*/
     private function execute($routes,$quit=false) {
+    	$verb=$this->get('VERB');
+    	$uri=$this->get('URI');
         $executed=0;
         foreach ($routes as $route) {
-            if (preg_match_all('~^'.$route['pattern'].'$~',$this->get('URI'),$matches,PREG_OFFSET_CAPTURE)) {
+            if (preg_match_all('~^'.$route['uri'].'$~',$this->get('URI'),$matches,PREG_OFFSET_CAPTURE)) {
                 $matches=array_slice($matches,1);
-                $params=array_map(function ($match,$index) use ($matches) {
+                $args=array_map(function ($match,$index) use ($matches) {
                     if (isset($matches[$index+1])
 					&&isset($matches[$index+1][0])
 					&&is_array($matches[$index+1][0]))
                         return trim(substr($match[0][0],0,$matches[$index+1][0][1]-$match[0][1]),'/');
                     else return (isset($match[0][0])?trim($match[0][0],'/'):null);
                 },$matches,array_keys($matches));
-                if (is_callable($route['handler']))
-                    call_user_func_array($route['handler'],$params);
-                elseif (stripos($route['handler'],'@')!==false) {
-                    list($controller,$method)=explode('@',$route['handler']);
+				// Execute directly if route handler is a callable function
+                if (is_callable($route['fn']))
+                    call_user_func_array($route['fn'],$args);
+				// But, if it's a string
+                elseif (stripos($route['fn'],'@')!==false) {
+                	// Find the appropriate class and method
+                    list($controller,$fn)=explode('@',$route['fn']);
                     if (class_exists($controller)) {
 						$class=new $controller;
-						// Check existence of before-route middleware
+						// Check existence of before-route middleware first
 						if (method_exists($class,'before')) {
-							$this->hive['ROUTES']['Before'][$this->get('METHOD')][]=[
-								'pattern'=>$this->get('URI'),
-								'handler'=>$controller.'@before'
-							];
+							// Assign before-route middleware info to hive
+							$this->push('ROUTES.Before.'.$verb,['uri'=>$uri,'fn'=>$controller.'@before']);
 							// Execute before-route middleware inside controller class
 							if (call_user_func([$class,'before'])===false)
-								trigger_error(sprintf(self::E_Middleware,'before',$controller.'@'.$method),
-									E_USER_ERROR);
+								user_error(sprintf(self::E_Middleware,'before',$controller.'@'.$fn),E_USER_ERROR);
 						}
-						// Check after route handler if exists, and assign it to routes array
+						// Assign after-route middleware info to hive if exists
 						if (method_exists($class,'after'))
-							$this->hive['ROUTES']['After'][$this->get('METHOD')][]=[
-								'pattern'=>$this->get('URI'),
-								'handler'=>$controller.'@after'
-							];
+							$this->push('ROUTES.After.'.$verb,['uri'=>$uri,'fn'=>$controller.'@after']);
 						// Execute main route handler
-                        if (call_user_func_array([$class,$method],$params)===false)
-                        	if (forward_static_call_array([$controller,$method],$params)===false)
-								trigger_error(sprintf(self::E_Forward,$route['handler']),E_USER_ERROR);
+                        if (call_user_func_array([$class,$fn],$args)===false)
+                        	if (forward_static_call_array([$controller,$fn],$args)===false)
+								user_error(sprintf(self::E_Forward,$route['fn']),E_USER_ERROR);
 						// Check existence of after-route middleware
 						if (method_exists($class,'after'))
 							// Execute after-route middleware inside controller class
 							if (call_user_func([$class,'after'])===false)
-								trigger_error(sprintf(self::E_Middleware,'after',$controller.'@'.$method),E_USER_ERROR);
+								user_error(sprintf(self::E_Middleware,'after',$controller.'@'.$fn),E_USER_ERROR);
 					}
-					else trigger_error(sprintf(self::E_Route,$controller.'@'.$method),E_USER_ERROR);
+					// Class doesn't exists
+					else user_error(sprintf(self::E_Route,$controller.'@'.$fn),E_USER_ERROR);
                 }
-                else trigger_error(sprintf(self::E_Route,$route['handler']),E_USER_ERROR);
+				// Invalid route handler detected!
+                else user_error(sprintf(self::E_Route,$route['fn']),E_USER_ERROR);
                 $executed++;
                 if ($quit)
 					break;
@@ -252,14 +253,14 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*/
 	function abort($code,$reason=null,$file=null,$line=null,$trace=null,$level=0) {
 		if ($code) {
-			$hdrmsg=@constant('self::HTTP_'.$code);
-			error_log($code.' '.$hdrmsg);
+			$status=@constant('self::HTTP_'.$code);
+			error_log($code.' '.$status);
 			$trace=$this->backtrace($trace);
 			foreach (explode("\n",$trace) as $log)
 				if ($log)
 					error_log($log);
 			$this->set('ERROR',[
-				'status'=>$hdrmsg,
+				'status'=>$status,
 				'code'=>$code,
 				'file'=>$file,
 				'line'=>$line,
@@ -280,16 +281,16 @@ final class Alit extends \Factory implements \ArrayAccess {
 			}
 			ob_start();
 			if (!headers_sent()) {
-				header($_SERVER['SERVER_PROTOCOL'].' '.$code.' '.$hdrmsg);
+				header($_SERVER['SERVER_PROTOCOL'].' '.$code.' '.$status);
 				header('X-Powered-By: '.$this->get('PACKAGE'));
 			}
 			if ($this->get('AJAX'))
 					echo json_encode(['status'=>500,'data'=>$this->get('ERROR')]);
 			else {
 				echo "<!DOCTYPE html>\n<html>".
-					"\n\t<head>\n\t\t<title>".$code." ".$hdrmsg."</title>\n\t</head>".
+					"\n\t<head>\n\t\t<title>".$code." ".$status."</title>\n\t</head>".
 					"\n\t<body style=\"color:#666\">\n".
-					"\t\t<h1>".$code." ".$hdrmsg."</h1>\n".
+					"\t\t<h1>".$code." ".$status."</h1>\n".
 					"\t\t<p>".ucfirst($reason)."</p>\n";
 				echo (!empty($file)&&!empty($line))
 					?"\t\t<pre>".$file.":<font color=\"red\">".$line."</font></pre><br>\n":"";
@@ -347,7 +348,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	}
 
 	/**
-	*	Handler for common and fatal errors
+	*	Custom shutdown function for error handling purpose
 	*	@param  $cwd  string
 	*/
 	function shutdown($cwd) {
@@ -382,7 +383,7 @@ final class Alit extends \Factory implements \ArrayAccess {
             exit();
         }
         catch (\Exception $ex) {
-			trigger_error(sprintf(self::E_Redirect,$url),E_USER_ERROR);
+			user_error(sprintf(self::E_Redirect,$url),E_USER_ERROR);
         }
     }
 
@@ -987,9 +988,9 @@ final class Alit extends \Factory implements \ArrayAccess {
 		ini_set('default_charset',$charset='UTF-8');
 		if (extension_loaded('mbstring'))
 			mb_internal_encoding($charset);
-		// Turn-off standard error reporting
+		// Turn-off default error reporting
 		ini_set('display_errors',0);
-		// Exception handler
+		// Override default exception handler
 		set_exception_handler(function($obj) {
 			$this->set('EXCEPTION',$obj);
 			$this->abort(500,
@@ -1000,7 +1001,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 				$obj->getCode()
 			);
 		});
-		// Error handler
+		// Override default error handler
 		set_error_handler(function($level,$reason,$file,$line) {
 			if ($level & error_reporting())
 				$this->abort(500,$reason,$file,$line,null,$level);
@@ -1054,15 +1055,15 @@ final class Alit extends \Factory implements \ArrayAccess {
 		// Get request method
 		// if it's a HEAD request, override it to being GET and prevent any output
 		// Reference: http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.4
-        $method=$_SERVER['REQUEST_METHOD'];
+        $verb=$_SERVER['REQUEST_METHOD'];
         if ($_SERVER['REQUEST_METHOD']=='HEAD') {
             ob_start();
-            $method='GET';
+            $verb='GET';
         } // If it's a POST request, check for a method override header
         elseif ($_SERVER['REQUEST_METHOD']=='POST') {
             if (isset($headers['X-HTTP-Method-Override'])
 			&&in_array($headers['X-HTTP-Method-Override'],['PUT','DELETE','PATCH']))
-                $method=$headers['X-HTTP-Method-Override'];
+                $verb=$headers['X-HTTP-Method-Override'];
         }
 		// Determine server port
 		$port=80;
@@ -1088,7 +1089,6 @@ final class Alit extends \Factory implements \ArrayAccess {
 			'HOST'=>$_SERVER['SERVER_NAME'],
 			'IP'=>$ip,
 			'LIB'=>$fw->slash(__DIR__).'/',
-			'METHOD'=>$method,
 			'MODULES'=>null,
 			'PACKAGE'=>self::PACKAGE,
 			'PROTO'=>$proto,
@@ -1103,13 +1103,14 @@ final class Alit extends \Factory implements \ArrayAccess {
 			'UA'=>$ua,
 			'UI'=>'./',
 			'URI'=>$uri,
+			'VERB'=>$verb,
 			'VERSION'=>self::VERSION,
 		];
 		// Set default timezone
 		date_default_timezone_set($fw->hive['TZ']);
-		// Register autoloader function
+		// Register custom class-autoloader function
 		spl_autoload_register([$fw,'autoloader']);
-		// Register fatal error handler
+		// Register custom shutdown function
 		register_shutdown_function([$fw,'shutdown'],getcwd());
 	}
 }
