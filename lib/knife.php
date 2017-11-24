@@ -29,11 +29,25 @@ class Knife extends \Preview {
     function __construct() {
         parent::__construct();
         $fw=\Alit::instance();
-        $this->cache=$fw->get('ROOT').str_replace('./','',$fw->get('TEMP'));
-        $this->format="htmlspecialchars(%s,ENT_QUOTES,'UTF-8')";
+        $this->cachepath($fw->get('ROOT').str_replace('./','',$fw->get('TEMP')));
+        $this->format("htmlspecialchars(%s,ENT_QUOTES,'UTF-8')");
     }
 
+    /**
+    *   Change echo format
+    *   @param  $format  string
+    */
+    protected function format($format) {
+        $this->format=$format;
+    }
 
+    /**
+    *   Change cache location
+    *   @param  $path  string
+    */
+    protected function cachepath($path) {
+        $this->cache=$path;
+    }
 
 	/**
 	*	Cleanup template cache
@@ -107,14 +121,6 @@ class Knife extends \Preview {
                 sprintf($this->format,$this->_echodefault($found[2])).'?>'.$space;
         },$vars);
         return $vars;
-    }
-
-    /**
-    *   Change echo format
-    *   @param  $format  string
-    */
-    protected function format($format) {
-        $this->format=$format;
     }
 
     /**

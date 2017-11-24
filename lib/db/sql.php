@@ -534,12 +534,12 @@ class SQL {
 
     /**
     *   Build ORDER BY statement
-    *   @param  $orderby    int
-    *   @param  $order_dir  int
+    *   @param  $orderby  int
+    *   @param  $sorting  int
     */
-    function order_by($orderby,$order_dir=null) {
-        if (!is_null($order_dir))
-            $this->orderby=$orderby.' '.strtoupper($order_dir);
+    function order_by($orderby,$sorting=null) {
+        if (!is_null($sorting))
+            $this->orderby=$orderby.' '.strtoupper($sorting);
         else {
             if (stristr($orderby,' ')||$orderby=='RAND()')
                 $this->orderby=$orderby;
@@ -603,7 +603,7 @@ class SQL {
 
     /**
     *   Get only one/first row of data
-    *   @param   $type  bool
+    *   @param   $type         bool|string
     *   @return  array|object
     */
     function one($type=false) {
@@ -616,7 +616,7 @@ class SQL {
 
     /**
     *   Get all data of affected rows
-    *   @param   $type  bool
+    *   @param   $type        bool|string
     *   @return  array|object
     */
     function many($type=false) {
