@@ -90,7 +90,7 @@ Multiple methods is supported:
 
 ```php
 $app->route('GET|POST|PUT /',function() use($app) {
-    echo "You're using {$app->get('METHOD')} method !";
+    echo "You're using {$app->get('VERB')} method !";
 });
 ```
 
@@ -171,7 +171,7 @@ class Test {
     }
 
     function index() {
-        echo "Hello from Test class! you're using {$this->app->get('METHOD')} method";
+        echo "Hello from Test class! you're using {$this->app->get('VERB')} method";
     }
     // ...
 }
@@ -348,8 +348,12 @@ And much more!
 All framework variables are stored in `$hive` and `$routes` property, So, you can do this to see available vars:
 
 ```php
+// See all hive vars
 var_dump($app->hive());
-// Or,
+// See all route vars
+var_dump($app->routes());
+
+// Or, see entire class properties
 var_dump($app);
 ```
 
@@ -400,7 +404,7 @@ $eval->isvalid($data,['email'=>'required|min_len,100']);
 // )
 ```
 
-Default error message is in english. To set the error message you can use the `setlang()` method
+Default error message is in english. To set the error message you can use the `setlang()` method 
 before calling the `isvalid()`.
 
 ```php
@@ -509,11 +513,11 @@ And the last step is creating the `ui/mytemplate.knife.php` file:
 
 ```php
 // File: ui/mytemplate.knife.php
-@include('the-header') // Including 'ui/header.knife.php'
+@include('header') // Including 'ui/header.knife.php'
     <body>
         Hello {{ $name }}, how are you today? // Printing variable
     </body>
-@include('the-footer') // Including 'ui/footer.knife.php'
+@include('footer') // Including 'ui/footer.knife.php'
 ```
 
 
@@ -546,7 +550,7 @@ $bench->stop('my-app'); // Stop the benchmark
 ### Loading 3rd-party Library
 
 Since alit treats external class as modules (including your controller classes),
-you can load external modules by appending the containing-path of your library
+you can load external modules by appending the containing-path of your library 
 to the `MODULES` directive, for example:
 
 ```php
