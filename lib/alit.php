@@ -89,7 +89,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@param  $fn   object|callable
 	*/
 	function before($req,$fn) {
-        $req=preg_split('/\s+/',preg_replace('/\s\s+/',' ',$req),-1,PREG_SPLIT_NO_EMPTY);
+        $req=preg_split('/ /',preg_replace('/\s\s+/',' ',$req),-1,PREG_SPLIT_NO_EMPTY);
         foreach ($this->split($req[0]) as $verb)
             $this->push('ROUTES.Before.'.$verb,['uri'=>$req[1],'fn'=>is_string($fn)?trim($fn):$fn]);
     }
@@ -101,7 +101,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@param  $fn   object|callable
 	*/
 	function after($req,$fn) {
-        $req=preg_split('/\s+/',preg_replace('/\s\s+/',' ',$req),-1,PREG_SPLIT_NO_EMPTY);
+        $req=preg_split('/ /',preg_replace('/\s\s+/',' ',$req),-1,PREG_SPLIT_NO_EMPTY);
         foreach ($this->split($req[0]) as $verb)
             $this->push('ROUTES.After.'.$verb,['uri'=>$req[1],'fn'=>is_string($fn)?trim($fn):$fn]);
     }
@@ -122,7 +122,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@param  $fn   object|callable
 	*/
 	function route($req,$fn) {
-        $req=preg_split('/\s+/',preg_replace('/\s\s+/',' ',$req),-1,PREG_SPLIT_NO_EMPTY);
+        $req=preg_split('/ /',preg_replace('/\s\s+/',' ',$req),-1,PREG_SPLIT_NO_EMPTY);
 	    foreach ($this->split($req[0]) as $verb) {
 			if (!in_array($verb,$this->split(self::METHODS)))
 				user_error(sprintf(self::E_Method,$verb),E_USER_ERROR);
@@ -156,7 +156,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 				// Call directly if it's a callable (anonymous/lambda) function
 				if (is_callable($notfound))
 	                call_user_func($notfound);
-	            // If it's a class method, instantiate the class then call it's method
+	            // If it's a class method, instantiate the class then call it!
 				elseif (is_string($notfound)) {
 					if (stripos($notfound,'@')!==false) {
 						list($class,$fn)=explode('@',$notfound);
@@ -206,6 +206,7 @@ final class Alit extends \Factory implements \ArrayAccess {
                 elseif (stripos($route['fn'],'@')!==false) {
                 	// Find the appropriate class and method
                     list($controller,$fn)=explode('@',$route['fn']);
+                    // Check existence of the class
                     if (class_exists($controller)) {
 						$class=new $controller;
 						// Check existence of before-route middleware first
@@ -235,7 +236,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 				// Invalid route handler detected!
                 else user_error(sprintf(self::E_Route,$route['fn']),E_USER_ERROR);
                 $executed++;
-                if ($quit)
+                if ((bool)$quit===true)
 					break;
             }
         }
