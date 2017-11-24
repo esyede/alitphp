@@ -89,9 +89,9 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@param  $fn   object|callable
 	*/
 	function before($req,$fn) {
-        $req=explode(' ',preg_replace('/\s\s+/',' ',$req));
+        $req=preg_split('/\s+/',preg_replace('/\s\s+/',' ',$req),-1,PREG_SPLIT_NO_EMPTY);
         foreach ($this->split($req[0]) as $verb)
-            $this->push('ROUTES.Before.'.$verb,['uri'=>$req[1],'fn'=>$fn]);
+            $this->push('ROUTES.Before.'.$verb,['uri'=>$req[1],'fn'=>is_string($fn)?trim($fn):$fn]);
     }
 
 	/**
@@ -101,9 +101,9 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@param  $fn   object|callable
 	*/
 	function after($req,$fn) {
-        $req=explode(' ',preg_replace('/\s\s+/',' ',$req));
+        $req=preg_split('/\s+/',preg_replace('/\s\s+/',' ',$req),-1,PREG_SPLIT_NO_EMPTY);
         foreach ($this->split($req[0]) as $verb)
-            $this->push('ROUTES.After.'.$verb,['uri'=>$req[1],'fn'=>$fn]);
+            $this->push('ROUTES.After.'.$verb,['uri'=>$req[1],'fn'=>is_string($fn)?trim($fn):$fn]);
     }
 
 	/**
@@ -111,7 +111,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@param  $fn  object|callable
 	*/
     function notfound($fn=null) {
-		$this->set('ROUTES.Notfound',$fn);
+		$this->set('ROUTES.Notfound',is_string($fn)?trim($fn):$fn);
 
     }
 
@@ -122,11 +122,11 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@param  $fn   object|callable
 	*/
 	function route($req,$fn) {
-        $req=explode(' ',preg_replace('/\s\s+/',' ',$req));
+        $req=preg_split('/\s+/',preg_replace('/\s\s+/',' ',$req),-1,PREG_SPLIT_NO_EMPTY);
 	    foreach ($this->split($req[0]) as $verb) {
 			if (!in_array($verb,$this->split(self::METHODS)))
 				user_error(sprintf(self::E_Method,$verb),E_USER_ERROR);
-			$this->push('ROUTES.Main.'.$verb,['uri'=>$req[1],'fn'=>$fn]);
+			$this->push('ROUTES.Main.'.$verb,['uri'=>$req[1],'fn'=>is_string($fn)?trim($fn):$fn]);
 		}
 	}
 
@@ -294,7 +294,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 					"\t\t<p>".ucfirst($reason)."</p>\n";
 				echo (!empty($file)&&!empty($line))
 					?"\t\t<pre>".$file.":<font color=\"red\">".$line."</font></pre><br>\n":"";
-				// Show backtrace if DEBUG is activated
+				// Show debug backtrace if DEBUG is activated
 				if ((int)$this->get('DEBUG')>0)
 					echo "\t\t<b>Back Trace:</b><br>\n\t\t<pre>".$trace."</pre>\n";
 				echo "\t</body>\n</html>";
