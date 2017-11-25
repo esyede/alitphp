@@ -156,12 +156,22 @@ final class Alit extends \Factory implements \ArrayAccess {
 				// Call directly if it's a callable (anonymous/lambda) function
 				if (is_callable($notfound))
 	                call_user_func($notfound);
-	            // If it's a class method, instantiate the class then call it!
+	            // If it's a class method
 				elseif (is_string($notfound)) {
 					if (stripos($notfound,'@')!==false) {
-						list($class,$fn)=explode('@',$notfound);
-						if (class_exists($class))
-							call_user_func([new $class,$fn]);
+						list($controller,$fn)=explode('@',$notfound);
+						// Check class existence, then instantiate it!
+						if (class_exists($controller)) {
+							$obj=new $controller;
+							if (is_subclass_of($obj,'Factory'))
+								$class=call_user_func($controller.'::instance');
+							else {
+								$ref=new \ReflectionClass($obj);
+								$class=method_exists($obj,'__construct')?$ref->newInstance():$obj;
+							}
+							// Finally, call the appropriate class method
+							call_user_func([$class,$fn]);
+						}
 						// Error, class or class-method cannot be found
 						else user_error(sprintf(self::E_Route,$class.'@'.$fn),E_USER_ERROR);
 					}
@@ -190,7 +200,7 @@ final class Alit extends \Factory implements \ArrayAccess {
     	$uri=$this->get('URI');
         $executed=0;
         foreach ($routes as $route) {
-            if (preg_match_all('~^'.$route['uri'].'$~',$this->get('URI'),$matches,PREG_OFFSET_CAPTURE)) {
+            if (preg_match_all('~^'.$route['uri'].'$~',$uri,$matches,PREG_OFFSET_CAPTURE)) {
                 $matches=array_slice($matches,1);
                 $args=array_map(function ($match,$index) use ($matches) {
                     if (isset($matches[$index+1])
@@ -208,7 +218,13 @@ final class Alit extends \Factory implements \ArrayAccess {
                     list($controller,$fn)=explode('@',$route['fn']);
                     // Check existence of the class
                     if (class_exists($controller)) {
-						$class=new $controller;
+						$obj=new $controller;
+						if (is_subclass_of($obj,'Factory'))
+							$class=call_user_func($controller.'::instance');
+						else {
+							$ref=new \ReflectionClass($controller);
+							$class=method_exists($obj,'__construct')?$ref->newInstance():$obj;
+						}
 						// Check existence of before-route middleware first
 						if (method_exists($class,'before')) {
 							// Assign before-route middleware info to hive
@@ -434,7 +450,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 					}
 					if (!empty($fn))
 						call_user_func_array(
-							// Call method based on config flag
+							// Call method based on config flag (route/config)
 							[$this,$fn[1]],
 							// Array to be passed in
 							array_merge([$match['left']],str_getcsv($match['right']))
@@ -549,7 +565,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 
 
 //!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//! Hive - functions to playing around with framework variables
+//! Hive - functions to play around with framework variables
 //!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
@@ -933,7 +949,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@return  string|null
 	*/
 	function segment($key,$default=null) {
-		$uri=array_map('trim',preg_split('~/~',$app->get('URI'),0,PREG_SPLIT_NO_EMPTY));
+		$uri=array_map('trim',preg_split('~/~',$app->get('URI'),-1,PREG_SPLIT_NO_EMPTY));
 		return array_key_exists($key,$uri)?$uri[$key]:$default;
 	}
 
@@ -991,7 +1007,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 			mb_internal_encoding($charset);
 		// Turn-off default error reporting
 		ini_set('display_errors',0);
-		// Override default exception handler
+		// Override default PHP exception handler
 		set_exception_handler(function($obj) {
 			$this->set('EXCEPTION',$obj);
 			$this->abort(500,
@@ -1002,12 +1018,13 @@ final class Alit extends \Factory implements \ArrayAccess {
 				$obj->getCode()
 			);
 		});
-		// Override default error handler
+		// Override default PHP error handler
 		set_error_handler(function($level,$reason,$file,$line) {
 			if ($level & error_reporting())
 				$this->abort(500,$reason,$file,$line,null,$level);
 		});
 		$fw=$this;
+		$base=null;
 		if (is_null($fw->hive['URI']))
 			$base=implode('/',array_slice(explode('/',$_SERVER['SCRIPT_NAME']),0,-1)).'/';
         $uri=substr($_SERVER['REQUEST_URI'],strlen($base));
@@ -1211,7 +1228,7 @@ class Preview extends \Factory {
 
 	/**
 	*	Block ends
-	*	@param   $overwrite  boolean
+	*	@param   $overwrite  bool
 	*	@return  string
 	*/
     protected function endblock($overwrite=false) {
@@ -1251,7 +1268,7 @@ abstract class Factory {
 //! Warehouse - container for singular object instances
 //!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 final class Warehouse {
-	// object table
+	// Object table
 	private static $table;
 
 	/**
