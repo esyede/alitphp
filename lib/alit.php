@@ -162,18 +162,18 @@ final class Alit extends \Factory implements \ArrayAccess {
 						list($controller,$fn)=explode('@',$notfound);
 						// Check class existence, then instantiate it!
 						if (class_exists($controller)) {
-							$obj=new $controller;
-							if (is_subclass_of($obj,'Factory'))
+							$class=new $controller;
+							if (is_subclass_of($class,'Factory'))
 								$class=call_user_func($controller.'::instance');
 							else {
-								$ref=new \ReflectionClass($obj);
-								$class=method_exists($obj,'__construct')?$ref->newInstance():$obj;
+								$ref=new \ReflectionClass($class);
+								$class=method_exists($class,'__construct')?$ref->newInstance():$class;
 							}
 							// Finally, call the appropriate class method
 							call_user_func([$class,$fn]);
 						}
 						// Error, class or class-method cannot be found
-						else user_error(sprintf(self::E_Route,$class.'@'.$fn),E_USER_ERROR);
+						else user_error(sprintf(self::E_Route,$controller.'@'.$fn),E_USER_ERROR);
 					}
 					else user_error(sprintf(self::E_Route,$notfound),E_USER_ERROR);
 				}
@@ -218,12 +218,12 @@ final class Alit extends \Factory implements \ArrayAccess {
                     list($controller,$fn)=explode('@',$route['fn']);
                     // Check existence of the class
                     if (class_exists($controller)) {
-						$obj=new $controller;
-						if (is_subclass_of($obj,'Factory'))
+						$class=new $controller;
+						if (is_subclass_of($class,'Factory'))
 							$class=call_user_func($controller.'::instance');
 						else {
 							$ref=new \ReflectionClass($controller);
-							$class=method_exists($obj,'__construct')?$ref->newInstance():$obj;
+							$class=method_exists($class,'__construct')?$ref->newInstance():$class;
 						}
 						// Check existence of before-route middleware first
 						if (method_exists($class,'before')) {
