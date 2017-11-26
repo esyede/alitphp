@@ -160,18 +160,9 @@ final class Alit extends \Factory implements \ArrayAccess {
 				elseif (is_string($notfound)) {
 					if (stripos($notfound,'@')!==false) {
 						list($controller,$fn)=explode('@',$notfound);
-						// Check class existence, then instantiate it!
-						if (class_exists($controller)) {
-							$class=new $controller;
-							if (is_subclass_of($class,'Factory'))
-								$class=call_user_func($controller.'::instance');
-							else {
-								$ref=new \ReflectionClass($class);
-								$class=method_exists($class,'__construct')?$ref->newInstance():$class;
-							}
-							// Finally, call the appropriate class method
-							call_user_func([$class,$fn]);
-						}
+						// Check class existence, then call it!
+						if (class_exists($controller))
+							call_user_func([new $controller,$fn]);
 						// Error, class or class-method cannot be found
 						else user_error(sprintf(self::E_Route,$controller.'@'.$fn),E_USER_ERROR);
 					}
@@ -219,12 +210,6 @@ final class Alit extends \Factory implements \ArrayAccess {
                     // Check existence of the class
                     if (class_exists($controller)) {
 						$class=new $controller;
-						if (is_subclass_of($class,'Factory'))
-							$class=call_user_func($controller.'::instance');
-						else {
-							$ref=new \ReflectionClass($controller);
-							$class=method_exists($class,'__construct')?$ref->newInstance():$class;
-						}
 						// Check existence of before-route middleware first
 						if (method_exists($class,'before')) {
 							// Assign before-route middleware info to hive
@@ -351,6 +336,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 		// Analyze stack trace
 		foreach ($trace as $stack) {
 			$line='';
+			// Delete the function arguments, e don't need it :)
 			if (isset($stack['args']))
 				unset($stack['args']);
 			if (isset($stack['class']))
@@ -474,6 +460,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 				}
 			}
 		}
+		// It's chainable :)
 		return $this;
 	}
 

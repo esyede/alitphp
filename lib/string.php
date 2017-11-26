@@ -292,6 +292,7 @@ class String extends \Factory implements \Serializable {
     }
 
     /**
+    *   Magic method to get string result
     *   @return  string
     */
     function __toString() {

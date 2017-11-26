@@ -64,7 +64,9 @@ class SQL {
         $config['port']=(strstr($config['host'],':')?explode(':',$config['host'])[1]:'');
         $this->prefix=(isset($config['prefix'])?$config['prefix']:'');
         $this->cachedir=(isset($config['cachedir'])?$config['cachedir']:$fw->get('TEMP'));
-        if (!in_array(['username','password','database'],$config))
+        if (!isset($config['username'])
+        ||!isset($config['password'])
+        ||!isset($config['database']))
             $fw->abort(500,self::E_DbAccount);
         $dsn='';
         if ($config['driver']=='mysql'||$config['driver']==''||$config['driver']=='pgsql')

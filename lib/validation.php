@@ -50,47 +50,47 @@ class Validation extends \Factory {
     static
         // Validation error messages
         $err_msg=[
-            'required'                 => 'The {field} field is required',
-            'valid_email'              => 'The {field} field must be a valid email address',
-            'max_len'                  => 'The {field} field needs to be {param} characters or less',
-            'min_len'                  => 'The {field} field needs to be at least {param} characters',
-            'exact_len'                => 'The {field} field needs to be exactly {param} characters',
-            'alpha'                    => 'The {field} field may only contain letters',
-            'alpha_numeric'            => 'The {field} field may only contain letters and numbers',
-            'alpha_numeric_space'      => 'The {field} field may only contain letters, numbers and spaces',
-            'alpha_dash'               => 'The {field} field may only contain letters and dashes',
-            'alpha_space'              => 'The {field} field may only contain letters and spaces',
-            'numeric'                  => 'The {field} field must be a number',
-            'integer'                  => 'The {field} field must be a number without a decimal',
-            'boolean'                  => 'The {field} field has to be either true or false',
-            'float'                    => 'The {field} field must be a number with a decimal point (float)',
-            'valid_url'                => 'The {field} field has to be a URL',
-            'url_exists'               => 'The {field} URL does not exist',
-            'valid_ip'                 => 'The {field} field needs to be a valid IP address',
-            'valid_ipv4'               => 'The {field} field needs to contain a valid IPv4 address',
-            'valid_ipv6'               => 'The {field} field needs to contain a valid IPv6 address',
-            'guidv4'                   => 'The {field} field needs to contain a valid GUID',
-            'valid_cc'                 => 'The {field} is not a valid credit card number',
-            'valid_name'               => 'The {field} should be a full name',
-            'contains'                 => 'The {field} can only be one of the following: {param}',
-            'contains_list'            => 'The {field} is not a valid option',
-            'doesnt_contain_list'      => 'The {field} field contains a value that is not accepted',
-            'street_address'           => 'The {field} field needs to be a valid street address',
-            'date'                     => 'The {field} must be a valid date',
-            'min_numeric'              => 'The {field} field needs to be a numeric value, equal to, or higher than {param}',
-            'max_numeric'              => 'The {field} field needs to be a numeric value, equal to, or lower than {param}',
-            'min_age'                  => 'The {field} field needs to have an age greater than or equal to {param}',
-            'invalid'                  => 'The {field} field is invalid',
-            'starts'                   => 'The {field} field needs to start with {param}',
-            'extension'                => 'The {field} field can only have one of the following extensions: {param}',
-            'required_file'            => 'The {field} field is required',
-            'equalsfield'              => 'The {field} field does not equal {param} field',
-            'iban'                     => 'The {field} field needs to contain a valid IBAN',
-            'phone_number'             => 'The {field} field needs to be a valid Phone Number',
-            'valid_json_string'        => 'The {field} field needs to contain a valid JSON format string',
-            'valid_array_size_greater' => 'The {field} fields needs to be an array with a size, equal to, or higher than {param}',
-            'valid_array_size_lesser'  => 'The {field} fields needs to be an array with a size, equal to, or lower than {param}',
-            'valid_array_size_equal'   => 'The {field} fields needs to be an array with a size equal to {param}',
+            'required'                 => "The %s field is required",
+            'valid_email'              => "The %s field must be a valid email address",
+            'max_len'                  => "The %s field needs to be %s characters or less",
+            'min_len'                  => "The %s field needs to be at least %s characters",
+            'exact_len'                => "The %s field needs to be exactly %s characters",
+            'alpha'                    => "The %s field may only contain letters",
+            'alpha_numeric'            => "The %s field may only contain letters and numbers",
+            'alpha_numeric_space'      => "The %s field may only contain letters, numbers and spaces",
+            'alpha_dash'               => "The %s field may only contain letters and dashes",
+            'alpha_space'              => "The %s field may only contain letters and spaces",
+            'numeric'                  => "The %s field must be a number",
+            'integer'                  => "The %s field must be a number without a decimal",
+            'boolean'                  => "The %s field has to be either true or false",
+            'float'                    => "The %s field must be a number with a decimal point",
+            'valid_url'                => "The %s field has to be a URL",
+            'url_exists'               => "The %s URL does not exist",
+            'valid_ip'                 => "The %s field needs to be a valid IP address",
+            'valid_ipv4'               => "The %s field needs to contain a valid IPv4 address",
+            'valid_ipv6'               => "The %s field needs to contain a valid IPv6 address",
+            'guidv4'                   => "The %s field needs to contain a valid GUID",
+            'valid_cc'                 => "The %s is not a valid credit card number",
+            'valid_name'               => "The %s should be a full name",
+            'contains'                 => "The %s can only be one of the following: %s",
+            'contains_list'            => "The %s is not a valid option",
+            'doesnt_contain_list'      => "The %s field contains a value that is not accepted",
+            'street_address'           => "The %s field needs to be a valid street address",
+            'date'                     => "The %s must be a valid date",
+            'min_numeric'              => "The %s field needs to be numeric, equal or higher than %s",
+            'max_numeric'              => "The %s field needs to be numeric, equal or lower than %s",
+            'min_age'                  => "The %s field needs to have an age with %s or higher",
+            'invalid'                  => "The %s field is invalid",
+            'starts'                   => "The %s field needs to start with %s",
+            'extension'                => "The %s field can only have one of the following type: %s",
+            'required_file'            => "The %s field is required",
+            'equalsfield'              => "The %s field does not equal %s field",
+            'iban'                     => "The %s field needs to contain a valid IBAN",
+            'phone_number'             => "The %s field needs to be a valid Phone Number",
+            'valid_json_string'        => "The %s field needs to contain a valid JSON format string",
+            'valid_array_size_greater' => "The %s fields needs to be array with size %s or higher",
+            'valid_array_size_lesser'  => "The %s fields needs to be array with size %s or lower",
+            'valid_array_size_equal'   => "The %s fields needs to be an array with a size equal to %s",
         ];
 
     const
@@ -477,10 +477,7 @@ class Validation extends \Factory {
             if (isset($allmsg[$err['rule']])) {
                 if (is_array($arg))
                     $arg=implode(',',$arg);
-                $msg=str_replace('{param}',$arg,
-                    str_replace('{field}','<span class="'.$field_class.'">'.$field.'</span>',
-                    $allmsg[$err['rule']])
-                );
+                $msg=sprintf($allmsg[$err['rule']],'<span class="'.$field_class.'">',$arg);
                 $response[]=$msg;
             }
             else $fw->abort(500,sprintf(self::E_Rule_NoMsg,$err['rule']));
@@ -520,9 +517,7 @@ class Validation extends \Factory {
                 if (!isset($response[$err['field']])) {
                     if (is_array($arg))
                         $arg=implode(',',$arg);
-                    $msg=str_replace('{param}',$arg,
-                        str_replace('{field}',$field,$allmsg[$err['rule']])
-                    );
+                    $msg=sprintf($allmsg[$err['rule']],$field,$arg);
                     $response[$err['field']]=$msg;
                 }
             }
