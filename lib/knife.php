@@ -15,10 +15,10 @@ if (!defined('DS')) die('Direct file access is not allowed.');
 class Knife extends \Preview {
 
     protected
-        // Cache directory
-        $cache,
         // Output format
-        $format;
+        $format,
+        // Path to save chache file
+        $cachepath;
 
     const
         // Command-type tokens
@@ -46,7 +46,7 @@ class Knife extends \Preview {
     *   @param  $path  string
     */
     protected function cachepath($path) {
-        $this->cache=$path;
+        $this->cachepath=$path;
     }
 
 	/**
@@ -54,7 +54,7 @@ class Knife extends \Preview {
 	*	@return  bool
 	*/
     function cleanup() {
-        foreach (glob($this->cache.'*.knife.php') as $f)
+        foreach (glob($this->cachepath.'*.knife.php') as $f)
 			if (unlink($f))
                 return true;
         return false;
@@ -68,7 +68,7 @@ class Knife extends \Preview {
     protected function tpl($name) {
         $fw=\Alit::instance();
         $tpl=preg_replace('/\s\s+/','',$this->ui.$name.'.knife.php');
-        $php=$this->cache.DS.md5($name).'.knife.php';
+        $php=$this->cachepath.DS.md5($name).'.knife.php';
         if (!file_exists($php)||filemtime($tpl)>filemtime($php)) {
             $txt=preg_replace('/@BASE/',$fw->base(),$fw->read($tpl));
             foreach ($fw->split(self::TOKENS) as $type)

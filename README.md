@@ -17,10 +17,10 @@ Lightweight, blazing fast micro framework
 
 ### Requirements
 
- * PHP 5.6+ (Untested on PHP7)
- * Apache webserver (optional, you can use php built-in webserver)
- * `mode_rewrite` if you use apache webserver
- * _PCRE_ 8.02+ (usually already bundled with php)
+ * PHP 5.6+ (untested on PHP7)
+ * Webserver (optional, you can use PHP built-in webserver)
+ * `mode_rewrite` if you use Apache
+ * _PCRE_ 8.02+ (usually already bundled with PHP)
  * Writable access to `tmp/` dir, for temporary files.
 
 
@@ -100,10 +100,10 @@ Supported methods: `CONNECT` `DELETE` `GET` `HEAD` `OPTIONS` `PATCH` `POST` `PUT
 Regex pattern is also supported:
 
 ```php
-$app->route('GET /test(/\w+)?',function($param1) use($app) {
-    echo 'Hello from '.(!isset($param1)
+$app->route('GET /test(/\w+)?',function($arg) use($app) {
+    echo 'Hello from '.(!isset($arg)
             ? '/test'
-            : '/test/'.$param1).' !';
+            : '/test/'.$arg).' !';
 });
 ```
 
@@ -127,7 +127,7 @@ $app->after('GET /admin',function() use($app) {
 
 #### Dealing with OOP
 
-Firstly, you must create the handler class:
+Firstly, you must create the controller class:
 
 ```php
 // file: user.php
@@ -157,21 +157,21 @@ $app->route('GET /user/profile(/\w+)?','User@profile');
 #### Routing to namespaced class?
 
 ```php
-// file: app/controllers/test.php
+// File: app/controllers/test.php
 namespace App\Controllers;
+use \Alit;
 
 class Test {
     protected $app;
 
     function __construct() {
-        // get the framework instance
-        $this->app=\Alit::instance();
-        // we add `\` (backslash) on core-class instantiation
-        // because on alit, 'lib/' dir is the base namespace
+        // Get the framework instance
+        $this->app=Alit::instance();
     }
 
     function index() {
-        echo "Hello from Test class! you're using {$this->app->get('VERB')} method";
+        $app=$this->app;
+        echo "Hello from Test class! you're using {$app->get('VERB')} method";
     }
     // ...
 }
@@ -180,7 +180,7 @@ class Test {
 Then you **must** append class directory to `MODULES` directive in order to help autoloader find your classes
 
 ```php
-$app->set('MODULES','app/controllers/'); // note: you must add trailing slash to the end of it
+$app->set('MODULES','app/controllers/'); // Note: you must add trailing slash to the end of it
 ```
 
 And finally, you can register it to your route:
@@ -193,7 +193,7 @@ $app->route('GET /test','App\Controllers\Test@index');
 Or even further, you can specify routes in a config file, like this:
 
 ```ini
-; file: config.ini
+; File: config.ini
 ; [route] is a flag for automatic routing definition
 
 [route]
@@ -220,7 +220,8 @@ class Test {
     }
 
 
-    // Yes, you can define before and after-middleware as a method inside your controller class
+    // Yes, you can define before and after-middleware as a method name -
+    // inside your controller classess
     function before() {
         echo "Before route here!<br/>";
     }
@@ -247,7 +248,7 @@ UI = ui/
 GET /     = Welcome@home
 GET /test = App\Controllers\Test@index
 
-; Flag for including other config file
+; Flag for including other config files
 [config]
 database.ini = true
 user.ini = true
@@ -259,7 +260,7 @@ discount = 0.2
 store.name = Happy Bookstore
 store.address.street = Walikukun, Ngawi
 store.address.postal = 63256
-store.tagline.text   = This is an example \
+store.dummy.text     = This is an example \
                         how to truncate long text \
                         on your config file.
 ```
@@ -269,11 +270,11 @@ And much more!
 
 ### Playing with Hive
 
-Hive is a variable that holds an array of whole system variables.
-Alit provide some method to play around with it. Let's take a look some of them:
+Hive (like a bee hive) is a variable that holds an array of whole system variables.
+Alit provide some method to play around with it. Let's take a look at some of them:
 
 
-Set a value
+Set a value to hive:
 
 ```php
 $app->set('profile',[
@@ -302,10 +303,10 @@ $app->mset([
 ]);
 ```
 
-_Tip: You can also setting hive value from config file like we did above_
+_Tip: You can also assign the hive value from config file like we did above_
 
 
-Get a value:
+Get a value from hive:
 
 ```php
 $app->get('profile')['uname'];    // paijo77
@@ -345,15 +346,13 @@ And much more!
 
 #### Framework Variables
 
-All framework variables are stored in `$hive` and `$routes` property, So, you can do this to see available vars:
+Since all framework variables are stored in `$hive` property, You can do this to see all available vars:
 
 ```php
 // See all hive vars
 var_dump($app->hive());
-// See all route vars
-var_dump($app->routes());
 
-// Or, see entire class properties
+// Or, see entire object
 var_dump($app);
 ```
 
@@ -404,14 +403,14 @@ $eval->isvalid($data,['email'=>'required|min_len,100']);
 // )
 ```
 
-Default error message is in english. To set the error message you can use the `setlang()` method 
+Default error message is in english. To set the error message you can use the `setlang()` method
 before calling the `isvalid()`.
 
 ```php
 $data=['email'=>'paijo77@gmail.com'];
 $lang=[
-    'required'=>'Kolom {field} wajib diisi!',
-    'min_len'=>'Kolom {field} setidaknya harus berisi {param} karakter'
+    'required'=>"Kolom %s wajib diisi!",
+    'min_len'=>"Kolom %s setidaknya harus berisi %s karakter"
 ];
 
 $eval->setlang($lang);
@@ -431,14 +430,16 @@ $config=[
     'username'=>'paijo77',
     'password'=>'s3cr3t',
     'database'=>'my_database',
-    'host'=>'localhost',            // optional, default to 'localhost'
-    'driver'=>'mysql',              // optional, default to 'mysql'
-    'port'=>3306,                   // optional, default to 'null'
-    'prefix'=>'',                   // optional, default to 'null'
-    'charset'=>'utf8',              // optional, default to 'utf8'
-    'collation'=>'utf8_general_ci', // optional, default to 'utf8_general_ci'
-    'cachedir'=>null,               // optional, default to temp dir.
+    'host'=>'localhost',            // Optional, default to 'localhost'
+    'driver'=>'mysql',              // Optional, default to 'mysql' (possible value: mysql, pgsql, sqlite, oracle)
+    'port'=>3306,                   // Optional, default to 'null'
+    'prefix'=>'',                   // Optional, default to 'null'
+    'charset'=>'utf8',              // Optional, default to 'utf8'
+    'collation'=>'utf8_general_ci', // Optional, default to 'utf8_general_ci'
+    'cachedir'=>null,               // Optional, default to TEMP dir.
 ];
+
+// Pass the config to class constructor
 $db=new DB\SQL($config);
 ```
 
@@ -481,15 +482,17 @@ $sess->set('role','administrator');
 
 // Get session data from database
 $sess->get('role');    // Result: administrator
-$sess->erase('role');  // erase/unset the session
-$sess->destroy();      // destroy session and remove from db
+$sess->erase('role');  // Erase/unset the session
+$sess->destroy();      // Destroy session and remove from db
+
+$sess->data(); // Prints all session data as array
 ```
 
 
 
 ### Knife (Template Library)
 
-As usual, do a instantiation first:
+As usual, do an instantiation first:
 
 ```php
 $tpl=Knife::instance();
@@ -500,6 +503,9 @@ Then you are ready to render the templates:
 ```php
 $data=['name'=>'Paijo'];
 $tpl->render('mytemplate',$data);
+
+// Or you can do:
+// Knife::instance()->render('mytemplate',$data);
 ```
 
 Based on above code, knife will look for `mytemplate.knife.php` file in `UI` directory.
@@ -513,11 +519,11 @@ And the last step is creating the `ui/mytemplate.knife.php` file:
 
 ```php
 // File: ui/mytemplate.knife.php
-@include('header') // Including 'ui/header.knife.php'
+@include('header') // Including other template (ui/header.knife.php)
     <body>
         Hello {{ $name }}, how are you today? // Printing variable
     </body>
-@include('footer') // Including 'ui/footer.knife.php'
+@include('footer') // Including other template (ui/footer.knife.php)
 ```
 
 
@@ -550,14 +556,14 @@ $bench->stop('my-app'); // Stop the benchmark
 ### Loading 3rd-party Library
 
 Since alit treats external class as modules (including your controller classes),
-you can load external modules by appending the containing-path of your library 
+you can load external modules by appending the containing-path of your library
 to the `MODULES` directive, for example:
 
 ```php
-$app->set('MODULES','app/controllers/|thirdparty/')
+$app->set('MODULES','app/controllers/|thirdparty/');
 ```
 
-Note that you must add `|` (pipe, or you can also use `,` or `;`) for each of supplied folder.
+Note that you must add `|` (pipe, or you can also use `,` or `;`) for each supplied folder.
 
 
 
@@ -609,10 +615,10 @@ $app->set('DEBUG',3);
 ```
 
 Possible value for debug is:
- * 0 : suppresses prints of the stack trace (default)
- * 1 : prints files & lines
- * 2 : prints classes & functions as well
- * 3 : prints detailed infos of the objects as well
+ * 0 : Suppresses prints of the stack trace (default)
+ * 1 : Prints files & lines
+ * 2 : Prints classes & functions as well
+ * 3 : Prints detailed infos of the objects as well
 
 
 
