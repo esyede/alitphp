@@ -766,10 +766,8 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@return  array
 	*/
     function sort($key=null) {
-        if (is_string($key)) {
-            $val=$this->get($key);
-            return $this->arrsort((array)$val);
-        }
+        if (is_string($key))
+            return $this->arrsort((array)$this->get($key));
         elseif (is_null($key))
             return $this->arrsort($this->hive);
     }
@@ -1252,7 +1250,7 @@ abstract class Factory {
 
 
 //!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//! Warehouse - container for singular object instances
+//! Warehouse - Container for singular object instances
 //!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 final class Warehouse {
 	// Object table

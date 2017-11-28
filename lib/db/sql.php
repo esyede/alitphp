@@ -94,10 +94,10 @@ class SQL {
     */
     function table($table) {
         if (is_array($table)) {
-            $f='';
+            $frm='';
             foreach ($table as $key)
-                $f.=$this->prefix.$key.', ';
-            $this->from=rtrim($f,', ');
+                $frm.=$this->prefix.$key.', ';
+            $this->from=rtrim($frm,', ');
         }
         else $this->from=$this->prefix.$table;
         return $this;

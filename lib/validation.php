@@ -111,7 +111,10 @@ class Validation extends \Factory {
 
     }
 
-
+    /**
+    *   Set error messages text
+    *   @param  $errors  array
+    */
     static function setlang(array $errors) {
         $fw=\Alit::instance();
         $eval=self::instance();
@@ -371,7 +374,7 @@ class Validation extends \Factory {
                             $rule=explode(',',$rule);
                             $method='validate_'.$rule[0];
                             $arg=$rule[1];
-                            // Check if $arg is regex then throw error message, sorry!
+                            // Prohibit regex pattern as a function's argument. sorry!
                             if (preg_match("/^\/.+\/[a-z]*$/i",$arg))
                                 $fw->abort(500,sprintf(self::E_Arg_isRegex,$rule));
                             $rule=$rule[0];
@@ -460,7 +463,7 @@ class Validation extends \Factory {
     *   @param   $err_class     string
     *   @return  array|string
     */
-    function get_readable_errors($to_string=false,$field_class='check-field',$err_class='error-message') {
+    function get_readable_errors($to_string=false,$field_class='check-field',$err_class='error-msg') {
         $fw=\Alit::instance();
         if (empty($this->errors))
             return ((bool)$to_string)?null:[];

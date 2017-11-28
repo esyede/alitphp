@@ -82,7 +82,8 @@ class String extends \Factory implements \Serializable {
     /**
     *   Strip whitespace (or other characters) from the beginning and end of a string
     *   Optionally, the stripped characters can also be specified using the chars parameter.
-    *   Simply list all characters that you want to be stripped. With .. you can specify a range of characters.
+    *   Simply list all characters that you want to be stripped.
+    *   With .. you can specify a range of characters.
     *   @param  $chars  string
     */
     function trim($chars=null) {
@@ -93,7 +94,8 @@ class String extends \Factory implements \Serializable {
     /**
     *   Strip whitespace (or other characters) from the end of a string
     *   You can also specify the characters you want to strip, by means of the chars parameter.
-    *   Simply list all characters that you want to be stripped. With .. you can specify a range of characters.
+    *   Simply list all characters that you want to be stripped.
+    *   With .. you can specify a range of characters.
     *   @param $chars  string
     */
     function rtrim($chars=null) {
@@ -104,7 +106,8 @@ class String extends \Factory implements \Serializable {
     /**
     *   Strip whitespace (or other characters) from the beginning of a string
     *   You can also specify the characters you want to strip, by means of the chars parameter.
-    *   Simply list all characters that you want to be stripped. With .. you can specify a range of characters.
+    *   Simply list all characters that you want to be stripped.
+    *   With .. you can specify a range of characters.
     *   @param  $chars  string
     */
     function ltrim($chars=null) {

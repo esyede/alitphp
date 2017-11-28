@@ -56,7 +56,8 @@ class Test {
 			$data=['status'=>$out,'message'=>$msg,'source'=>null];
 			foreach (debug_backtrace() as $src)
 				if (isset($src['file'])) {
-					$data['source']=$fw->slash($src['file']).':<font color="red">'.$src['line'].'</font>';
+					$data['source']=$fw->slash($src['file']).
+						':<font color="red">'.$src['line'].'</font>';
 					break;
 				}
 			$this->data[]=$data;
