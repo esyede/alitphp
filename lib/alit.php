@@ -136,6 +136,13 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@return  bool
 	*/
     function run() {
+    	// Send some headers
+		header('X-XSS-Protection: 1; mode=block');
+		header('X-Content-Type-Options: nosniff');
+    	if (!is_null($this->get('PACKAGE')))
+			header('X-Powered-By: '.$this->get('PACKAGE'));
+		if (!is_null($this->get('XFRAME')))
+			header('X-Frame-Options: '.$this->get('XFRAME'));
     	// Get routes info
     	$before=$this->get('ROUTES.Before');
     	$main=$this->get('ROUTES.Main');
@@ -160,12 +167,13 @@ final class Alit extends \Factory implements \ArrayAccess {
 				elseif (is_string($notfound)) {
 					if (stripos($notfound,'@')!==false) {
 						list($controller,$fn)=explode('@',$notfound);
-						// Check class existence, then call it!
+						// Check class existence, then call appropriate method inside it!
 						if (class_exists($controller))
 							call_user_func([new $controller,$fn]);
 						// Error, class or class-method cannot be found
 						else user_error(sprintf(self::E_Route,$controller.'@'.$fn),E_USER_ERROR);
 					}
+					// Error, route handler is neither string containing '@' or callable function
 					else user_error(sprintf(self::E_Route,$notfound),E_USER_ERROR);
 				}
 			}
@@ -175,6 +183,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 		// Execute after-route middleware if any
         else if (isset($after[$verb]))
             $this->execute($after[$verb]);
+        // Clean output buffer if it's a HEAD request
         if ($verb=='HEAD')
         	ob_end_clean();
 		return ($executed>0);
@@ -1108,6 +1117,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 			'URI'=>$uri,
 			'VERB'=>$verb,
 			'VERSION'=>self::VERSION,
+			'XFRAME'=>'SAMEORIGIN',
 		];
 		// Set default timezone
 		date_default_timezone_set($fw->hive['TZ']);
