@@ -82,7 +82,8 @@ class Session {
             $res->data=$fw->unserialize($res->data);
             $this->data['token']=$res->token;
             if ($res->ip==$fw->get('IP')) {
-                if (count($res->data)>0)
+                $count=count($res->data);
+                if ($count>0)
                     foreach($res->data as $key=>$val)
                         $this->set($key,$val);
                 $this->data['seen']=time();

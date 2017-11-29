@@ -118,7 +118,8 @@ class Validation extends \Factory {
     static function setlang(array $errors) {
         $fw=\Alit::instance();
         $eval=self::instance();
-        if (is_array($errors)&&count($errors)>0)
+        $count=count($errors);
+        if (is_array($errors)&&$count>0)
             foreach ($errors as $k=>$v)
                 $eval->lang['validate_'.$k]=$v;
         else $fw->abort(500,self::E_InvSetLang);
@@ -356,8 +357,8 @@ class Validation extends \Factory {
         $this->errors=[];
         foreach ($ruleset as $field=>$rules) {
             $rules=preg_split('/(?<!\\\)\|(?![^\|]+\))/',$rules);
-            if (count(array_intersect(['required_file','required'],$rules))>0
-            ||(isset($ipt[$field]))) {
+            $count=count(array_intersect(['required_file','required'],$rules));
+            if ($count>0||(isset($ipt[$field]))) {
                 if (isset($ipt[$field])) {
                     if (is_array($ipt[$field])
                     &&in_array('required_file',$ruleset))
@@ -405,7 +406,8 @@ class Validation extends \Factory {
                 }
             }
         }
-        return (count($this->errors)>0)?$this->errors:true;
+        $count=count($this->errors);
+        return ($count>0)?$this->errors:true;
     }
 
     /**
@@ -544,7 +546,8 @@ class Validation extends \Factory {
                 $args=null;
                 if (strstr($filter,',')!==false) {
                     $filter=explode(',',$filter);
-                    $args=array_slice($filter,1,count($filter)-1);
+                    $count=count($filter);
+                    $args=array_slice($filter,1,$count-1);
                     $filter=$filter[0];
                 }
                 if (is_array($ipt[$field]))

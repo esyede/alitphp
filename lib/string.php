@@ -271,7 +271,8 @@ class String extends \Factory implements \Serializable {
     *   @return  int
     */
     function countlines() {
-        return count($this->lines());
+        $count=count($this->lines());
+        return $count;
     }
 
     /**
