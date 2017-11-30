@@ -685,7 +685,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 			$this->set($key,[]);
 		elseif (is_array($key))
 			foreach ($key as $k)
-				$this->clear($k,[]);
+				$this->clear($k);
 	}
 
 	/**
