@@ -992,6 +992,8 @@ final class Alit extends \Factory implements \ArrayAccess {
 
 	// Prohibit cloning
 	private function __clone() {}
+	// Prohibit unserialization
+	private function __wakeup() {}
 
 	// Class constructor
 	function __construct() {
