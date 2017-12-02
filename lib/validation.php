@@ -564,6 +564,7 @@ class Validation extends \Factory {
                         $val=call_user_func(self::$filter_methods[$filter],$val,$args);
                     else $fw->abort(500,sprintf(self::E_Filter_Inexist,$filter));
                 }
+                unset($ipt_arr);
             }
         }
         return $ipt;
@@ -943,7 +944,7 @@ class Validation extends \Factory {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
             return;
-        if (!preg_match('/^([a-z0-9ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖßÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ_-])+$/i',
+        if (!preg_match('/^([a-zÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖßÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ_-])+$/i',
         $ipt[$field])!==false)
             return [
                 'field'=>$field,
@@ -1456,7 +1457,7 @@ class Validation extends \Factory {
             $allow=explode(';',$arg);
             $info=pathinfo($ipt[$field]['name']);
             $ext=isset($info['extension'])?$info['extension']:false;
-            if ($ext&&in_array($ext,$allow))
+            if ($ext&&in_array(strtolower($ext),$allow))
                 return;
             return [
                 'field'=>$field,
