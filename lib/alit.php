@@ -868,20 +868,20 @@ final class Alit extends \Factory implements \ArrayAccess {
 
 	/**
 	*	Recursively convert array to object
-	*	@param   $arr    array
-	*	@return  object
+	*	@param   $arr         array
+	*	@return  object|null
 	*/
 	function arr2obj($arr) {
-	    return json_decode(json_encode((array)$arr));
+	    return is_array($arr)?json_decode(json_encode($arr,JSON_FORCE_OBJECT),false):null;
 	}
 
 	/**
 	*	Recursively convert object to array
-	*	@param   $obj    object
-	*	@return  array
+	*	@param   $obj        object
+	*	@return  array|null
 	*/
 	function obj2arr($obj) {
-	    return json_decode(json_encode((object)$obj),true);
+	    return is_object($obj)?json_decode(json_encode($obj),true):null;
 	}
 
 	/**
