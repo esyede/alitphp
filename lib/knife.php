@@ -106,16 +106,16 @@ class Knife extends \Preview {
     *   @return  string
     */
     protected function _echo($vars) {
-        $vars=preg_replace_callback('/\{\{\{\s*(.+?)\s*\}\}\}(\r?\n)?/s',function ($found) {
+        $vars=preg_replace_callback('/\{\{\{\s*(.+?)\s*\}\}\}(\r?\n)?/s',function($found) {
             $space=empty($found[2])?'':$found[2];
             return '<?php echo htmlspecialchars('.
                 $this->_echodefault($found[1]).",ENT_QUOTES,'UTF-8')?>".$space;
         },$vars);
-        $vars=preg_replace_callback('/\{\!!\s*(.+?)\s*!!\}(\r?\n)?/s',function ($found) {
+        $vars=preg_replace_callback('/\{\!!\s*(.+?)\s*!!\}(\r?\n)?/s',function($found) {
             $space=empty($found[2])?'':$found[2];
             return '<?php echo '.$this->_echodefault($found[1]).'?>'.$space;
         },$vars);
-        $vars=preg_replace_callback('/(@)?\{\{\s*(.+?)\s*\}\}(\r?\n)?/s',function ($found) {
+        $vars=preg_replace_callback('/(@)?\{\{\s*(.+?)\s*\}\}(\r?\n)?/s',function($found) {
             $space=empty($found[3])?'':$found[3];
             return $found[1]?substr($found[0],1):'<?php echo '.
                 sprintf($this->format,$this->_echodefault($found[2])).'?>'.$space;
