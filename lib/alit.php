@@ -11,6 +11,7 @@
 if (!defined('DS')) define('DS',DIRECTORY_SEPARATOR);
 
 
+
 //!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //! Alit - The core class
 //!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -86,7 +87,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	Set a before-route middleware and a handling function to be -
 	*	executed when accessed using one of the specified methods.
 	*	@param  $req  string
-	*	@param  $fn   object|callable
+	*	@param  $fn   string|callable
 	*/
 	function before($req,$fn) {
         $req=preg_split('/ /',preg_replace('/\s\s+/',' ',$req),-1,PREG_SPLIT_NO_EMPTY);
@@ -98,7 +99,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	Set a after-route middleware and a handling function to be -
 	*	executed when accessed using one of the specified methods.
 	*	@param  $req  string
-	*	@param  $fn   object|callable
+	*	@param  $fn   string|callable
 	*/
 	function after($req,$fn) {
         $req=preg_split('/ /',preg_replace('/\s\s+/',' ',$req),-1,PREG_SPLIT_NO_EMPTY);
@@ -108,7 +109,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 
 	/**
 	*	Set the page not found (404) handling function
-	*	@param  $fn  object|callable
+	*	@param  $fn  string|callable
 	*/
     function notfound($fn=null) {
 		$this->set('ROUTES.Notfound',is_string($fn)?trim($fn):$fn);
@@ -119,7 +120,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	Store a route and a handling function to be executed -
 	*	when accessed using one of the specified methods.
 	*	@param  $req  string
-	*	@param  $fn   object|callable
+	*	@param  $fn   string|callable
 	*/
 	function route($req,$fn) {
         $req=preg_split('/ /',preg_replace('/\s\s+/',' ',$req),-1,PREG_SPLIT_NO_EMPTY);
@@ -131,7 +132,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	}
 
 	/**
-	*	Execute the framework: Loop all defined route before middleware's and routes, -
+	*	Run the framework: Loop all defined route before middleware's and routes, -
 	*	and execute the handling function if a route was found.
 	*	@return  bool
 	*/
@@ -192,7 +193,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	/**
 	*	Execute a set of routes: if a route is found, invoke the relating handling function
 	*	@param   $routes  array
-	*	@param   $quit    boolean
+	*	@param   $quit    bool
 	*	@return  int
 	*/
     private function execute($routes,$quit=false) {
@@ -202,7 +203,7 @@ final class Alit extends \Factory implements \ArrayAccess {
         foreach ($routes as $route) {
             if (preg_match_all('~^'.$route['uri'].'$~',$uri,$matches,PREG_OFFSET_CAPTURE)) {
                 $matches=array_slice($matches,1);
-                $args=array_map(function ($match,$index) use ($matches) {
+                $args=array_map(function($match,$index) use($matches) {
                     if (isset($matches[$index+1])
 					&&isset($matches[$index+1][0])
 					&&is_array($matches[$index+1][0]))
@@ -246,7 +247,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 				// Invalid route handler detected!
                 else user_error(sprintf(self::E_Route,$route['fn']),E_USER_ERROR);
                 $executed++;
-                if ((bool)$quit===true)
+                if ($quit===true)
 					break;
             }
         }
@@ -293,10 +294,14 @@ final class Alit extends \Factory implements \ArrayAccess {
 			ob_start();
 			if (!headers_sent()) {
 				header($_SERVER['SERVER_PROTOCOL'].' '.$code.' '.$status);
-				header('X-Powered-By: '.$this->get('PACKAGE'));
+				if (!is_null($this->get('PACKAGE')))
+					header('X-Powered-By: '.$this->get('PACKAGE'));
 			}
-			if ($this->get('AJAX'))
-					echo json_encode(['status'=>500,'data'=>$this->get('ERROR')]);
+			if ($this->get('AJAX')) {
+				if (!headers_sent())
+					header('Content-Type: application/json');
+				echo json_encode(['status'=>500,'data'=>$this->get('ERROR')]);
+			}
 			else {
 				echo "<!DOCTYPE html>\n<html>".
 					"\n\t<head>\n\t\t<title>".$code." ".$status."</title>\n\t</head>".
@@ -306,7 +311,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 				echo (!empty($file)&&!empty($line))
 					?"\t\t<pre>".$file.":<font color=\"red\">".$line."</font></pre><br>\n":"";
 				// Show debug backtrace if DEBUG is activated
-				if ((int)$this->get('DEBUG')>0)
+				if ($this->get('DEBUG')>0)
 					echo "\t\t<b>Back Trace:</b><br>\n\t\t<pre>".$trace."</pre>\n";
 				echo "\t</body>\n</html>";
 			}
@@ -331,7 +336,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 		}
 		$debug=$this->get('DEBUG');
 		$trace=array_filter($trace,
-			function($stack) use ($debug) {
+			function($stack) use($debug) {
 				return isset($stack['file'])
 					&&($debug>1||($stack['file']!=__FILE__||$debug)
 					&&(empty($stack['function'])
