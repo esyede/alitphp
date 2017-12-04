@@ -131,8 +131,8 @@ class String extends \Factory implements \Serializable {
     */
     function replace($pattern,$replace) {
         if (is_callable($replace)) {
-            $this->str=preg_replace_callback($pattern,function ($found) use($replace) {
-                $args=array_map(function ($item) {
+            $this->str=preg_replace_callback($pattern,function($found) use($replace) {
+                $args=array_map(function($item) {
                     return new \String($item);
                 },$found);
                 return call_user_func_array($replace,$args);
@@ -175,7 +175,7 @@ class String extends \Factory implements \Serializable {
     *   @param  $spaces  int
     */
     function detab($spaces=4) {
-        $this->replace('/(.*?)\t/',function (\String $w,\String $str) use($spaces) {
+        $this->replace('/(.*?)\t/',function(\String $w,\String $str) use($spaces) {
             return $str.str_repeat(' ',$spaces-$str->length()%$spaces);
         });
         return $this;
@@ -214,7 +214,7 @@ class String extends \Factory implements \Serializable {
     *   @return  object|array
     */
     function split($pattern,$flags=PREG_SPLIT_DELIM_CAPTURE) {
-        return array_map(function ($item) {
+        return array_map(function($item) {
             return new static($item);
         },preg_split($pattern,$this->str,-1,$flags));
     }
@@ -308,7 +308,8 @@ class String extends \Factory implements \Serializable {
     *   @return  string|null
     */
     function serialize() {
-        return serialize($this->str);
+
+        return \ALit::instance()->serialize($this->str);
     }
 
     /**
@@ -316,7 +317,7 @@ class String extends \Factory implements \Serializable {
     *   @param  $str  string
     */
     function unserialize($str) {
-        $this->str=unserialize($str);
+        $this->str=\ALit::instance()->unserialize($str);
     }
 
 }
