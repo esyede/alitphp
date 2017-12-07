@@ -3,7 +3,7 @@
 *   Core Class of Alit PHP
 *   @package     Alit PHP
 *   @subpackage  Alit
-*   @copyright   Copyright (c) 2017-2011 Suyadi. All Rights Reserved.
+*   @copyright   Copyright (c) 2017 Suyadi. All Rights Reserved.
 *   @license     https://opensource.org/licenses/MIT The MIT License (MIT).
 *   @author      Suyadi <suyadi.1992@gmail.com>
 */
@@ -93,6 +93,8 @@ final class Alit extends \Factory implements \ArrayAccess {
         $req=preg_split('/ /',preg_replace('/\s\s+/',' ',$req),-1,PREG_SPLIT_NO_EMPTY);
         foreach ($this->split($req[0]) as $verb)
             $this->push('ROUTES.Before.'.$verb,['uri'=>$req[1],'fn'=>is_string($fn)?trim($fn):$fn]);
+        // It's chainable!
+        return $this;
     }
 
 	/**
@@ -105,6 +107,8 @@ final class Alit extends \Factory implements \ArrayAccess {
         $req=preg_split('/ /',preg_replace('/\s\s+/',' ',$req),-1,PREG_SPLIT_NO_EMPTY);
         foreach ($this->split($req[0]) as $verb)
             $this->push('ROUTES.After.'.$verb,['uri'=>$req[1],'fn'=>is_string($fn)?trim($fn):$fn]);
+        // It's chainable!
+        return $this;
     }
 
 	/**
@@ -113,7 +117,8 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*/
     function notfound($fn=null) {
 		$this->set('ROUTES.Notfound',is_string($fn)?trim($fn):$fn);
-
+		// It's chainable!
+		return $this;
     }
 
 	/**
@@ -129,6 +134,8 @@ final class Alit extends \Factory implements \ArrayAccess {
 				user_error(sprintf(self::E_Method,$verb),E_USER_ERROR);
 			$this->push('ROUTES.Main.'.$verb,['uri'=>$req[1],'fn'=>is_string($fn)?trim($fn):$fn]);
 		}
+		// It's chainable!
+		return $this;
 	}
 
 	/**
@@ -407,7 +414,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 	/**
     *   Render view using native PHP template
     *   @param  $name  string
-    *   @param  $data  null|array
+    *   @param  $data  array|null
     */
 	function render($name,$data=null) {
 		$file=str_replace('/',DS,$this->get('BASE').str_replace('./','',$this->get('UI').$name));
@@ -425,6 +432,8 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	@param  $source  string|array
 	*/
 	function config($source) {
+		// You can pass a comma-, semicolon-, or pipe-separated string of config file at once!
+		// Eg.: user.ini|database.cfg,routes.conf;test.cfg
 		if (is_string($source))
 			$source=$this->split($source);
 		foreach ($source as $file) {
@@ -474,7 +483,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 				}
 			}
 		}
-		// It's chainable :)
+		// It's also chainable!
 		return $this;
 	}
 
@@ -504,15 +513,15 @@ final class Alit extends \Factory implements \ArrayAccess {
 	*	Write log message to file
 	*	@param   $file      string
 	*	@param   $data      mixed
-	*	@param   $block     bool
+	*	@param   $lf        bool
 	*	@return  bool
 	*/
-	function log($data,$file,$block=false) {
+	function log($data,$file,$lf=false) {
 		$ts=time();
 		$date=new \DateTime('now',new \DateTimeZone($this->get('TZ')));
 		$date->setTimestamp($ts);
 		return $this->write($file,"[".$date->format('Y/m/d H:i:s')."]".
-			((bool)$block?PHP_EOL:" ").$data.PHP_EOL,file_exists($file));
+			($lf?PHP_EOL:" ").$data.PHP_EOL,file_exists($file));
 	}
 
 	/**
@@ -545,6 +554,107 @@ final class Alit extends \Factory implements \ArrayAccess {
 				return require($file);
 	}
 
+    /**
+	*	Return string representation of PHP value
+	*	@param   $key    mixed
+	*	@return  string
+	**/
+	function serialize($key) {
+		return ($this->get('SERIALIZER')=='igbinary')
+			?igbinary_serialize($key):serialize($key);
+	}
+
+	/**
+	*	Return PHP value derived from string
+	*	@param   $key    mixed
+	*	@return  string
+	**/
+	function unserialize($key) {
+		return ($this->get('SERIALIZER')=='igbinary')
+			?igbinary_unserialize($key):unserialize($key);
+	}
+
+	/**
+	*	Recursively convert array to object
+	*	@param   $arr         array
+	*	@return  object|null
+	*/
+	function arr2obj($arr) {
+	    return is_array($arr)?json_decode(json_encode($arr,JSON_FORCE_OBJECT),false):null;
+	}
+
+	/**
+	*	Recursively convert object to array
+	*	@param   $obj        object
+	*	@return  array|null
+	*/
+	function obj2arr($obj) {
+	    return is_object($obj)?json_decode(json_encode($obj),true):null;
+	}
+
+	/**
+	*	Retrieve POST data
+	*	@param   $key         string|null
+	*	@param   $escape      bool
+	*	@return  string|null
+	*/
+	function post($key=null,$escape=true) {
+		$eval=\Validation::instance();
+		if (is_null($key)) {
+			$post=[];
+			if ($escape===true)
+				foreach ($_POST as $k=>$v)
+					$post[$k]=$eval->xss_clean([$v]);
+			return ($escape===true)?$post:$_POST;
+		}
+		elseif (isset($_POST[$key]))
+			return ($escape===true)?$eval->xss_clean([$_POST[$key]]):$_POST[$key];
+		return null;
+	}
+
+    /**
+    *   Retrieve COOKIE data
+    *   @param   $key          string
+    *   @param   $escape       bool
+    *   @return  string|false
+    */
+    function cookie($key=null,$escape=true) {
+		$eval=\Validation::instance();
+		if (is_null($key)) {
+			$cookie=[];
+			if ($escape===true)
+				foreach ($_COOKIE as $k=>$v)
+					$cookie[$k]=$eval->xss_clean([$v]);
+			return ($escape===true)?$cookie:$_COOKIE;
+		}
+		elseif (isset($_COOKIE[$key]))
+			return ($escape===true)?$eval->xss_clean([$_COOKIE[$key]]):$_COOKIE[$key];
+		return false;
+    }
+
+    /**
+    *   Set a cookie
+    *   @param   $key    string
+    *   @param   $val    mixed
+    *   @param   $ttl    int|null
+    *   @return  string
+    */
+    function setcookie($key,$val,$ttl=null) {
+        $ttl=is_null($ttl)?(time()+(60*60*24)):$ttl;
+        setcookie($key,$val,$ttl,$this->get('TEMP'));
+    }
+
+	/**
+	*	Retrieve parts of URI
+	*	@param   $key         int
+	*	@param   $default     string|null
+	*	@return  string|null
+	*/
+	function segment($key,$default=null) {
+		$uri=array_map('trim',preg_split('~/~',$app->get('URI'),-1,PREG_SPLIT_NO_EMPTY));
+		return array_key_exists($key,$uri)?$uri[$key]:$default;
+	}
+
 	/**
 	*	Replace backslash with slash
 	*	@param   $str    string
@@ -564,9 +674,18 @@ final class Alit extends \Factory implements \ArrayAccess {
 		return array_map('trim',preg_split('/[,;|]/',$str,0,$noempty?PREG_SPLIT_NO_EMPTY:0));
 	}
 
+	/**
+	*	Generate 64bit/base36 hash
+	*	@param   $str    string
+	*	@return  string
+	*/
+	function hash($str) {
+		return str_pad(base_convert(substr(sha1($str),-16),16,36),11,'0',STR_PAD_LEFT);
+	}
+
 
 //!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//! Hive - functions to play around with framework variables
+//! Hive - Methods to play around with framework variables
 //!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
@@ -851,107 +970,6 @@ final class Alit extends \Factory implements \ArrayAccess {
         return $this->hive;
     }
 
-    /**
-	*	Return string representation of PHP value
-	*	@param   $key    mixed
-	*	@return  string
-	**/
-	function serialize($key) {
-		return ($this->get('SERIALIZER')=='igbinary')
-			?igbinary_serialize($key):serialize($key);
-	}
-
-	/**
-	*	Return PHP value derived from string
-	*	@param   $key    mixed
-	*	@return  string
-	**/
-	function unserialize($key) {
-		return ($this->get('SERIALIZER')=='igbinary')
-			?igbinary_unserialize($key):unserialize($key);
-	}
-
-	/**
-	*	Recursively convert array to object
-	*	@param   $arr         array
-	*	@return  object|null
-	*/
-	function arr2obj($arr) {
-	    return is_array($arr)?json_decode(json_encode($arr,JSON_FORCE_OBJECT),false):null;
-	}
-
-	/**
-	*	Recursively convert object to array
-	*	@param   $obj        object
-	*	@return  array|null
-	*/
-	function obj2arr($obj) {
-	    return is_object($obj)?json_decode(json_encode($obj),true):null;
-	}
-
-	/**
-	*	Retrieve POST data
-	*	@param   $key         string|null
-	*	@param   $escape      bool
-	*	@return  string|null
-	*/
-	function post($key=null,$escape=true) {
-		$eval=\Validation::instance();
-		if (is_null($key)) {
-			$post=[];
-			if ($escape===true)
-				foreach ($_POST as $k=>$v)
-					$post[$k]=$eval->xss_clean([$v]);
-			return ($escape===true)?$post:$_POST;
-		}
-		elseif (isset($_POST[$key]))
-			return ($escape===true)?$eval->xss_clean([$_POST[$key]]):$_POST[$key];
-		return null;
-	}
-
-    /**
-    *   Retrieve COOKIE data
-    *   @param   $key          string
-    *   @param   $escape       bool
-    *   @return  string|false
-    */
-    function cookie($key=null,$escape=true) {
-		$eval=\Validation::instance();
-		if (is_null($key)) {
-			$cookie=[];
-			if ($escape===true)
-				foreach ($_COOKIE as $k=>$v)
-					$cookie[$k]=$eval->xss_clean([$v]);
-			return ($escape===true)?$cookie:$_COOKIE;
-		}
-		elseif (isset($_COOKIE[$key]))
-			return ($escape===true)?$eval->xss_clean([$_COOKIE[$key]]):$_COOKIE[$key];
-		return false;
-    }
-
-    /**
-    *   Set a cookie
-    *   @param   $key    string
-    *   @param   $val    mixed
-    *   @param   $ttl    int|null
-    *   @return  string
-    */
-    function setcookie($key,$val,$ttl=null) {
-        $ttl=is_null($ttl)?(time()+(60*60*24)):$ttl;
-        setcookie($key,$val,$ttl,$this->get('TEMP'));
-    }
-
-	/**
-	*	Retrieve parts of URI
-	*	@param   $key         int
-	*	@param   $default     string|null
-	*	@return  string|null
-	*/
-	function segment($key,$default=null) {
-		$uri=array_map('trim',preg_split('~/~',$app->get('URI'),-1,PREG_SPLIT_NO_EMPTY));
-		return array_key_exists($key,$uri)?$uri[$key]:$default;
-	}
-
 
 //!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //! ArrayAccess Interface Methods
@@ -1028,6 +1046,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 		$base=null;
 		if (is_null($fw->hive['URI']))
 			$base=implode('/',array_slice(explode('/',$_SERVER['SCRIPT_NAME']),0,-1)).'/';
+		$seed=$fw->hash($_SERVER['SERVER_NAME'].$base);
         $uri=substr($_SERVER['REQUEST_URI'],strlen($base));
         if (strstr($uri,'?'))
 			$uri=substr($uri,0,strpos($uri,'?'));
@@ -1101,6 +1120,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 		$fw->hive=[
 			'AJAX'=>$isajax,
 			'BASE'=>$_SERVER['SERVER_NAME'].$base,
+			'CACHE'=>false,
 			'DEBUG'=>0,
 			'ERROR'=>null,
 			'EXCEPTION'=>null,
@@ -1114,6 +1134,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 			'PORT'=>$port,
 			'ROOT'=>$_SERVER['DOCUMENT_ROOT'].$base,
 			'ROUTES'=>$routes,
+			'SEED'=>$seed,
 			'SERIALIZER'=>$serializer,
 			'SYSLOG'=>false,
 			'TEMP'=>'tmp/',
