@@ -2,7 +2,7 @@
 <html lang="en-us" dir="ltr">
     <head>
         <meta charset="utf-8">
-        <title>{{ $app }}</title>
+        <title>{{ $title }}</title>
         <style>
             body {
                 font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
