@@ -198,7 +198,7 @@ Or even further, you can specify routes in a config file, like this:
 
 [route]
 GET /                 = Welcome@home
-GET /profile(/\w+)    = Welcome@profile
+GET /profile(/\w+)?   = Welcome@profile
 GET|POST|PUT /test    = App\Controllers\Test@index
 ```
 
@@ -206,8 +206,8 @@ And your _index.php_ will be even simpler:
 
 ```php
 $app=require('lib/alit.php');
-$app->config('config.ini');
-$app->run();
+$app->config('config.ini')
+    ->run();
 ```
 
 Do you need the middleware?
