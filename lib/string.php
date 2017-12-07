@@ -1,9 +1,9 @@
 <?php
 /**
-*   Tiny string manipulation library for Alit PHP
+*   Tiny String Manipulation Library for Alit PHP
 *   @package     Alit PHP
 *   @subpackage  Alit.String
-*   @copyright   Copyright (c) 2017-2011 Suyadi. All Rights Reserved.
+*   @copyright   Copyright (c) 2017 Suyadi. All Rights Reserved.
 *   @license     https://opensource.org/licenses/MIT The MIT License (MIT)
 *   @author      Suyadi <suyadi.1992@gmail.com>
 */

@@ -3,7 +3,7 @@
 *   Tiny Validation Library for Alit PHP
 *   @package     Alit PHP
 *   @subpackage  Alit.Validation
-*   @copyright   Copyright (c) 2017-2011 Suyadi. All Rights Reserved.
+*   @copyright   Copyright (c) 2017 Suyadi. All Rights Reserved.
 *   @license     https://opensource.org/licenses/MIT The MIT License (MIT)
 *   @author      Suyadi <suyadi.1992@gmail.com>
 */
@@ -487,7 +487,7 @@ class Validation extends \Factory {
             }
             else $fw->abort(500,sprintf(self::E_Rule_NoMsg,$err['rule']));
         }
-        if ((bool)$to_string===false)
+        if ($to_string===false)
             return $response;
         else {
             $buffer='';

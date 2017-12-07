@@ -1,9 +1,9 @@
 <?php
 /**
-*   Tiny Blade-Like Template Engine for Alit PHP
+*   Tiny Template Engine for Alit PHP
 *   @package     Alit PHP
 *   @subpackage  Alit.Knife
-*   @copyright   Copyright (c) 2017-2011 Suyadi. All Rights Reserved.
+*   @copyright   Copyright (c) 2017 Suyadi. All Rights Reserved.
 *   @license     https://opensource.org/licenses/MIT The MIT License (MIT)
 *   @author      Suyadi <suyadi.1992@gmail.com>
 */

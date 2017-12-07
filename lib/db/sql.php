@@ -3,7 +3,7 @@
 *   Tiny PDO-Based SQL Query Builder for Alit PHP
 *   @package     Alit PHP
 *   @subpackage  Alit.DB.SQL
-*   @copyright   Copyright (c) 2017-2011 Suyadi. All Rights Reserved.
+*   @copyright   Copyright (c) 2017 Suyadi. All Rights Reserved.
 *   @license     https://opensource.org/licenses/MIT The MIT License (MIT)
 *   @author      Suyadi <suyadi.1992@gmail.com>
 */
@@ -267,7 +267,6 @@ class SQL {
     *   @param  $op      string|null
     *   @param  $val     string|null
     *   @param  $type    string|null
-    *   @param  $type    string|null
     *   @param  $and_or  string|null
     */
     function where($where,$op=null,$val=null,$type='',$and_or='AND') {
@@ -404,7 +403,7 @@ class SQL {
     *   @param  $field   string
     *   @param  $value1  mixed
     *   @param  $value2  mixed
-    *   @param  $tyoe    string|null
+    *   @param  $type    string|null
     *   @param  $and_or  string|null
     */
     function between($field,$value1,$value2,$type='',$and_or='AND') {
@@ -456,12 +455,11 @@ class SQL {
     *   Build LIKE statement
     *   @param  $field   string
     *   @param  $data    mixed
-    *   @param  $tyoe    string|null
+    *   @param  $type    string|null
     *   @param  $and_or  string
     */
     function like($field,$data,$type='',$and_or='AND') {
-        $like=$this->escape($data);
-        $where=$field.' '.$type.'LIKE '.$like;
+        $where=$field.' '.$type.'LIKE '.$this->escape($data);
         if ($this->grouped) {
             $where='('.$where;
             $this->grouped=false;
@@ -618,7 +616,7 @@ class SQL {
 
     /**
     *   Get all data of affected rows
-    *   @param   $type        bool|string
+    *   @param   $type         bool|string
     *   @return  array|object
     */
     function many($type=false) {
@@ -647,10 +645,8 @@ class SQL {
     *   @param   $data  array
     */
     function insert($data) {
-        $columns=array_keys($data);
-        $column=implode(',',$columns);
         $val=implode(', ',array_map([$this,'escape'],$data));
-        $query='INSERT INTO '.$this->from.' ('.$column.') VALUES ('.$val.')';
+        $query='INSERT INTO '.$this->from.' ('.implode(',',array_keys($data)).') VALUES ('.$val.')';
         $query=$this->query($query);
         if ($query) {
             $this->insertid=$this->conn->lastInsertId();
@@ -800,7 +796,7 @@ class SQL {
     *   @return  string
     */
     function escape($data) {
-        if ($data===NULL)
+        if ($data===null)
             return 'NULL';
         if (is_null($data))
             return null;
