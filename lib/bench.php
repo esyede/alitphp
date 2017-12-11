@@ -22,14 +22,14 @@ class Bench extends \Factory {
 
     const
         // Error messages
-        E_Key="Benchmark key '%s' not found";
+        E_BENCHKEY="Benchmark key '%s' not found";
 
     /**
     *   Start benchmark
     *   @param  $key  string
     */
     function start($key) {
-        $this->start[$key]=microtime(true);
+        $this->start[$key]=microtime(TRUE);
     }
 
     /**
@@ -37,16 +37,16 @@ class Bench extends \Factory {
     *   @param   $key         string
     *   @param   $round       int
     *   @param   $stop        string
-    *   @return  float|false
+    *   @return  float|FALSE
     */
-    function elapsed($key,$round,$stop=false) {
+    function elapsed($key,$round,$stop=FALSE) {
         $fw=\Alit::instance();
         if (!isset($this->start[$key]))
-            $fw->abort(500,sprintf(self::E_Key,$key));
+            $fw->abort(500,sprintf(self::E_BENCHKEY,$key));
         else {
-            if (!isset($this->stop[$key])&&$stop===true)
-                $this->stop[$key]=microtime(true);
-            return round((microtime(true)-$this->start[$key]),is_int($round)?$round:3);
+            if (!isset($this->stop[$key])&&$stop===TRUE)
+                $this->stop[$key]=microtime(TRUE);
+            return round((microtime(TRUE)-$this->start[$key]),is_int($round)?$round:3);
         }
     }
 
@@ -55,7 +55,7 @@ class Bench extends \Factory {
     *   @return  int
     */
     function memory() {
-        $mem=memory_get_usage(true);
+        $mem=memory_get_usage(TRUE);
         for ($i=0;$mem>=1024&&$i<4;$i++)
             $mem/=1024;
         return round($mem,2).[' B',' KB',' MB'][$i];
@@ -66,6 +66,6 @@ class Bench extends \Factory {
     *   @param  $key  string
     */
     function stop($key) {
-        $this->stop[$key]=microtime(true);
+        $this->stop[$key]=microtime(TRUE);
     }
 }
