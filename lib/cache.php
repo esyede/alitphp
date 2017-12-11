@@ -26,12 +26,12 @@ class Cache extends \Factory {
 	*	Return timestamp and lifetime of cache entry or FALSE if not found
 	*	@param   $key         string
 	*	@param   $val         mixed
-	*	@return  array|false
+	*	@return  array|FALSE
 	*/
-	function exists($key,&$val=null) {
+	function exists($key,&$val=NULL) {
 		$fw=\Alit::instance();
 		if (!$this->dsn)
-			return false;
+			return FALSE;
 		$ndx=$this->prefix.'.'.$key;
 		$parts=explode('=',$this->dsn,2);
 		switch ($parts[0]) {
@@ -46,12 +46,12 @@ class Cache extends \Factory {
 		}
 		if (!empty($raw)) {
 			list($val,$time,$ttl)=(array)$fw->unserialize($raw);
-			if ($ttl===0||$time+$ttl>microtime(true))
+			if ($ttl===0||$time+$ttl>microtime(TRUE))
 				return [$time,$ttl];
-			$val=null;
+			$val=NULL;
 			$this->erase($key);
 		}
-		return false;
+		return FALSE;
 	}
 
 	/**
@@ -59,14 +59,14 @@ class Cache extends \Factory {
 	*	@param   $key         string
 	*	@param   $val         mixed
 	*	@param   $ttl         int
-	*	@return  mixed|false
+	*	@return  mixed|FALSE
 	*/
 	function set($key,$val,$ttl=0) {
 		$fw=\Alit::instance();
 		if (!$this->dsn)
-			return true;
+			return TRUE;
 		$ndx=$this->prefix.'.'.$key;
-		$time=microtime(true);
+		$time=microtime(TRUE);
 		if ($cached=$this->exists($key))
 			list($time,$ttl)=$cached;
 		$data=$fw->serialize([$val,$time,$ttl]);
@@ -81,16 +81,16 @@ class Cache extends \Factory {
 			case 'xcache':    return xcache_set($ndx,$data,$ttl);
 			case 'folder':    return $fw->write($parts[1].$ndx,$data);
 		}
-		return false;
+		return FALSE;
 	}
 
 	/**
 	*	Retrieve value of cache entry
 	*	@param   $key         string
-	*	@return  mixed|false
+	*	@return  mixed|FALSE
 	*/
 	function get($key) {
-		return $this->dsn&&$this->exists($key,$data)?$data:false;
+		return $this->dsn&&$this->exists($key,$data)?$data:FALSE;
 	}
 
 	/**
@@ -113,7 +113,7 @@ class Cache extends \Factory {
 			case 'xcache':    return xcache_unset($ndx);
 			case 'folder':    return @unlink($parts[1].$ndx);
 		}
-		return false;
+		return FALSE;
 	}
 
 	/**
@@ -121,28 +121,28 @@ class Cache extends \Factory {
 	*	@param   $suffix  string
 	*	@return  bool
 	*/
-	function reset($suffix=null) {
+	function reset($suffix=NULL) {
 		if (!$this->dsn)
-			return true;
+			return TRUE;
 		$regex='/'.preg_quote($this->prefix.'.','/').'.+'.
 			preg_quote($suffix,'/').'/';
 		$parts=explode('=',$this->dsn,2);
 		switch ($parts[0]) {
 			case 'apc':
 			case 'apcu':
-				$info=call_user_func($parts[0].'_cache_info',$parts[0]=='apcu'?false:'user');
+				$info=call_user_func($parts[0].'_cache_info',$parts[0]=='apcu'?FALSE:'user');
 				if (!empty($info['cache_list'])) {
 					$key=array_key_exists('info',$info['cache_list'][0])?'info':'key';
 					foreach ($info['cache_list'] as $item)
 						if (preg_match($regex,$item[$key]))
 							call_user_func($parts[0].'_delete',$item[$key]);
 				}
-				return true;
+				return TRUE;
 			case 'redis':
 				$keys=$this->obj->keys($this->prefix.'.*'.$suffix);
 				foreach($keys as $key)
 					$this->obj->del($key);
-				return true;
+				return TRUE;
 			case 'memcache':
 				foreach (memcache_get_extended_stats($this->obj,'slabs') as $slabs)
 					foreach (array_filter(array_keys($slabs),'is_numeric') as $id)
@@ -151,29 +151,29 @@ class Cache extends \Factory {
 								foreach (array_keys($data) as $key)
 									if (preg_match($regex,$key))
 										memcache_delete($this->obj,$key);
-				return true;
+				return TRUE;
 			case 'memcached':
 				foreach ($this->obj->getallkeys()?:[] as $key)
 					if (preg_match($regex,$key))
 						$this->obj->delete($key);
-				return true;
+				return TRUE;
 			case 'wincache':
 				$info=wincache_ucache_info();
 				foreach ($info['ucache_entries'] as $item)
 					if (preg_match($regex,$item['key_name']))
 						wincache_ucache_delete($item['key_name']);
-				return true;
+				return TRUE;
 			case 'xcache':
 				xcache_unset_by_prefix($this->prefix.'.');
-				return true;
+				return TRUE;
 			case 'folder':
 				if ($glob=@glob($parts[1].'*'))
 					foreach ($glob as $file)
 						if (preg_match($regex,basename($file)))
 							@unlink($file);
-				return true;
+				return TRUE;
 		}
-		return false;
+		return FALSE;
 	}
 
 	/**
@@ -182,15 +182,15 @@ class Cache extends \Factory {
 	*	@param   $seed   bool|string
 	*	@return  string
 	*/
-	function load($dsn,$seed=null) {
+	function load($dsn,$seed=NULL) {
 		$fw=\Alit::instance();
 		if ($dsn=trim($dsn)) {
 			if (preg_match('/^redis=(.+)/',$dsn,$parts)
 			&&extension_loaded('redis')) {
-				list($host,$port,$db)=explode(':',$parts[1])+[1=>6379,2=>null];
+				list($host,$port,$db)=explode(':',$parts[1])+[1=>6379,2=>NULL];
 				$this->obj=new \Redis;
 				if(!$this->obj->connect($host,$port,2))
-					$this->obj=null;
+					$this->obj=NULL;
 				if(isset($db))
 					$this->obj->select($db);
 			}
@@ -199,7 +199,7 @@ class Cache extends \Factory {
 				foreach ($fw->split($parts[1]) as $server) {
 					list($host,$port)=explode(':',$server)+[1=>11211];
 					if (empty($this->obj))
-						$this->obj=@memcache_connect($host,$port)?:null;
+						$this->obj=@memcache_connect($host,$port)?:NULL;
 					else memcache_add_server($this->obj,$host,$port);
 				}
 			}
@@ -218,7 +218,7 @@ class Cache extends \Factory {
 					?current($grep):('folder='.$fw->get('TEMP').'cache/');
 			if (preg_match('/^folder\h*=\h*(.+)/',$dsn,$parts)
 			&&!is_dir($parts[1]))
-				mkdir($parts[1],0755,true);
+				mkdir($parts[1],0755,TRUE);
 		}
 		$this->prefix=$seed?:$fw->get('SEED');
 		return $this->dsn=$dsn;
@@ -228,7 +228,7 @@ class Cache extends \Factory {
 	*	Class constructor
 	*	@param  $dsn  bool|string
 	*/
-	function __construct($dsn=false) {
+	function __construct($dsn=FALSE) {
 		if ($dsn)
 			$this->load($dsn);
 	}
