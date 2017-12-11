@@ -25,12 +25,11 @@ class Session {
         // Data exist?
         $existed,
         // Session start indicator
-        $started=false;
+        $started=FALSE;
 
     const
         // Error messages
-        E_Database="You must pass database connection object to use session library",
-        E_TableOrCookie="Table and cookie param can only accept string";
+        E_DBPARAM="Table and cookie param can only accept string";
 
     /**
     *   Class constructor
@@ -38,18 +37,16 @@ class Session {
     *   @param  $table   string
     *   @param  $cookie  string
     */
-    function __construct($db,$table='session',$cookie='cookies') {
+    function __construct(\DB\SQL $db,$table='session',$cookie='cookies') {
         $fw=\Alit::instance();
-        if (!is_object($db))
-            $fw->abort(500,self::E_Database);
         if (!is_string($table)||!is_string($cookie))
-            $fw->abort(500,self::E_TableOrCookie);
+            $fw->abort(500,self::E_DBPARAM);
         $this->db=$db;
         $this->table=$table;
         $this->start();
         $this->maketable();
         $this->cookie=$cookie;
-        $this->existed=false;
+        $this->existed=FALSE;
         if (!$this->check())
             $this->create();
     }
@@ -58,7 +55,7 @@ class Session {
     protected function start() {
         if (!$this->started) {
             session_start();
-            $this->started=true;
+            $this->started=TRUE;
         }
     }
 
@@ -71,14 +68,14 @@ class Session {
     protected function check() {
         $fw=\Alit::instance();
         $cookie=$fw->cookie($this->cookie);
-        if ($cookie===false)
-            return false;
+        if ($cookie===FALSE)
+            return FALSE;
         $token=base64_decode($cookie);
         $res=$this->db->table($this->table)
             ->where('token',$token)
             ->one();
         if ($this->db->num_rows()>0) {
-            $this->existed=true;
+            $this->existed=TRUE;
             $res->data=$fw->unserialize($res->data);
             $this->data['token']=$res->token;
             if ($res->ip==$fw->get('IP')) {
@@ -87,11 +84,11 @@ class Session {
                     foreach($res->data as $key=>$val)
                         $this->set($key,$val);
                 $this->data['seen']=time();
-                return true;
+                return TRUE;
             }
             else $this->destroy();
         }
-        return false;
+        return FALSE;
     }
 
     // Destroy session and remove user data from database
@@ -102,7 +99,7 @@ class Session {
             ->where('token',$this->data['token'])
             ->delete();
         $this->data=[];
-        $this->started=false;
+        $this->started=FALSE;
         session_destroy();
         $this->start();
         $this->create();
@@ -111,10 +108,10 @@ class Session {
     /**
     *   Get session data from database
     *   @param   $key      string
-    *   @param   $default  string|null
+    *   @param   $default  string|NULL
     *   @return  mixed
     */
-    function get($key,$default=null) {
+    function get($key,$default=NULL) {
         return isset($this->data[$key])?$this->data[$key]:$default;
     }
 
@@ -123,7 +120,7 @@ class Session {
     *   @param   $key  string
     *   @param   $val  mixed
     */
-    function set($key,$val=null) {
+    function set($key,$val=NULL) {
         $fw=\Alit::instance();
         if (is_array($key))
             foreach ($key as $k=>$v)
@@ -132,7 +129,7 @@ class Session {
         $fw->setcookie($this->cookie,base64_encode($this->data['token']));
         $data=['token'=>$this->data['token'],'ip'=>$fw->get('IP'),'seen'=>time()];
         $res=0;
-        if ($this->existed===false) {
+        if ($this->existed===FALSE) {
             $data['data']=$fw->serialize($this->data);
             $this->db->table($this->table)->insert($data);
             $res=$this->db->num_rows();

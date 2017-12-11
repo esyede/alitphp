@@ -58,7 +58,7 @@ class String extends \Factory implements \Serializable {
     *   @param  $start  string
     *   @param  $end    string
     */
-    function wrap($start,$end=null) {
+    function wrap($start,$end=NULL) {
         $this->str=$start.$this->str.(is_null($end)?$start:$end);
         return $this;
     }
@@ -86,7 +86,7 @@ class String extends \Factory implements \Serializable {
     *   With .. you can specify a range of characters.
     *   @param  $chars  string
     */
-    function trim($chars=null) {
+    function trim($chars=NULL) {
         $this->str=is_null($chars)?trim($this->str):trim($this->str,$chars);
         return $this;
     }
@@ -98,7 +98,7 @@ class String extends \Factory implements \Serializable {
     *   With .. you can specify a range of characters.
     *   @param $chars  string
     */
-    function rtrim($chars=null) {
+    function rtrim($chars=NULL) {
         $this->str=is_null($chars)?rtrim($this->str):rtrim($this->str,$chars);
         return $this;
     }
@@ -110,7 +110,7 @@ class String extends \Factory implements \Serializable {
     *   With .. you can specify a range of characters.
     *   @param  $chars  string
     */
-    function ltrim($chars=null) {
+    function ltrim($chars=NULL) {
         $this->str=is_null($chars)?ltrim($this->str):ltrim($this->str,$chars);
         return $this;
     }
@@ -200,10 +200,10 @@ class String extends \Factory implements \Serializable {
     /**
     *   Perform a regular expression match
     *   @param   $pattern  string
-    *   @param   $found    array|null
+    *   @param   $found    array|NULL
     *   @return  bool
     */
-    function match($pattern,&$found=null) {
+    function match($pattern,&$found=NULL) {
         return preg_match($pattern,$this->str,$found)>0;
     }
 
@@ -305,7 +305,7 @@ class String extends \Factory implements \Serializable {
 
     /**
     *   String representation of object
-    *   @return  string|null
+    *   @return  string|NULL
     */
     function serialize() {
 
@@ -319,5 +319,4 @@ class String extends \Factory implements \Serializable {
     function unserialize($str) {
         $this->str=\ALit::instance()->unserialize($str);
     }
-
 }

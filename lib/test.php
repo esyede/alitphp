@@ -24,7 +24,7 @@ class Test {
 		// Test results
 		$data=[],
 		// Success indicator
-		$passed=true;
+		$passed=TRUE;
 
 	/**
 	*	Return test results
@@ -48,12 +48,12 @@ class Test {
 	*	@param   $msg     string
     *	@return  object
 	*/
-	function expect($cond,$msg=null) {
+	function expect($cond,$msg=NULL) {
 		$fw=\Alit::instance();
 		$out=(bool)$cond;
 		if ($this->level==$out
         ||$this->level==self::RL_BOTH) {
-			$data=['status'=>$out,'message'=>$msg,'source'=>null];
+			$data=['status'=>$out,'message'=>$msg,'source'=>NULL];
 			foreach (debug_backtrace() as $src)
 				if (isset($src['file'])) {
 					$data['source']=$fw->slash($src['file']).
@@ -63,26 +63,25 @@ class Test {
 			$this->data[]=$data;
 		}
 		if (!$out&&$this->passed)
-			$this->passed=false;
+			$this->passed=FALSE;
 		return $this;
 	}
 
 	/**
 	*	Append message to test results
 	*	@param   $msg  string
-    *	@return  null
+    *	@return  NULL
 	*/
 	function message($msg) {
-		$this->expect(true,$msg);
+		$this->expect(TRUE,$msg);
 	}
 
 	/**
 	*	Class constructor
 	*	@param   $level  int
-    *	@return  null
+    *	@return  NULL
 	*/
 	function __construct($level=self::RL_BOTH) {
 		$this->level=$level;
 	}
-
 }

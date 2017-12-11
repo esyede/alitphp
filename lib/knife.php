@@ -56,8 +56,8 @@ class Knife extends \Preview {
     function cleanup() {
         foreach (glob($this->cachepath.'*.knife.php') as $f)
 			if (unlink($f))
-                return true;
-        return false;
+                return TRUE;
+        return FALSE;
     }
 
     /**
@@ -313,6 +313,6 @@ class Knife extends \Preview {
     *   @return  string
     */
     protected function _overwrite($expr) {
-        return "<?php \$this->endblock(true)?>";
+        return "<?php \$this->endblock(TRUE)?>";
     }
 }

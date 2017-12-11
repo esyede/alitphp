@@ -18,30 +18,30 @@ class SQL {
         // Class properties
         $numrows=0,
         $result=[],
-        $from=null,
-        $join=null,
+        $from=NULL,
+        $join=NULL,
         $select='*',
-        $where=null,
-        $cache=null,
-        $limit=null,
-        $query=null,
-        $error=null,
-        $offset=null,
-        $prefix=null,
-        $having=null,
+        $where=NULL,
+        $cache=NULL,
+        $limit=NULL,
+        $query=NULL,
+        $error=NULL,
+        $offset=NULL,
+        $prefix=NULL,
+        $having=NULL,
         $querycount=0,
-        $orderby=null,
-        $groupby=null,
-        $insertid=null,
-        $cachedir=null,
-        $grouped=false;
+        $orderby=NULL,
+        $groupby=NULL,
+        $insertid=NULL,
+        $cachedir=NULL,
+        $grouped=FALSE;
 
     const
         // Error messages
-        E_DbAccount="At least you must provide username, password, and database name to your db config",
-        E_Connection="Cannot connect to Database.<br><br>%s",
-        E_Production="There is an error on the database, please contact administrator.",
-        E_LastError="<b>DB Error:</b><pre>%s</pre><br><b>Query:</b><pre>%s</pre><br>";
+        E_DBACCOUNT="At least you must provide username, password, and database name to your db config",
+        E_CONNECTION="Cannot connect to Database.<br><br>%s",
+        E_PRODUCTION="There is an error on the database, please contact administrator.",
+        E_LASTERROR="<b>DB Error:</b><pre>%s</pre><br><b>Query:</b><pre>%s</pre><br>";
 
     const
         // Comparison operators
@@ -49,7 +49,7 @@ class SQL {
 
     public
         // Database connection object
-        $conn=null;
+        $conn=NULL;
 
     /**
     *   Class constructor
@@ -67,7 +67,7 @@ class SQL {
         if (!isset($config['username'])
         ||!isset($config['password'])
         ||!isset($config['database']))
-            $fw->abort(500,self::E_DbAccount);
+            $fw->abort(500,self::E_DBACCOUNT);
         $dsn='';
         if ($config['driver']=='mysql'||$config['driver']==''||$config['driver']=='pgsql')
             $dsn=$config['driver'].':host='.$config['host'].';'.
@@ -83,7 +83,7 @@ class SQL {
             $this->conn->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE,\PDO::FETCH_OBJ);
         }
         catch(\PDOException $e) {
-            $fw->abort(500,sprintf(self::E_Connection,$e->getMessage()));
+            $fw->abort(500,sprintf(self::E_CONNECTION,$e->getMessage()));
         }
         return $this->conn;
     }
@@ -116,9 +116,9 @@ class SQL {
     /**
     *   Build MAX statement
     *   @param  $fields  string
-    *   @param  $name    string|null
+    *   @param  $name    string|NULL
     */
-    function max($field,$name=null) {
+    function max($field,$name=NULL) {
         $func='MAX('.$field.')'.(!is_null($name)?' AS '.$name:'');
         $this->select=($this->select=='*'?$func:$this->select.', '.$func);
         return $this;
@@ -127,9 +127,9 @@ class SQL {
     /**
     *  Build MIN statement
     *   @param  $fields  string
-    *   @param  $name    string|null
+    *   @param  $name    string|NULL
     */
-    function min($field,$name=null) {
+    function min($field,$name=NULL) {
         $func='MIN('.$field.')'.(!is_null($name)?' AS '.$name:'');
         $this->select=($this->select=='*'?$func:$this->select.', '.$func);
         return $this;
@@ -138,9 +138,9 @@ class SQL {
     /**
     *   Build SUM statement
     *   @param  $fields  string
-    *   @param  $name    string|null
+    *   @param  $name    string|NULL
     */
-    function sum($field,$name=null) {
+    function sum($field,$name=NULL) {
         $func='SUM('.$field.')'.(!is_null($name)?' AS '.$name:'');
         $this->select=($this->select=='*'?$func:$this->select.', '.$func);
         return $this;
@@ -149,9 +149,9 @@ class SQL {
     /**
     *   Build COUNT AS statement
     *   @param  $fields  string
-    *   @param  $name    string|null
+    *   @param  $name    string|NULL
     */
-    function count($field,$name=null) {
+    function count($field,$name=NULL) {
         $func='COUNT('.$field.')'.(!is_null($name)?' AS '.$name:'');
         $this->select=($this->select=='*'?$func:$this->select.', '.$func);
         return $this;
@@ -160,9 +160,9 @@ class SQL {
     /**
     *   Build AVG statement
     *   @param  $fields  string
-    *   @param  $name    string|null
+    *   @param  $name    string|NULL
     */
-    function avg($field,$name=null) {
+    function avg($field,$name=NULL) {
         $func='AVG('.$field.')'.(!is_null($name)?' AS '.$name:'');
         $this->select=($this->select=='*'?$func:$this->select.', '.$func);
         return $this;
@@ -171,12 +171,12 @@ class SQL {
     /**
     *   Build JOIN statement
     *   @param  $table   string
-    *   @param  $field1  string|null
-    *   @param  $op      string|null
-    *   @param  $field2  string|null
-    *   @param  $type    string|null
+    *   @param  $field1  string|NULL
+    *   @param  $op      string|NULL
+    *   @param  $field2  string|NULL
+    *   @param  $type    string|NULL
     */
-    function join($table,$field1=null,$op=null,$field2=null,$type='') {
+    function join($table,$field1=NULL,$op=NULL,$field2=NULL,$type='') {
         $on=$field1;
         $table=$this->prefix.$table;
         if (!is_null($op))
@@ -192,9 +192,9 @@ class SQL {
     /**
     *   Build INNER JOIN statement
     *   @param  $table   string
-    *   @param  $field1  string|null
-    *   @param  $op      string|null
-    *   @param  $field2  string|null
+    *   @param  $field1  string|NULL
+    *   @param  $op      string|NULL
+    *   @param  $field2  string|NULL
     */
     function inner($table,$field1,$op='',$field2='') {
         $this->join($table,$field1,$op,$field2,'INNER ');
@@ -204,9 +204,9 @@ class SQL {
     /**
     *   Build LEFT JOIN statement
     *   @param  $table   string
-    *   @param  $field1  string|null
-    *   @param  $op      string|null
-    *   @param  $field2  string|null
+    *   @param  $field1  string|NULL
+    *   @param  $op      string|NULL
+    *   @param  $field2  string|NULL
     */
     function left($table,$field1,$op='',$field2='') {
         $this->join($table,$field1,$op,$field2,'LEFT ');
@@ -217,8 +217,8 @@ class SQL {
     *   Build RIGHT JOIN statement
     *   @param  $table   string
     *   @param  $field1  string
-    *   @param  $op      string|null
-    *   @param  $field2  string|null
+    *   @param  $op      string|NULL
+    *   @param  $field2  string|NULL
     */
     function right($table,$field1,$op='',$field2='') {
         $this->join($table,$field1,$op,$field2,'RIGHT ');
@@ -229,8 +229,8 @@ class SQL {
     *   Build FULL OUTER JOIN statement
     *   @param  $table   string
     *   @param  $field1  string
-    *   @param  $op      string|null
-    *   @param  $field2  string|null
+    *   @param  $op      string|NULL
+    *   @param  $field2  string|NULL
     */
     function full_outer($table,$field1,$op='',$field2='') {
         $this->join($table,$field1,$op,$field2,'FULL OUTER ');
@@ -241,8 +241,8 @@ class SQL {
     *   Build LEFT OUTER JOIN statement
     *   @param  $table   string
     *   @param  $field1  string
-    *   @param  $op      string|null
-    *   @param  $field2  string|null
+    *   @param  $op      string|NULL
+    *   @param  $field2  string|NULL
     */
     function left_outer($table,$field1,$op='',$field2='') {
         $this->join($table,$field1,$op,$field2,'LEFT OUTER ');
@@ -253,8 +253,8 @@ class SQL {
     *   Build RIGHT OUTER JOIN statement
     *   @param  $table   string
     *   @param  $field1  string
-    *   @param  $op      string|null
-    *   @param  $field2  string|null
+    *   @param  $op      string|NULL
+    *   @param  $field2  string|NULL
     */
     function right_outer($table,$field1,$op='',$field2='') {
         $this->join($table,$field1,$op,$field2,'RIGHT OUTER ');
@@ -264,12 +264,12 @@ class SQL {
     /**
     *   Build WEHRE statement
     *   @param  $where   string
-    *   @param  $op      string|null
-    *   @param  $val     string|null
-    *   @param  $type    string|null
-    *   @param  $and_or  string|null
+    *   @param  $op      string|NULL
+    *   @param  $val     string|NULL
+    *   @param  $type    string|NULL
+    *   @param  $and_or  string|NULL
     */
-    function where($where,$op=null,$val=null,$type='',$and_or='AND') {
+    function where($where,$op=NULL,$val=NULL,$type='',$and_or='AND') {
         if (is_array($where)) {
             $_where=[];
             foreach ($where as $column=>$data)
@@ -285,13 +285,13 @@ class SQL {
                         $w.=$type.$v.(isset($op[$k])?$this->escape($op[$k]):'');
                 $where=$w;
             }
-            elseif (!in_array($op,explode('|',self::OPERATORS))||$op==false)
+            elseif (!in_array($op,explode('|',self::OPERATORS))||$op==FALSE)
                 $where=$type.$where.' = '.$this->escape($op);
             else $where=$type.$where.' '.$op.' '.$this->escape($val);
         }
         if ($this->grouped) {
             $where='('.$where;
-            $this->grouped=false;
+            $this->grouped=FALSE;
         }
         if (is_null($this->where))
             $this->where=$where;
@@ -302,10 +302,10 @@ class SQL {
     /**
     *   Build OR WEHRE statement
     *   @param  $where   string
-    *   @param  $op      string|null
-    *   @param  $val     string|null
+    *   @param  $op      string|NULL
+    *   @param  $val     string|NULL
     */
-    function or_where($where,$op=null,$val=null) {
+    function or_where($where,$op=NULL,$val=NULL) {
         $this->where($where,$op,$val,'','OR');
         return $this;
     }
@@ -313,10 +313,10 @@ class SQL {
     /**
     *   Build WEHRE NOT statement
     *   @param  $where   string
-    *   @param  $op      string|null
-    *   @param  $val     string|null
+    *   @param  $op      string|NULL
+    *   @param  $val     string|NULL
     */
-    function not_where($where,$op=null,$val=null) {
+    function not_where($where,$op=NULL,$val=NULL) {
         $this->where($where,$op,$val,'NOT ','AND');
         return $this;
     }
@@ -324,10 +324,10 @@ class SQL {
     /**
     *   Build OR NOT WEHRE statement
     *   @param  $where   string
-    *   @param  $op      string|null
-    *   @param  $val     string|null
+    *   @param  $op      string|NULL
+    *   @param  $val     string|NULL
     */
-    function ornot_where($where,$op=null,$val=null) {
+    function ornot_where($where,$op=NULL,$val=NULL) {
         $this->where($where,$op,$val,'NOT ','OR');
         return $this;
     }
@@ -337,7 +337,7 @@ class SQL {
     *   @param  $obj  object
     */
     function grouped(\Closure $obj) {
-        $this->grouped=true;
+        $this->grouped=TRUE;
         call_user_func_array($obj,[$this]);
         $this->where.=')';
         return $this;
@@ -347,8 +347,8 @@ class SQL {
     *   Build WEHRE IN statement
     *   @param  $field   string
     *   @param  $keys    array
-    *   @param  $type    string|null
-    *   @param  $and_or  string|null
+    *   @param  $type    string|NULL
+    *   @param  $and_or  string|NULL
     */
     function in($field,array $keys,$type='',$and_or='AND') {
         if (is_array($keys)) {
@@ -359,7 +359,7 @@ class SQL {
             $where=$field.' '.$type.'IN ('.$keys.')';
             if ($this->grouped) {
                 $where='('.$where;
-                $this->grouped=false;
+                $this->grouped=FALSE;
             }
             if (is_null($this->where))
                 $this->where=$where;
@@ -403,14 +403,14 @@ class SQL {
     *   @param  $field   string
     *   @param  $value1  mixed
     *   @param  $value2  mixed
-    *   @param  $type    string|null
-    *   @param  $and_or  string|null
+    *   @param  $type    string|NULL
+    *   @param  $and_or  string|NULL
     */
     function between($field,$value1,$value2,$type='',$and_or='AND') {
         $where=$field.' '.$type.'BETWEEN '.$this->escape($value1).' AND '.$this->escape($value2);
         if ($this->grouped) {
             $where='('.$where;
-            $this->grouped=false;
+            $this->grouped=FALSE;
         }
         if (is_null($this->where))
             $this->where=$where;
@@ -455,14 +455,14 @@ class SQL {
     *   Build LIKE statement
     *   @param  $field   string
     *   @param  $data    mixed
-    *   @param  $type    string|null
+    *   @param  $type    string|NULL
     *   @param  $and_or  string
     */
     function like($field,$data,$type='',$and_or='AND') {
         $where=$field.' '.$type.'LIKE '.$this->escape($data);
         if ($this->grouped) {
             $where='('.$where;
-            $this->grouped=false;
+            $this->grouped=FALSE;
         }
         if (is_null($this->where))
             $this->where=$where;
@@ -505,7 +505,7 @@ class SQL {
     *   @param  $limit      int
     *   @param  $limit_end  int
     */
-    function limit($limit,$limit_end=null) {
+    function limit($limit,$limit_end=NULL) {
         if (!is_null($limit_end))
             $this->limit=$limit.', '.$limit_end;
         else $this->limit=$limit;
@@ -537,7 +537,7 @@ class SQL {
     *   @param  $orderby  int
     *   @param  $sorting  int
     */
-    function order_by($orderby,$sorting=null) {
+    function order_by($orderby,$sorting=NULL) {
         if (!is_null($sorting))
             $this->orderby=$orderby.' '.strtoupper($sorting);
         else {
@@ -562,10 +562,10 @@ class SQL {
     /**
     *   Build HAVING statement
     *   @param  $field  string
-    *   @param  $op     string|null
-    *   @param  $val    mixed|null
+    *   @param  $op     string|NULL
+    *   @param  $val    mixed|NULL
     */
-    function having($field,$op=null,$val=null) {
+    function having($field,$op=NULL,$val=NULL) {
         if (is_array($op)) {
             $x=explode('?',$field);
             $w='';
@@ -594,11 +594,11 @@ class SQL {
     function error() {
         $fw=\Alit::instance();
         if ($fw->get('DEBUG')==0)
-            $fw->abort(500,self::E_Production);
+            $fw->abort(500,self::E_PRODUCTION);
         elseif ($fw->get('DEBUG')==1)
             $fw->abort(500,sprintf("%s",$this->error));
         elseif ($fw->get('DEBUG')>1)
-            $fw->abort(500,sprintf(self::E_LastError,$this->error,$this->query));
+            $fw->abort(500,sprintf(self::E_LASTERROR,$this->error,$this->query));
     }
 
     /**
@@ -606,12 +606,12 @@ class SQL {
     *   @param   $type         bool|string
     *   @return  array|object
     */
-    function one($type=false) {
+    function one($type=FALSE) {
         $this->limit=1;
-        $query=$this->many(true);
-        if ($type===true)
+        $query=$this->many(TRUE);
+        if ($type===TRUE)
             return $query;
-        else return $this->query($query,false,(($type=='array')?true:false));
+        else return $this->query($query,FALSE,(($type=='array')?TRUE:FALSE));
     }
 
     /**
@@ -619,7 +619,7 @@ class SQL {
     *   @param   $type         bool|string
     *   @return  array|object
     */
-    function many($type=false) {
+    function many($type=FALSE) {
         $query='SELECT '.$this->select.' FROM '.$this->from;
         if (!is_null($this->join))
             $query.=$this->join;
@@ -635,9 +635,9 @@ class SQL {
             $query.=' LIMIT '.$this->limit;
         if (!is_null($this->offset))
             $query.=' OFFSET '.$this->offset;
-        if ($type===true)
+        if ($type===TRUE)
             return $query;
-        else return $this->query($query,true,(($type=='array')?true:false));
+        else return $this->query($query,TRUE,(($type=='array')?TRUE:FALSE));
     }
 
     /**
@@ -652,7 +652,7 @@ class SQL {
             $this->insertid=$this->conn->lastInsertId();
             return $this->insert_id();
         }
-        else return false;
+        else return FALSE;
     }
 
     /**
@@ -723,7 +723,7 @@ class SQL {
     *   @param   $array  string
     *   @return  mixed
     */
-    function query($query,$all=true,$array=false) {
+    function query($query,$all=TRUE,$array=FALSE) {
         $this->reset();
         if (is_array($all)) {
             $x=explode('?',$query);
@@ -734,14 +734,14 @@ class SQL {
             $query=$q;
         }
         $this->query=preg_replace("/\s\s+|\t\t+/",' ',trim($query));
-        $str=false;
+        $str=FALSE;
         foreach (['select','optimize','check','repair','checksum','analyze'] as $value) {
             if (stripos($this->query,$value)===0) {
-                $str=true;
+                $str=TRUE;
                 break;
             }
         }
-        $cache=false;
+        $cache=FALSE;
         if (!is_null($this->cache))
             $cache=$this->cache->get($this->query,$array);
         if (!$cache&&$str) {
@@ -751,39 +751,39 @@ class SQL {
                 if (($this->numrows>0)) {
                     if ($all) {
                         $q=[];
-                        while ($result=($array==false)
+                        while ($result=($array==FALSE)
                         ?$sql->fetchAll(\PDO::FETCH_OBJ)
                         :$sql->fetchAll(\PDO::FETCH_ASSOC))
                             $q[]=$result;
                         $this->result=$q[0];
                     }
                     else {
-                        $q=($array==false)?$sql->fetch(\PDO::FETCH_OBJ):$sql->fetch(\PDO::FETCH_ASSOC);
+                        $q=($array==FALSE)?$sql->fetch(\PDO::FETCH_OBJ):$sql->fetch(\PDO::FETCH_ASSOC);
                         $this->result=$q;
                     }
                 }
                 if (!is_null($this->cache))
                     $this->cache->set($this->query,$this->result);
-                $this->cache=null;
+                $this->cache=NULL;
             }
             else {
-                $this->cache=null;
+                $this->cache=NULL;
                 $this->error=$this->conn->errorInfo();
                 $this->error=$this->error[2];
                 return $this->error();
             }
         }
         elseif ((!$cache&&!$str)||($cache&&!$str)) {
-            $this->cache=null;
+            $this->cache=NULL;
             $this->result=$this->conn->exec($this->query);
-            if ($this->result===false) {
+            if ($this->result===FALSE) {
                 $this->error=$this->conn->errorInfo();
                 $this->error=$this->error[2];
                 return $this->error();
             }
         }
         else {
-            $this->cache=null;
+            $this->cache=NULL;
             $this->result=$cache;
         }
         $this->querycount++;
@@ -796,10 +796,10 @@ class SQL {
     *   @return  string
     */
     function escape($data) {
-        if ($data===null)
+        if ($data===NULL)
             return 'NULL';
         if (is_null($data))
-            return null;
+            return NULL;
         return $this->conn->quote(trim($data));
     }
 
@@ -826,25 +826,25 @@ class SQL {
     protected function reset() {
         $this->result=[];
         $this->numrows=0;
-        $this->from=null;
-        $this->join=null;
+        $this->from=NULL;
+        $this->join=NULL;
         $this->select='*';
-        $this->error=null;
-        $this->where=null;
-        $this->query=null;
-        $this->limit=null;
-        $this->offset=null;
-        $this->having=null;
-        $this->orderby=null;
-        $this->groupby=null;
-        $this->grouped=false;
-        $this->insertid=null;
+        $this->error=NULL;
+        $this->where=NULL;
+        $this->query=NULL;
+        $this->limit=NULL;
+        $this->offset=NULL;
+        $this->having=NULL;
+        $this->orderby=NULL;
+        $this->groupby=NULL;
+        $this->grouped=FALSE;
+        $this->insertid=NULL;
         return;
     }
 
     // Class destructor
     function __destruct() {
-        $this->conn=null;
+        $this->conn=NULL;
     }
 }
 
@@ -857,14 +857,14 @@ class SQLCache {
 
     private
         // SQL Cache directory
-        $cachedir=null,
+        $cachedir=NULL,
         // Cache time
-        $cache=null,
+        $cache=NULL,
         // Elapsed cache time
-        $elapsed=null;
+        $elapsed=NULL;
 
     // Class constructor
-    function __construct($dir=null,$time=0) {
+    function __construct($dir=NULL,$time=0) {
         if (!file_exists($dir))
             mkdir($dir,0755);
         $this->cachedir=$dir;
@@ -879,7 +879,7 @@ class SQLCache {
     */
     function set($sql,$result) {
         if (is_null($this->cache))
-            return false;
+            return FALSE;
         $target=$this->cachedir.md5($this->filename($sql)).'.db.cache';
         $target=fopen($target,'w');
         if ($target)
@@ -892,19 +892,19 @@ class SQLCache {
     *   @param  $sql    string
     *   @param  $array  bool
     */
-    function get($sql,$array=false) {
+    function get($sql,$array=FALSE) {
         if (is_null($this->cache))
-            return false;
+            return FALSE;
         $target=$this->cachedir.md5($this->filename($sql)).'.db.cache';
         if (file_exists($target)) {
             $cache=json_decode(\Alit::instance()->read($target),$array);
-            if ((($array===true)?$cache['elapsed']:$cache->finish)<time()) {
+            if ((($array===TRUE)?$cache['elapsed']:$cache->finish)<time()) {
                 unlink($target);
                 return;
             }
-            else return (($array===true)?$cache['data']:$cache->data);
+            else return (($array===TRUE)?$cache['data']:$cache->data);
         }
-        return false;
+        return FALSE;
     }
 
     /**
