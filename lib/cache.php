@@ -8,7 +8,7 @@
 *   @author      Suyadi <suyadi.1992@gmail.com>
 */
 // Prohibit direct access to file
-if (!defined('DS')) die('Direct file access is not allowed.');
+defined('DS') or die('Direct file access is not allowed.');
 
 
 
@@ -124,8 +124,7 @@ class Cache extends \Factory {
 	function reset($suffix=NULL) {
 		if (!$this->dsn)
 			return TRUE;
-		$regex='/'.preg_quote($this->prefix.'.','/').'.+'.
-			preg_quote($suffix,'/').'/';
+		$regex='/'.preg_quote($this->prefix.'.','/').'.+'.preg_quote($suffix,'/').'/';
 		$parts=explode('=',$this->dsn,2);
 		switch ($parts[0]) {
 			case 'apc':

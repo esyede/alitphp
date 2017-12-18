@@ -8,7 +8,7 @@
 *   @author      Suyadi <suyadi.1992@gmail.com>
 */
 // Prohibit direct access to file
-if (!defined('DS')) die('Direct file access is not allowed.');
+defined('DS') or die('Direct file access is not allowed.');
 
 
 class Session {

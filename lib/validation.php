@@ -8,7 +8,7 @@
 *   @author      Suyadi <suyadi.1992@gmail.com>
 */
 // Prohibit direct access to file
-if (!defined('DS')) die('Direct file access is not allowed.');
+defined('DS') or die('Direct file access is not allowed.');
 
 
 class Validation extends \Factory {
@@ -167,32 +167,32 @@ class Validation extends \Factory {
     function xss_clean(array $data) {
         foreach ($data as $k=>$v) {
             $data[$k]=str_replace(['&amp;','&lt;','&gt;'],['&amp;amp;','&amp;lt;','&amp;gt;'],$v);
-            $data[$k]=preg_replace('~(&#*\w+)[\x00-\x20]+;~u','$1;',$v);
-            $data[$k]=preg_replace('~(&#x*[0-9A-F]+);*~iu','$1;',$v);
+            $data[$k]=preg_replace('/(&#*\w+)[\x00-\x20]+;/u','$1;',$v);
+            $data[$k]=preg_replace('/(&#x*[0-9A-F]+);*/iu','$1;',$v);
             $data[$k]=html_entity_decode($v,ENT_COMPAT,'UTF-8');
-            $data[$k]=preg_replace('~(<[^>]+?[\x00-\x20"\'])(?:on|xmlns)[^>]*+>~iu','$1>',$k);
-            $data[$k]=preg_replace('~([a-z]*)[\x00-\x20]*=[\x00-\x20]*([`\'"]*)'.
+            $data[$k]=preg_replace('/(<[^>]+?[\x00-\x20"\'])(?:on|xmlns)[^>]*+>/iu','$1>',$k);
+            $data[$k]=preg_replace('/([a-z]*)[\x00-\x20]*=[\x00-\x20]*([`\'"]*)'.
                 '[\x00-\x20]*j[\x00-\x20]*a[\x00-\x20]*v[\x00-\x20]*a[\x00-\x20]*s'.
                 '[\x00-\x20]*c[\x00-\x20]*r[\x00-\x20]*i[\x00-\x20]*p[\x00-\x20]*t'.
-                '[\x00-\x20]*:~iu','$1=$2nojavascript...',$v);
-            $data[$k]=preg_replace('~([a-z]*)[\x00-\x20]*=([\'"]*)[\x00-\x20]*v'.
+                '[\x00-\x20]*:/iu','$1=$2nojavascript...',$v);
+            $data[$k]=preg_replace('/([a-z]*)[\x00-\x20]*=([\'"]*)[\x00-\x20]*v'.
                 '[\x00-\x20]*b[\x00-\x20]*s[\x00-\x20]*c[\x00-\x20]*r[\x00-\x20]*i'.
-                '[\x00-\x20]*p[\x00-\x20]*t[\x00-\x20]*:~iu','$1=$2novbscript...',$v);
-            $data[$k]=preg_replace('~([a-z]*)[\x00-\x20]*=([\'"]*)[\x00-\x20]*'.
-                '-moz-binding[\x00-\x20]*:~u','$1=$2nomozbinding...',$v);
-            $data[$k]=preg_replace('~(<[^>]+?)style[\x00-\x20]*=[\x00-\x20]*[`\'"]'.
-                '*.*?expression[\x00-\x20]*\([^>]*+>~i','$1>',$v);
-            $data[$k]=preg_replace('~(<[^>]+?)style[\x00-\x20]*=[\x00-\x20]*[`\'"]'.
-                '*.*?behaviour[\x00-\x20]*\([^>]*+>~i','$1>',$v);
-            $data[$k]=preg_replace('~(<[^>]+?)style[\x00-\x20]*=[\x00-\x20]*[`\'"]'.
+                '[\x00-\x20]*p[\x00-\x20]*t[\x00-\x20]*:/iu','$1=$2novbscript...',$v);
+            $data[$k]=preg_replace('/([a-z]*)[\x00-\x20]*=([\'"]*)[\x00-\x20]*'.
+                '-moz-binding[\x00-\x20]*:/u','$1=$2nomozbinding...',$v);
+            $data[$k]=preg_replace('/(<[^>]+?)style[\x00-\x20]*=[\x00-\x20]*[`\'"]'.
+                '*.*?expression[\x00-\x20]*\([^>]*+>/i','$1>',$v);
+            $data[$k]=preg_replace('/(<[^>]+?)style[\x00-\x20]*=[\x00-\x20]*[`\'"]'.
+                '*.*?behaviour[\x00-\x20]*\([^>]*+>/i','$1>',$v);
+            $data[$k]=preg_replace('/(<[^>]+?)style[\x00-\x20]*=[\x00-\x20]*[`\'"]'.
                 '*.*?s[\x00-\x20]*c[\x00-\x20]*r[\x00-\x20]*i[\x00-\x20]*p'.
-                '[\x00-\x20]*t[\x00-\x20]*:*[^>]*+>~iu','$1>',$v);
-            $data[$k]=preg_replace('~</*\w+:\w[^>]*+>~i','',$v);
+                '[\x00-\x20]*t[\x00-\x20]*:*[^>]*+>/iu','$1>',$v);
+            $data[$k]=preg_replace('/</*\w+:\w[^>]*+>/i','',$v);
             do {
                 $old=$data[$k];
-                $data[$k]=preg_replace('~</*(?:applet|b(?:ase|gsound|link)|embed'.
+                $data[$k]=preg_replace('/</*(?:applet|b(?:ase|gsound|link)|embed'.
                     '|frame(?:set)?|i(?:frame|layer)|l(?:ayer|ink)|meta|object|s(?:cript|tyle)'.
-                    '|title|xml)[^>]*+>~i','',$data[$k]);
+                    '|title|xml)[^>]*+>/i','',$data[$k]);
             } while ($old!==$data[$k]);
         }
         return filter_var($data[$k],FILTER_SANITIZE_STRING);
@@ -716,7 +716,7 @@ class Validation extends \Factory {
             return;
         $arg=trim(strtolower($arg));
         $val=trim(strtolower($ipt[$field]));
-        if (preg_match_all('#\'(.+?)\'#',$arg,$found,PREG_PATTERN_ORDER))
+        if (preg_match_all('/\'(.+?)\'/',$arg,$found,PREG_PATTERN_ORDER))
             $arg=$found[1];
         else $arg=explode(chr(32),$arg);
         if (in_array($val,$arg))

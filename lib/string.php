@@ -8,7 +8,7 @@
 *   @author      Suyadi <suyadi.1992@gmail.com>
 */
 // Prohibit direct access to file
-if (!defined('DS')) die('Direct file access is not allowed.');
+defined('DS') or die('Direct file access is not allowed.');
 
 
 
@@ -308,7 +308,6 @@ class String extends \Factory implements \Serializable {
     *   @return  string|NULL
     */
     function serialize() {
-
         return \ALit::instance()->serialize($this->str);
     }
 
