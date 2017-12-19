@@ -347,7 +347,7 @@ final class Alit extends \Factory implements \ArrayAccess {
                 return isset($stack['file'])
                     &&($debug>1||($stack['file']!=__FILE__||$debug)
                     &&(empty($stack['function'])
-                    ||!preg_match('/^(?:(?:trigger|user)_error|__call|call_user_func)/',
+                    ||!preg_match('~^(?:(?:trigger|user)_error|__call|call_user_func)~',
                         $stack['function'])));
             }
         );
@@ -395,7 +395,7 @@ final class Alit extends \Factory implements \ArrayAccess {
         $base=$this->get('PROTO').'://'.rtrim($this->get('BASE'),'/');
         $url=filter_var($url,FILTER_SANITIZE_URL);
         if (!is_null($url)) {
-            if (!preg_match('/^(http(s)?://)?[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(/.*)?$/i',$url)
+            if (!preg_match('~^(http(s)?://)?[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(/.*)?$~i',$url)
             ||!filter_var($url,FILTER_VALIDATE_URL))
                 $url=$base.$url;
         }
@@ -438,11 +438,11 @@ final class Alit extends \Factory implements \ArrayAccess {
             $source=$this->split($source);
         foreach ($source as $file) {
             preg_match_all(
-                '/(?<=^|\n)(?:'.
+                '~(?<=^|\n)(?:'.
                 '\[(?<child>.+?)\]|'.
                 '(?<left>[^\h\r\n;].*?)\h*=\h*'.
                 '(?<right>(?:\\\\\h*\r?\n|.+?)*)'.
-                ')(?=\r?\n|$)/',
+                ')(?=\r?\n|$)~',
                 $this->read($file),$matches,PREG_SET_ORDER
             );
             if ($matches) {
@@ -451,10 +451,10 @@ final class Alit extends \Factory implements \ArrayAccess {
                 foreach ($matches as $match) {
                     if ($match['child']) {
                         $child=$match['child'];
-                        if (preg_match('/^(?!(?:global|config|route)\b)((?:\.?\w)+)/i',$child,$gchild)
+                        if (preg_match('~^(?!(?:global|config|route)\b)((?:\.?\w)+)~i',$child,$gchild)
                         &&!$this->exists($gchild[0],$this->hive()))
                             $this->set($gchild[0],NULL);
-                        preg_match('/^(config|route)\b|^((?:\.?\w)+)\s*\>\s*(.*)/i',$child,$fn);
+                        preg_match('~^(config|route)\b|^((?:\.?\w)+)\s*\>\s*(.*)~i',$child,$fn);
                         continue;
                     }
                     if (!empty($fn))
@@ -465,16 +465,16 @@ final class Alit extends \Factory implements \ArrayAccess {
                             array_merge([$match['left']],str_getcsv($match['right']))
                         );
                     else {
-                        $right=preg_replace('/\\\\\h*(\r?\n)/','\1',$match['right']);
-                        if (preg_match('/^(.+)\|\h*(\d+)$/',$right,$tmp)) {
+                        $right=preg_replace('~\\\\\h*(\r?\n)~','\1',$match['right']);
+                        if (preg_match('~^(.+)\|\h*(\d+)$~',$right,$tmp)) {
                             array_shift($tmp);
                             list($right)=$tmp;
                         }
                         // Remove invisible characters
-                        $right=preg_replace('/[[:cntrl:]]/u','',$right);
+                        $right=preg_replace('~[[:cntrl:]]~u','',$right);
                         // Mark quoted strings with 0x00 whitespace
-                        str_getcsv(preg_replace('/(?<!\\\\)(")(.*?)\1/',"\\1\x00\\2\\1",trim($right)));
-                        preg_match('/^(?<child>[^:]+)?/',$child,$node);
+                        str_getcsv(preg_replace('~(?<!\\\\)(")(.*?)\1~',"\\1\x00\\2\\1",trim($right)));
+                        preg_match('~^(?<child>[^:]+)?~',$child,$node);
                         $custom=(strtolower($node['child']!='global'));
                         $left=($custom?($node['child'].'.'):'').preg_replace('/\s\s+/','',$match['left']);
                         // Set config array to hive
@@ -495,7 +495,7 @@ final class Alit extends \Factory implements \ArrayAccess {
     */
     function read($file,$lf=FALSE) {
         $file=file_get_contents($file);
-        return $lf?preg_replace('/\r\n|\r/',"\n",$file):$file;
+        return $lf?preg_replace('~\r\n|\r~',"\n",$file):$file;
     }
 
     /**
