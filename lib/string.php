@@ -14,6 +14,10 @@ defined('DS') or die('Direct file access is not allowed.');
 
 class String extends \Factory implements \Serializable {
 
+    const
+        // Error messages
+        E_PATTERN="Only string can be passed as a pattern";
+
     private
         // Hold string manipulation result
         $str;
@@ -130,6 +134,8 @@ class String extends \Factory implements \Serializable {
     *   @param  $replace  string|callable
     */
     function replace($pattern,$replace) {
+        if (!is_string($pattern))
+            \Alit::instance()->abort(500,self::E_PATTERN);
         if (is_callable($replace)) {
             $this->str=preg_replace_callback($pattern,function($found) use($replace) {
                 $args=array_map(function($item) {
@@ -204,6 +210,8 @@ class String extends \Factory implements \Serializable {
     *   @return  bool
     */
     function match($pattern,&$found=NULL) {
+        if (!is_string($pattern))
+            \Alit::instance()->abort(500,self::E_PATTERN);
         return preg_match($pattern,$this->str,$found)>0;
     }
 
@@ -214,6 +222,8 @@ class String extends \Factory implements \Serializable {
     *   @return  object|array
     */
     function split($pattern,$flags=PREG_SPLIT_DELIM_CAPTURE) {
+        if (!is_string($pattern))
+            \Alit::instance()->abort(500,self::E_PATTERN);
         return array_map(function($item) {
             return new static($item);
         },preg_split($pattern,$this->str,-1,$flags));
@@ -225,6 +235,8 @@ class String extends \Factory implements \Serializable {
     *   @return  object|array
     */
     function lines($pattern='/(\r?\n)/') {
+        if (!is_string($pattern))
+            \Alit::instance()->abort(500,self::E_PATTERN);
         $chunk=array_chunk(preg_split($pattern,$this->str,-1,PREG_SPLIT_DELIM_CAPTURE),2);
         $res=[];
         foreach ($chunk as $v)
