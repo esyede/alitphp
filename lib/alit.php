@@ -1,12 +1,12 @@
 <?php
 /**
-*   Core Class of Alit PHP
-*   @package     Alit PHP
-*   @subpackage  Alit
-*   @copyright   Copyright (c) 2017 Suyadi. All Rights Reserved.
-*   @license     https://opensource.org/licenses/MIT The MIT License (MIT).
-*   @author      Suyadi <suyadi.1992@gmail.com>
-*/
+ * Core Class of Alit PHP
+ * @package     Alit
+ * @subpackage  none
+ * @copyright   Copyright (c) 2017 Suyadi. All Rights Reserved.
+ * @license     <https://opensource.org/licenses/MIT> The MIT License (MIT).
+ * @author      Suyadi <suyadi.1992@gmail.com>
+ */
 // Define framework constant to prohibit direct file access
 defined('DS') or define('DS',DIRECTORY_SEPARATOR);
 
@@ -84,11 +84,12 @@ final class Alit extends \Factory implements \ArrayAccess {
         $hive;
 
     /**
-    *   Set a before-route middleware and a handling function to be -
-    *   executed when accessed using one of the specified methods.
-    *   @param  $req  string
-    *   @param  $fn   string|callable
-    */
+     * Set a before-route middleware and a handling function to be -
+     * executed when accessed using one of the specified methods.
+     * @param   string           $req
+     * @param   string|callable  $fn
+     * @return  object
+     */
     function before($req,$fn) {
         $req=preg_split('/ /',preg_replace('/\s\s+/',' ',$req),NULL,PREG_SPLIT_NO_EMPTY);
         foreach ($this->split($req[0]) as $verb)
@@ -97,11 +98,12 @@ final class Alit extends \Factory implements \ArrayAccess {
         return $this;
     }
 
-    /**
-    *   Set a after-route middleware and a handling function to be -
-    *   executed when accessed using one of the specified methods.
-    *   @param  $req  string
-    *   @param  $fn   string|callable
+   /**
+    * Set a after-route middleware and a handling function to be -
+    * executed when accessed using one of the specified methods
+    * @param   string           $req
+    * @param   string|callable  $fn
+    * @return  object
     */
     function after($req,$fn) {
         $req=preg_split('/ /',preg_replace('/\s\s+/',' ',$req),NULL,PREG_SPLIT_NO_EMPTY);
@@ -111,9 +113,10 @@ final class Alit extends \Factory implements \ArrayAccess {
         return $this;
     }
 
-    /**
-    *   Set the page not found (404) handling function
-    *   @param  $fn  string|callable
+   /**
+    * Set the page not found (404) handling function
+    * @param   string|callable  $fn
+    * @return  object
     */
     function notfound($fn=NULL) {
         $this->set('ROUTES.Notfound',is_string($fn)?trim($fn):$fn);
@@ -121,11 +124,12 @@ final class Alit extends \Factory implements \ArrayAccess {
         return $this;
     }
 
-    /**
-    *   Store a route and a handling function to be executed -
-    *   when accessed using one of the specified methods.
-    *   @param  $req  string
-    *   @param  $fn   string|callable
+   /**
+    * Store a route and a handling function to be executed -
+    * when accessed using one of the specified methods.
+    * @param   string           $req
+    * @param   string|callable  $fn
+    * @return  object
     */
     function route($req,$fn) {
         $req=preg_split('/ /',preg_replace('/\s\s+/',' ',$req),NULL,PREG_SPLIT_NO_EMPTY);
@@ -138,10 +142,10 @@ final class Alit extends \Factory implements \ArrayAccess {
         return $this;
     }
 
-    /**
-    *   Run the framework: Loop all defined route before middleware's and routes, -
-    *   and execute the handling function if a route was found.
-    *   @return  bool
+   /**
+    * Run the framework: Loop all defined route before middleware's and routes, -
+    * and execute the handling function if a route was found.
+    * @return  boolean
     */
     function run() {
         // Send some headers
@@ -197,13 +201,13 @@ final class Alit extends \Factory implements \ArrayAccess {
         return ($executed>0);
     }
 
-    /**
-    *   Execute a set of routes: if a route is found, invoke the relating handling function
-    *   @param   $routes  array
-    *   @param   $quit    bool
-    *   @return  int
+   /**
+    * Execute a set of routes: if a route is found, invoke the relating handling function
+    * @param   array    $routes
+    * @param   boolean  $break
+    * @return  integer
     */
-    private function execute($routes,$quit=FALSE) {
+    private function execute($routes,$break=FALSE) {
         $verb=$this->get('VERB');
         $uri=$this->get('URI');
         $executed=0;
@@ -254,21 +258,22 @@ final class Alit extends \Factory implements \ArrayAccess {
                 // Invalid route handler detected!
                 else user_error(sprintf(self::E_ROUTE,$route['fn']),E_USER_ERROR);
                 $executed++;
-                if ($quit===TRUE)
+                if ($break===TRUE)
                     break;
             }
         }
         return $executed;
     }
 
-    /**
-    *   Trigger error message
-    *   @param  $code    int
-    *   @param  $reason  string|NULL
-    *   @param  $file    string|NULL
-    *   @param  $line    string|NULL
-    *   @param  $trace   mixed|NULL
-    *   @param  $level   int
+   /**
+    * Trigger error message
+    * @param   integer      $code
+    * @param   string|null  $reason
+    * @param   string|null  $file
+    * @param   string|null  $line
+    * @param   mixed|null   $trace
+    * @param   integer      $level
+    * @return  void
     */
     function abort($code,$reason=NULL,$file=NULL,$line=NULL,$trace=NULL,$level=0) {
         if ($code) {
@@ -327,11 +332,11 @@ final class Alit extends \Factory implements \ArrayAccess {
         }
     }
 
-    /**
-    *   Return filtered stack trace as a formatted string (or array)
-    *   @param   $trace        array|NULL
-    *   @param   $format       bool
-    *   @return  string|array
+   /**
+    * Return filtered stack trace as a formatted string or array
+    * @param   array|null    $trace
+    * @param   boolean       $format
+    * @return  string|array   
     */
     function backtrace(array $trace=NULL,$format=TRUE) {
         if (!$trace) {
@@ -371,9 +376,10 @@ final class Alit extends \Factory implements \ArrayAccess {
         return $out;
     }
 
-    /**
-    *   Custom shutdown function for error handling purpose
-    *   @param  $cwd  string
+   /**
+    * Custom shutdown function for error handling purpose
+    * @param   string  $cwd
+    * @return  void
     */
     function shutdown($cwd) {
         chdir($cwd);
@@ -385,11 +391,11 @@ final class Alit extends \Factory implements \ArrayAccess {
             $this->abort(500,$error['message'],$error['file'],$error['line']);
     }
 
-
-    /**
-    *   Redirect to specified URI
-    *   @param  $url   string
-    *   @param  $wait  int
+   /**
+    * Redirect to specified URI
+    * @param   string   $url
+    * @param   boolean  $permanent
+    * @return  void
     */
     function redirect($url=NULL,$permanent=TRUE) {
         $base=$this->get('PROTO').'://'.rtrim($this->get('BASE'),'/');
@@ -411,10 +417,11 @@ final class Alit extends \Factory implements \ArrayAccess {
         }
     }
 
-    /**
-    *   Render view using native PHP template
-    *   @param  $name  string
-    *   @param  $data  array|NULL
+   /**
+    * Render view using native PHP template
+    * @param   string  $name
+    * @param   array   $data
+    * @return  void
     */
     function render($name,$data=NULL) {
         $file=str_replace('/',DS,$this->get('BASE').str_replace('./','',$this->get('UI').$name));
@@ -427,9 +434,10 @@ final class Alit extends \Factory implements \ArrayAccess {
         echo trim(ob_get_clean());
     }
 
-    /**
-    *   Parse INI file and store it's array to hive
-    *   @param  $source  string|array
+   /**
+    * Parse ini-stryle config file and store to hive
+    * @param   string|array  $source
+    * @return  object
     */
     function config($source) {
         // You can pass a comma-, semicolon-, or pipe-separated string of config file at once!
@@ -487,11 +495,11 @@ final class Alit extends \Factory implements \ArrayAccess {
         return $this;
     }
 
-    /**
-    *   Read from file (with option to apply Unix LF as standard line ending)
-    *   @param   $file   string
-    *   @param   $lf     bool
-    *   @return  string
+   /**
+    * Read from file (with option to apply Unix LF as standard line ending)
+    * @param   string   $file
+    * @param   boolean  $lf
+    * @return  string
     */
     function read($file,$lf=FALSE) {
         $file=file_get_contents($file);
@@ -499,22 +507,22 @@ final class Alit extends \Factory implements \ArrayAccess {
     }
 
     /**
-    *   Write to file (or append if $append is TRUE)
-    *   @param   $file      string
-    *   @param   $data      mixed
-    *   @param   $append    bool
-    *   @return  int|FALSE
-    **/
+     * Write to file (or append if $append is TRUE)
+     * @param   string   $file
+     * @param   mixed    $data
+     * @param   boolean  $append
+     * @return  boolean
+     */
     function write($file,$data,$append=FALSE) {
         return file_put_contents($file,$data,LOCK_EX|($append?FILE_APPEND:0));
     }
 
-    /**
-    *   Write log message to file
-    *   @param   $file      string
-    *   @param   $data      mixed
-    *   @param   $lf        bool
-    *   @return  bool
+   /**
+    * Write log message to file
+    * @param   string   $data
+    * @param   string   $file
+    * @param   boolean  $lf
+    * @return  boolean
     */
     function log($data,$file,$lf=FALSE) {
         $ts=time();
@@ -524,20 +532,20 @@ final class Alit extends \Factory implements \ArrayAccess {
             ($lf?PHP_EOL:" ").$data.PHP_EOL,file_exists($file));
     }
 
-    /**
-    *   Return base url (with protocol)
-    *   @param   $suffix  string|NULL
-    *   @return  string
+   /**
+    * Return base url (with protocol)
+    * @param   string|null  $suffix
+    * @return  string
     */
     function base($suffix=NULL) {
         $base=rtrim($this->get('PROTO').'://'.$this->get('BASE'),'/');
         return empty($suffix)?$base:$base.(string)$suffix;
     }
 
-    /**
-    *   Class autoloader
-    *   @param   $class  string
-    *   @return  bool
+   /**
+    * Class autoloader
+    * @param   string   $class
+    * @return  boolean
     */
     protected function autoloader($class) {
         $class=$this->slash(ltrim($class,'\\'));
@@ -555,48 +563,48 @@ final class Alit extends \Factory implements \ArrayAccess {
     }
 
     /**
-    *   Return string representation of PHP value
-    *   @param   $key    mixed
-    *   @return  string
-    **/
-    function serialize($key) {
+     * Return string representation of PHP value
+     * @param   mixed   $data
+     * @return  string
+     */
+    function serialize($data) {
         return ($this->get('SERIALIZER')=='igbinary')
-            ?igbinary_serialize($key):serialize($key);
+            ?igbinary_serialize($data):serialize($data);
     }
 
     /**
-    *   Return PHP value derived from string
-    *   @param   $key    mixed
-    *   @return  string
-    **/
-    function unserialize($key) {
+     * Return PHP value derived from string
+     * @param   string  $data
+     * @return  mixed
+     */
+    function unserialize($data) {
         return ($this->get('SERIALIZER')=='igbinary')
-            ?igbinary_unserialize($key):unserialize($key);
+            ?igbinary_unserialize($data):unserialize($data);
     }
 
-    /**
-    *   Recursively convert array to object
-    *   @param   $arr         array
-    *   @return  object|NULL
+   /**
+    * Recursively convert array to object
+    * @param   array        $arr
+    * @return  object|null
     */
     function arr2obj($arr) {
         return is_array($arr)?json_decode(json_encode($arr,JSON_FORCE_OBJECT),FALSE):NULL;
     }
 
-    /**
-    *   Recursively convert object to array
-    *   @param   $obj        object
-    *   @return  array|NULL
+   /**
+    * Recursively convert object to array
+    * @param   object      $obj
+    * @return  array|null
     */
     function obj2arr($obj) {
         return is_object($obj)?json_decode(json_encode($obj),TRUE):NULL;
     }
 
-    /**
-    *   Retrieve POST data
-    *   @param   $key         string|NULL
-    *   @param   $escape      bool
-    *   @return  string|NULL
+   /**
+    * Retrieve POST data
+    * @param   string|null  $key
+    * @param   boolean      $escape
+    * @return  string|null
     */
     function post($key=NULL,$escape=TRUE) {
         $eval=\Validation::instance();
@@ -613,10 +621,30 @@ final class Alit extends \Factory implements \ArrayAccess {
     }
 
     /**
-    *   Retrieve COOKIE data
-    *   @param   $key          string
-    *   @param   $escape       bool
-    *   @return  string|FALSE
+    * Retrieve FILES data
+    * @param   string|null  $key
+    * @param   boolean      $escape
+    * @return  string|null
+    */
+    function files($key=NULL,$escape=TRUE) {
+        $eval=\Validation::instance();
+        if (is_null($key)) {
+            $files=[];
+            if ($escape===TRUE)
+                foreach ($_FILES as $k=>$v)
+                    $files[$k]=$eval->xss_clean([$v]);
+            return ($escape===TRUE)?$files:$_FILES;
+        }
+        elseif (isset($_FILES[$key]))
+            return ($escape===TRUE)?$eval->xss_clean([$_FILES[$key]]):$_FILES[$key];
+        return NULL;
+    }
+
+   /**
+    * Retrieve COOKIE data
+    * @param   string|null  $key
+    * @param   boolean      $escape
+    * @return  string|null
     */
     function cookie($key=NULL,$escape=TRUE) {
         $eval=\Validation::instance();
@@ -632,42 +660,43 @@ final class Alit extends \Factory implements \ArrayAccess {
         return FALSE;
     }
 
-    /**
-    *   Set a cookie
-    *   @param   $key    string
-    *   @param   $val    mixed
-    *   @param   $ttl    int|NULL
+   /**
+    * Set a cookie
+    * @param   string   $key
+    * @param   mixed    $val
+    * @param   integer  $ttl
+    * @return  void
     */
     function setcookie($key,$val,$ttl=NULL) {
         $ttl=empty($ttl)?(time()+(60*60*24)):$ttl;
         setcookie($key,$val,$ttl,$this->get('TEMP'));
     }
 
-    /**
-    *   Retrieve parts of URI
-    *   @param   $key         int
-    *   @param   $default     string|NULL
-    *   @return  string|NULL
+   /**
+    * Retrieve part of URI
+    * @param   integer      $key
+    * @param   string|null  $default
+    * @return  string
     */
     function segment($key,$default=NULL) {
         $uri=array_map('trim',preg_split('///',$app->get('URI'),NULL,PREG_SPLIT_NO_EMPTY));
         return array_key_exists($key,$uri)?$uri[$key]:$default;
     }
 
-    /**
-    *   Replace backslash with slash
-    *   @param   $str    string
-    *   @return  string
+   /**
+    * Replace backslash with slash
+    * @param   string  $str
+    * @return  string
     */
     function slash($str) {
         return $str?strtr($str,'\\','/'):$str;
     }
 
-    /**
-    *   Split comma-, semicolon-, or pipe-separated string
-    *   @param   $str      string
-    *   @param   $noempty  bool
-    *   @return  array
+   /**
+    * Split comma-, semicolon-, or pipe-separated string
+    * @param   string   $str
+    * @param   boolean  $noempty
+    * @return  array
     */
     function split($str,$noempty=TRUE) {
         return array_map('trim',preg_split('/[,;|]/',$str,0,$noempty?PREG_SPLIT_NO_EMPTY:0));
@@ -678,10 +707,11 @@ final class Alit extends \Factory implements \ArrayAccess {
 //! Hive - Methods to play around with framework variables
 //!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    /**
-    *   Set a value to hive or rewrite it if already exist
-    *   @param  $key  mixed
-    *   @param  $val  mixed
+   /**
+    * Set a value to hive or rewrite it if already exist
+    * @param   string|array  $key
+    * @param   mixed         $val
+    * @return  void
     */
     function set($key,$val=NULL) {
         if (is_string($key)) {
@@ -705,20 +735,22 @@ final class Alit extends \Factory implements \ArrayAccess {
                 $this->set($k,$v);
     }
 
-    /**
-    *   Multi-set data to hive using associative array
-    *   @param $arr     array
-    *   @param $prefix  string
+   /**
+    * Multiple-set data to hive using associative array
+    * @param   array        $arr
+    * @param   string|null  $prefix
+    * @return  void
     */
-    function mset(array $arr,$prefix='') {
+    function mset(array $arr,$prefix=NULL) {
         foreach ($arr as $k=>$v)
-            $this->set($prefix.$k,$v);
+            $this->set((is_string($prefix)?$prefix:NULL).$k,$v);
     }
 
-    /**
-    *   Get a value from hive or default value if path doesn't exist
-    *   @param  $key      string
-    *   @param  $default  mixed
+   /**
+    * Get a value from hive or default value if path doesn't exist
+    * @param   string      $key
+    * @param   mixed|null  $default
+    * @return  mixed|null
     */
     function get($key,$default=NULL) {
         $keys=explode('.',(string)$key);
@@ -731,12 +763,13 @@ final class Alit extends \Factory implements \ArrayAccess {
         return $hive;
     }
 
-    /**
-    *   Add a value or array of value to hive
-    *   $pop is a helper to pop out the last key if the value is an array
-    *   @param  $key  mixed
-    *   @param  $val  mixed
-    *   @param  $pop  bool
+   /**
+    * Add a value or array of value to hive.
+    * $pop is a helper to pop out the last key if the value is an array
+    * @param   string|array  $key
+    * @param   mixed         $val
+    * @param   boolean       $pop
+    * @return  void
     */
     function add($key,$val=NULL,$pop=FALSE) {
         if (is_string($key)) {
@@ -762,9 +795,10 @@ final class Alit extends \Factory implements \ArrayAccess {
                 $this->add($k,$v);
     }
 
-    /**
-    *   Check if hive path exists
-    *   @param  $key  string
+   /**
+    * Check if hive path exists
+    * @param   string   $key
+    * @return  boolean
     */
     function has($key) {
         $keys=explode('.',(string)$key);
@@ -777,11 +811,11 @@ final class Alit extends \Factory implements \ArrayAccess {
         return TRUE;
     }
 
-    /**
-    *   Determine if the given key exists in the provided array
-    *   @param   $hive  object|array
-    *   @param   $key   string
-    *   @return  bool
+   /**
+    * Determine if the given key exists in the provided array
+    * @param   string   $key
+    * @param   array    $hive
+    * @return  boolean
     */
     protected function exists($key,$hive) {
         if ($hive instanceof \ArrayAccess)
@@ -789,9 +823,10 @@ final class Alit extends \Factory implements \ArrayAccess {
         return array_key_exists($key,(array)$hive);
     }
 
-    /**
-    *   Clear a values of given key or keys
-    *   @param  $key  string|array
+   /**
+    * Clear a values of given hive key or keys
+    * @param   string|array  $key
+    * @return  void
     */
     function clear($key) {
         if (is_string($key))
@@ -801,9 +836,10 @@ final class Alit extends \Factory implements \ArrayAccess {
                 $this->clear($k);
     }
 
-    /**
-    *   Erase a hive path or array of hive paths
-    *   @param  $key  mixed
+   /**
+    * Erase a hive path or array of hive paths
+    * @param   string|array  $key
+    * @return  void
     */
     function erase($key) {
         if (is_string($key)) {
@@ -822,10 +858,10 @@ final class Alit extends \Factory implements \ArrayAccess {
                 $this->erase($k);
     }
 
-    /**
-    *   Check if given key or keys are empty
-    *   @param   $key  string|array
-    *   @return  bool
+   /**
+    * Check if given key or keys are empty
+    * @param   string|array  $key
+    * @return  boolean
     */
     function dry($key) {
         if (is_string($key))
@@ -837,9 +873,11 @@ final class Alit extends \Factory implements \ArrayAccess {
         return TRUE;
     }
 
-    /**
-    *   Merge a given array with the given key
-    *   @param  $key  mixed
+   /**
+    * Merge a given array with the given key
+    * @param   string|array
+    * @param   mixed|null
+    * @return  void
     */
     function merge($key,$val=NULL) {
         if (is_array($key))
@@ -851,11 +889,11 @@ final class Alit extends \Factory implements \ArrayAccess {
         }
     }
 
-    /**
-    *   Return the value of given key and delete the key
-    *   @param   $key      string
-    *   @param   $default  mixed|NULL
-    *   @return  mixed
+   /**
+    * Return the value of given key and delete the key
+    * @param   string       $key
+    * @param   string|null  $default
+    * @return  mixed
     */
     function pull($key,$default=NULL) {
         if (!is_string($key))
@@ -865,10 +903,11 @@ final class Alit extends \Factory implements \ArrayAccess {
         return $val;
     }
 
-    /**
-    *   Push a given array to the end of the array in a given key
-    *   @param   $key   string
-    *   @param   $val   mixed|NULL
+   /**
+    * Push a given array to the end of the array in a given key
+    * @param   string      $key
+    * @param   mixed|null  $val
+    * @return  void
     */
     function push($key,$val=NULL) {
         if (is_null($val)) {
@@ -882,10 +921,10 @@ final class Alit extends \Factory implements \ArrayAccess {
         }
     }
 
-    /**
-    *   Sort the values of a hive path or all the stored values
-    *   @param   $key   string|NULL
-    *   @return  array
+   /**
+    * Sort the values of a hive path or all the stored values
+    * @param   string|null  $key
+    * @return  array
     */
     function sort($key=NULL) {
         if (is_string($key))
@@ -894,11 +933,11 @@ final class Alit extends \Factory implements \ArrayAccess {
             return $this->arrsort($this->hive);
     }
 
-    /**
-    *   Recursively sort the values of a hive path or all the stored values
-    *   @param   $key   string|NULL
-    *   @param   $arr   array
-    *   @return  array
+   /**
+    * Recursively sort the values of a hive path or all the stored values
+    * @param   string|null  $key
+    * @param   array|null   $arr
+    * @return  array
     */
     function recsort($key=NULL,$arr=NULL) {
         if (is_array($arr)) {
@@ -913,47 +952,48 @@ final class Alit extends \Factory implements \ArrayAccess {
             return $this->recsort(NULL,$this->hive);
     }
 
-    /**
-    *   Sort the given array
-    *   @param   $arr   array
-    *   @return  array
+   /**
+    * Sort the given array
+    * @param   array  $arr
+    * @return  array
     */
     function arrsort($arr) {
         $this->isassoc($arr)?ksort($arr):sort($arr);
         return $arr;
     }
 
-    /**
-    *   Determine whether the given value is array accessible
-    *   @param   $val  mixed
-    *   @return  bool
+   /**
+    * Determine whether the given value is array accessible
+    * @param   array    $val
+    * @return  boolean
     */
     function accessible($val) {
         return is_array($val)||$val instanceof \ArrayAccess;
     }
 
-    /**
-    *   Determine if an array is associative
-    *   @param   $arr  array|NULL
-    *   @return  bool
+   /**
+    * Determine if an array is associative
+    * @param   array|null  $arr
+    * @return  boolean
     */
     function isassoc($arr=NULL) {
         $keys=is_array($arr)?array_keys($arr):array_keys($this->hive);
         return array_keys($keys)!==$keys;
     }
 
-    /**
-    *   Store a key as reference
-    *   @param  $key  string
-    *   @param  $val  mixed|NULL
+   /**
+    * Store a key as reference
+    * @param   string  $key
+    * @param   mixed   &$val
+    * @return  void
     */
     function ref($key,&$val=NULL) {
         $this->hive[$key]=&$val;
     }
 
-    /**
-    *   Grab all stored values in hive
-    *   @return  array
+   /**
+    * Get all stored values in hive
+    * @return  array
     */
     function hive() {
         return $this->hive;
@@ -1160,7 +1200,9 @@ class Preview extends \Factory {
         // Template stacks
         $stack;
 
-    // Class constructor
+    /**
+     * Class constructor
+     */
     function __construct() {
         $fw=\Alit::instance();
         $this->block=[];
@@ -1168,29 +1210,30 @@ class Preview extends \Factory {
         $this->ui=str_replace('/',DS,$fw->get('ROOT').str_replace('./','',$fw->get('UI')));
     }
 
-    /**
-    *   Add file to include
-    *   @param   $name   string
-    *   @return  string
+   /**
+    * Add file to include
+    * @param   string  $name
+    * @return  string
     */
     protected function tpl($name) {
         return preg_replace('/\s\s+/','',$this->ui.$name);
     }
 
-    /**
-    *   Print result of templating
-    *   @param  $name  string
-    *   @param  $data  array
+   /**
+    * Print result of templating
+    * @param   string  $name
+    * @param   array   $data
+    * @return  void
     */
     function render($name,$data=[]) {
         echo $this->retrieve($name,$data);
     }
 
-    /**
-    *   Retrieve result of templating
-    *   @param   $name   string
-    *   @param   $data   array
-    *   @return  string
+   /**
+    * Retrieve result of templating
+    * @param   string  $name
+    * @param   array   $data
+    * @return  string
     */
     function retrieve($name,$data=[]) {
         $this->tpl[]=$name;
@@ -1203,46 +1246,48 @@ class Preview extends \Factory {
         return $this->block('content');
     }
 
-    /**
-    *   Check existance of a template file
-    *   @param   $name  string
-    *   @return  bool
+   /**
+    * Check existance of a template file
+    * @param   string  $name
+    * @return  boolean
     */
     function exists($name) {
         return file_exists($this->tpl($name));
     }
 
-    /**
-    *   Define parent
-    *   @param  $name  string
+   /**
+    * Define parent
+    * @param   string  $name
+    * @return  void
     */
     protected function extend($name) {
         $this->tpl[]=$name;
     }
 
-    /**
-    *   Return content of block if exists
-    *   @param   $name     string
-    *   @param   $default  string
-    *   @return  string
+   /**
+    * Return content of block if exists
+    * @param   string       $name   
+    * @param   string|null  $default
+    * @return  string
     */
-    protected function block($name,$default='') {
+    protected function block($name,$default=NULL) {
         return array_key_exists($name,$this->block)?$this->block[$name]:$default;
     }
 
-    /**
-    *   Block begins
-    *   @param  $name  string
+   /**
+    * Bnock begins
+    * @param   string $name
+    * @return  void
     */
     protected function beginblock($name) {
         array_push($this->stack,$name);
         ob_start();
     }
 
-    /**
-    *   Block ends
-    *   @param   $overwrite  bool
-    *   @return  string
+   /**
+    * Block ends
+    * @param   boolean $overwrite
+    * @return  string
     */
     protected function endblock($overwrite=FALSE) {
         $name=array_pop($this->stack);
@@ -1260,9 +1305,9 @@ class Preview extends \Factory {
 //!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 abstract class Factory {
 
-    /**
-    *   Return class instance
-    *   @return  static
+   /**
+    * Return class instance
+    * @return  static
     */
     static function instance() {
         if (!\Warehouse::exists($class=get_called_class())) {
@@ -1284,38 +1329,38 @@ final class Warehouse {
     // Object table
     private static $table;
 
-    /**
-    *   Return TRUE if object exists in table
-    *   @param   $key  string
-    *   @return  bool
+   /**
+    * Return TRUE if object exists in table
+    * @param   string  $key
+    * @return  boolean
     */
     static function exists($key) {
         return isset(self::$table[$key]);
     }
 
-    /**
-    *   Add object to table
-    *   @param   $key    string
-    *   @param   $obj    object
-    *   @return  object
+   /**
+    * Add object to table
+    * @param  string   $key
+    * @param  object   $obj  object to be add
+    * @return boolean
     */
     static function set($key,$obj) {
         return self::$table[$key]=$obj;
     }
 
-    /**
-    *   Retrieve object from table
-    *   @param   $key    string
-    *   @return  object
+   /**
+    * Retrieve object from table
+    * @param   string  $key
+    * @return  object
     */
     static function get($key) {
         return self::$table[$key];
     }
 
-    /**
-    *   Delete object from table
-    *   @param   $key  string
-    *   @return  NULL
+   /**
+    * Delete object from table
+    * @param   string  $key
+    * @return  null
     */
     static function clear($key) {
         self::$table[$key]=NULL;

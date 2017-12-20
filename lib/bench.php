@@ -1,12 +1,12 @@
 <?php
 /**
-*   Tiny Benchmark Library for Alit PHP
-*   @package     Alit PHP
-*   @subpackage  Alit.Bench
-*   @copyright   Copyright (c) 2017 Suyadi. All Rights Reserved.
-*   @license     https://opensource.org/licenses/MIT The MIT License (MIT)
-*   @author      Suyadi <suyadi.1992@gmail.com>
-*/
+ * Tiny Benchmark Library for Alit PHP
+ * @package     Alit
+ * @subpackage  Bench
+ * @copyright   Copyright (c) 2017 Suyadi. All Rights Reserved.
+ * @license     <https://opensource.org/licenses/MIT> The MIT License (MIT).
+ * @author      Suyadi <suyadi.1992@gmail.com>
+ */
 // Prohibit direct access to file
 defined('DS') or die('Direct file access is not allowed.');
 
@@ -24,20 +24,21 @@ class Bench extends \Factory {
         // Error messages
         E_BENCHKEY="Benchmark key '%s' not found";
 
-    /**
-    *   Start benchmark
-    *   @param  $key  string
+   /**
+    * Start a bechmark
+    * @param   string  $key
+    * @return  void
     */
     function start($key) {
         $this->start[$key]=microtime(TRUE);
     }
 
-    /**
-    *   Get elapsed time
-    *   @param   $key         string
-    *   @param   $round       int
-    *   @param   $stop        string
-    *   @return  float|FALSE
+   /**
+    * Get elapsed time
+    * @param   string   $key
+    * @param   integer  $round
+    * @param   boolean  $stop
+    * @return  integer
     */
     function elapsed($key,$round,$stop=FALSE) {
         $fw=\Alit::instance();
@@ -50,9 +51,9 @@ class Bench extends \Factory {
         }
     }
 
-    /**
-    *   Get memory usage
-    *   @return  int
+   /**
+    * Get memory usage
+    * @return  string
     */
     function memory() {
         $mem=memory_get_usage(TRUE);
@@ -61,9 +62,10 @@ class Bench extends \Factory {
         return round($mem,2).[' B',' KB',' MB'][$i];
     }
 
-    /**
-    *   Stop benchmarking
-    *   @param  $key  string
+   /**
+    * Stop the benchmark
+    * @param   string $key
+    * @return  void
     */
     function stop($key) {
         $this->stop[$key]=microtime(TRUE);

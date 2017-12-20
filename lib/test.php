@@ -1,12 +1,12 @@
 <?php
 /**
-*   Tiny Unit-testing Tool for Alit PHP
-*   @package     Alit PHP
-*   @subpackage  Alit.Test
-*   @copyright   Copyright (c) 2017 Suyadi. All Rights Reserved.
-*   @license     https://opensource.org/licenses/MIT The MIT License (MIT)
-*   @author      Suyadi <suyadi.1992@gmail.com>
-*/
+ * Tiny Unit-testing Belt for Alit PHP
+ * @package     Alit
+ * @subpackage  Test
+ * @copyright   Copyright (c) 2017 Suyadi. All Rights Reserved.
+ * @license     <https://opensource.org/licenses/MIT> The MIT License (MIT).
+ * @author      Suyadi <suyadi.1992@gmail.com>
+ */
 // Prohibit direct access to file
 defined('DS') or die('Direct file access is not allowed.');
 
@@ -27,27 +27,27 @@ class Test {
 		$passed=TRUE;
 
 	/**
-	*	Return test results
-	*	@return  array
-	*/
+	 * Return test results
+	 * @return  array
+	 */
 	function results() {
 		return $this->data;
 	}
 
 	/**
-	*	Return FALSE if at least one test case fails
-	*	@return  bool
-	*/
+	 * Return FALSE if at least one test case fails
+	 * @return  boolean
+	 */
 	function passed() {
 		return $this->passed;
 	}
 
 	/**
-	*	Evaluate condition and save test result
-	*	@param   $cond    bool
-	*	@param   $msg     string
-    *	@return  object
-	*/
+	 * Evaluate condition and save test result
+	 * @param   boolean        $cond  test condition
+	 * @param   string|null    $msg   test message
+	 * @return  object                object of this class (chain-ability)
+	 */
 	function expect($cond,$msg=NULL) {
 		$fw=\Alit::instance();
 		$out=(bool)$cond;
@@ -68,19 +68,18 @@ class Test {
 	}
 
 	/**
-	*	Append message to test results
-	*	@param   $msg  string
-    *	@return  NULL
-	*/
+	 * Append message to test results
+	 * @param   string  $msg  message to be append
+	 * @return  void
+	 */
 	function message($msg) {
 		$this->expect(TRUE,$msg);
 	}
 
 	/**
-	*	Class constructor
-	*	@param   $level  int
-    *	@return  NULL
-	*/
+	 * Class constructor
+	 * @param  int  $level  result level
+	 */
 	function __construct($level=self::RL_BOTH) {
 		$this->level=$level;
 	}

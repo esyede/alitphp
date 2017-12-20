@@ -1,12 +1,12 @@
 <?php
 /**
-*   Tiny PDO-Based SQL Query Builder for Alit PHP
-*   @package     Alit PHP
-*   @subpackage  Alit.DB.SQL
-*   @copyright   Copyright (c) 2017 Suyadi. All Rights Reserved.
-*   @license     https://opensource.org/licenses/MIT The MIT License (MIT)
-*   @author      Suyadi <suyadi.1992@gmail.com>
-*/
+ * Tiny PDO-Based Query Builder Library for Alit PHP
+ * @package     Alit
+ * @subpackage  DB.SQL
+ * @copyright   Copyright (c) 2017 Suyadi. All Rights Reserved.
+ * @license     <https://opensource.org/licenses/MIT> The MIT License (MIT).
+ * @author      Suyadi <suyadi.1992@gmail.com>
+ */
 namespace DB;
 // Prohibit direct access to file
 defined('DS') or die('Direct file access is not allowed.');
@@ -52,9 +52,9 @@ class SQL {
         $conn=NULL;
 
     /**
-    *   Class constructor
-    *   @param  $config  array
-    */
+     * Class constructor
+     * @param  array  $config
+     */
     function __construct(array $config) {
         $fw=\Alit::instance();
         $config['driver']=(isset($config['driver'])?$config['driver']:'mysql');
@@ -89,9 +89,10 @@ class SQL {
     }
 
     /**
-    *   Set table to operate
-    *   @param  $table  string
-    */
+     * Set table ro operate
+     * @param   string  $table
+     * @return  object
+     */
     function table($table) {
         if (is_array($table)) {
             $frm='';
@@ -104,9 +105,10 @@ class SQL {
     }
 
     /**
-    *   Execute SELECT statement
-    *   @param  $fields  string
-    */
+     * Execute SELECT statement
+     * @param   string  $fields
+     * @return  object
+     */
     function select($fields) {
         $select=(is_array($fields)?implode(', ',$fields):$fields);
         $this->select=($this->select=='*'?$select:$this->select.', '.$select);
@@ -114,10 +116,11 @@ class SQL {
     }
 
     /**
-    *   Build MAX statement
-    *   @param  $fields  string
-    *   @param  $name    string|NULL
-    */
+     * Build MAX statement
+     * @param   string       $field
+     * @param   string|null  $name
+     * @return  object
+     */
     function max($field,$name=NULL) {
         $func='MAX('.$field.')'.(!is_null($name)?' AS '.$name:'');
         $this->select=($this->select=='*'?$func:$this->select.', '.$func);
@@ -125,10 +128,11 @@ class SQL {
     }
 
     /**
-    *  Build MIN statement
-    *   @param  $fields  string
-    *   @param  $name    string|NULL
-    */
+     * Build MIN statement
+     * @param   string       $field
+     * @param   string|null  $name
+     * @return  object
+     */
     function min($field,$name=NULL) {
         $func='MIN('.$field.')'.(!is_null($name)?' AS '.$name:'');
         $this->select=($this->select=='*'?$func:$this->select.', '.$func);
@@ -136,10 +140,11 @@ class SQL {
     }
 
     /**
-    *   Build SUM statement
-    *   @param  $fields  string
-    *   @param  $name    string|NULL
-    */
+     * Build SUM statement
+     * @param   string       $field
+     * @param   string|null  $name
+     * @return  object
+     */
     function sum($field,$name=NULL) {
         $func='SUM('.$field.')'.(!is_null($name)?' AS '.$name:'');
         $this->select=($this->select=='*'?$func:$this->select.', '.$func);
@@ -147,10 +152,11 @@ class SQL {
     }
 
     /**
-    *   Build COUNT AS statement
-    *   @param  $fields  string
-    *   @param  $name    string|NULL
-    */
+     * Build COUNT statement
+     * @param   string       $field
+     * @param   string|null  $name
+     * @return  object
+     */
     function count($field,$name=NULL) {
         $func='COUNT('.$field.')'.(!is_null($name)?' AS '.$name:'');
         $this->select=($this->select=='*'?$func:$this->select.', '.$func);
@@ -158,10 +164,11 @@ class SQL {
     }
 
     /**
-    *   Build AVG statement
-    *   @param  $fields  string
-    *   @param  $name    string|NULL
-    */
+     * Build AVG statement
+     * @param   string       $field
+     * @param   string|null  $name
+     * @return  object
+     */
     function avg($field,$name=NULL) {
         $func='AVG('.$field.')'.(!is_null($name)?' AS '.$name:'');
         $this->select=($this->select=='*'?$func:$this->select.', '.$func);
@@ -169,13 +176,14 @@ class SQL {
     }
 
     /**
-    *   Build JOIN statement
-    *   @param  $table   string
-    *   @param  $field1  string|NULL
-    *   @param  $op      string|NULL
-    *   @param  $field2  string|NULL
-    *   @param  $type    string|NULL
-    */
+     * Build JOIN statement
+     * @param   string       $table
+     * @param   string|null  $field1
+     * @param   string|null  $op
+     * @param   string|null  $field2
+     * @param   string       $type
+     * @return  object
+     */
     function join($table,$field1=NULL,$op=NULL,$field2=NULL,$type='') {
         $on=$field1;
         $table=$this->prefix.$table;
@@ -190,85 +198,92 @@ class SQL {
     }
 
     /**
-    *   Build INNER JOIN statement
-    *   @param  $table   string
-    *   @param  $field1  string|NULL
-    *   @param  $op      string|NULL
-    *   @param  $field2  string|NULL
-    */
+     * Build INNER JOIN statement
+     * @param   string  $table
+     * @param   string  $field1
+     * @param   string  $op 
+     * @param   string  $field2
+     * @return  object
+     */
     function inner($table,$field1,$op='',$field2='') {
         $this->join($table,$field1,$op,$field2,'INNER ');
         return $this;
     }
 
     /**
-    *   Build LEFT JOIN statement
-    *   @param  $table   string
-    *   @param  $field1  string|NULL
-    *   @param  $op      string|NULL
-    *   @param  $field2  string|NULL
-    */
+     * Build LEFT JOIN statement
+     * @param   string  $table
+     * @param   string  $field1
+     * @param   string  $op 
+     * @param   string  $field2
+     * @return  object
+     */
     function left($table,$field1,$op='',$field2='') {
         $this->join($table,$field1,$op,$field2,'LEFT ');
         return $this;
     }
 
     /**
-    *   Build RIGHT JOIN statement
-    *   @param  $table   string
-    *   @param  $field1  string
-    *   @param  $op      string|NULL
-    *   @param  $field2  string|NULL
-    */
+     * Build RIGHT JOIN statement
+     * @param   string  $table
+     * @param   string  $field1
+     * @param   string  $op 
+     * @param   string  $field2
+     * @return  object
+     */
     function right($table,$field1,$op='',$field2='') {
         $this->join($table,$field1,$op,$field2,'RIGHT ');
         return $this;
     }
 
     /**
-    *   Build FULL OUTER JOIN statement
-    *   @param  $table   string
-    *   @param  $field1  string
-    *   @param  $op      string|NULL
-    *   @param  $field2  string|NULL
-    */
+     * Build FULL OUTER JOIN statement
+     * @param   string  $table
+     * @param   string  $field1
+     * @param   string  $op 
+     * @param   string  $field2
+     * @return  object
+     */
     function full_outer($table,$field1,$op='',$field2='') {
         $this->join($table,$field1,$op,$field2,'FULL OUTER ');
         return $this;
     }
 
     /**
-    *   Build LEFT OUTER JOIN statement
-    *   @param  $table   string
-    *   @param  $field1  string
-    *   @param  $op      string|NULL
-    *   @param  $field2  string|NULL
-    */
+     * Build LEFT OUTER JOIN statement
+     * @param   string  $table
+     * @param   string  $field1
+     * @param   string  $op 
+     * @param   string  $field2
+     * @return  object
+     */
     function left_outer($table,$field1,$op='',$field2='') {
         $this->join($table,$field1,$op,$field2,'LEFT OUTER ');
         return $this;
     }
 
     /**
-    *   Build RIGHT OUTER JOIN statement
-    *   @param  $table   string
-    *   @param  $field1  string
-    *   @param  $op      string|NULL
-    *   @param  $field2  string|NULL
-    */
+     * Build RIGHT OUTER JOIN statement
+     * @param   string  $table
+     * @param   string  $field1
+     * @param   string  $op 
+     * @param   string  $field2
+     * @return  object
+     */
     function right_outer($table,$field1,$op='',$field2='') {
         $this->join($table,$field1,$op,$field2,'RIGHT OUTER ');
         return $this;
     }
 
     /**
-    *   Build WEHRE statement
-    *   @param  $where   string
-    *   @param  $op      string|NULL
-    *   @param  $val     string|NULL
-    *   @param  $type    string|NULL
-    *   @param  $and_or  string|NULL
-    */
+     * Build WHERE statement
+     * @param   string       $where
+     * @param   string|null  $op
+     * @param   string|null  $val
+     * @param   string|null  $type
+     * @param   string       $and_or
+     * @return  object
+     */
     function where($where,$op=NULL,$val=NULL,$type='',$and_or='AND') {
         if (is_array($where)) {
             $_where=[];
@@ -300,42 +315,46 @@ class SQL {
     }
 
     /**
-    *   Build OR WEHRE statement
-    *   @param  $where   string
-    *   @param  $op      string|NULL
-    *   @param  $val     string|NULL
-    */
+     * Build OR WHERE statement
+     * @param   string       $where
+     * @param   string|null  $op
+     * @param   string|null  $val
+     * @return  object
+     */
     function or_where($where,$op=NULL,$val=NULL) {
         $this->where($where,$op,$val,'','OR');
         return $this;
     }
 
     /**
-    *   Build WEHRE NOT statement
-    *   @param  $where   string
-    *   @param  $op      string|NULL
-    *   @param  $val     string|NULL
-    */
+     * Build NOT WHERE statement
+     * @param   string       $where
+     * @param   string|null  $op
+     * @param   string|null  $val
+     * @return  object
+     */
     function not_where($where,$op=NULL,$val=NULL) {
         $this->where($where,$op,$val,'NOT ','AND');
         return $this;
     }
 
     /**
-    *   Build OR NOT WEHRE statement
-    *   @param  $where   string
-    *   @param  $op      string|NULL
-    *   @param  $val     string|NULL
-    */
+     * Build OR NOT WHERE statement
+     * @param   string       $where
+     * @param   string|null  $op
+     * @param   string|null  $val
+     * @return  object
+     */
     function ornot_where($where,$op=NULL,$val=NULL) {
         $this->where($where,$op,$val,'NOT ','OR');
         return $this;
     }
 
     /**
-    *   Grouping statement
-    *   @param  $obj  object
-    */
+     * Grouping
+     * @param   Closure  $obj
+     * @return  object
+     */
     function grouped(\Closure $obj) {
         $this->grouped=TRUE;
         call_user_func_array($obj,[$this]);
@@ -344,12 +363,13 @@ class SQL {
     }
 
     /**
-    *   Build WEHRE IN statement
-    *   @param  $field   string
-    *   @param  $keys    array
-    *   @param  $type    string|NULL
-    *   @param  $and_or  string|NULL
-    */
+     * Build WHERE IN statement
+     * @param   string       $field
+     * @param   array        $keys 
+     * @param   string|null  $type 
+     * @param   string       $and_or
+     * @return  object        
+     */
     function in($field,array $keys,$type='',$and_or='AND') {
         if (is_array($keys)) {
             $_keys=[];
@@ -369,43 +389,47 @@ class SQL {
     }
 
     /**
-    *   Build WEHRE NOT IN statement
-    *   @param  $field   string
-    *   @param  $keys    array
-    */
+     * Build WEHRE NOT IN statement
+     * @param   string  $field
+     * @param   array   $keys 
+     * @return  object
+     */
     function not_in($field,array $keys) {
         $this->in($field,$keys,'NOT ','AND');
         return $this;
     }
 
     /**
-    *   Build OR WEHRE IN statement
-    *   @param  $field   string
-    *   @param  $keys    array
-    */
+     * Build OR WEHRE IN statement
+     * @param   string  $field
+     * @param   array   $keys 
+     * @return  object
+     */
     function or_in($field,array $keys) {
         $this->in($field,$keys,'','OR');
         return $this;
     }
 
     /**
-    *   Build OR WEHRE NOT IN statement
-    *   @param  $field   string
-    *   @param  $keys    array
-    */
+     * Build OR WEHRE NOT IN statement
+     * @param   string  $field
+     * @param   array   $keys 
+     * @return  object
+     */
     function ornot_in($field,array $keys) {
         $this->in($field,$keys,'NOT ','OR');
         return $this;
     }
 
     /**
-    *   Build BETWEEN statement
-    *   @param  $field   string
-    *   @param  $value1  mixed
-    *   @param  $value2  mixed
-    *   @param  $type    string|NULL
-    *   @param  $and_or  string|NULL
-    */
+     * Build BETWEEN statement
+     * @param   string       $field
+     * @param   string       $value1
+     * @param   string       $value2
+     * @param   string|null  $type
+     * @param   string       $and_or
+     * @return  object
+     */
     function between($field,$value1,$value2,$type='',$and_or='AND') {
         $where=$field.' '.$type.'BETWEEN '.$this->escape($value1).' AND '.$this->escape($value2);
         if ($this->grouped) {
@@ -419,45 +443,49 @@ class SQL {
     }
 
     /**
-    *   Build NOT BERWEEN statement
-    *   @param  $field   string
-    *   @param  $value1  mixed
-    *   @param  $value2  mixed
-    */
+     * Build NOT BERWEEN statement
+     * @param   string  $field
+     * @param   string  $value1
+     * @param   string  $value2
+     * @return  object      
+     */
     function not_between($field,$value1,$value2) {
         $this->between($field,$value1,$value2,'NOT ','AND');
         return $this;
     }
 
     /**
-    *   Build OR BERWEEN statement
-    *   @param  $field   string
-    *   @param  $value1  mixed
-    *   @param  $value2  mixed
-    */
+     * Build OR BERWEEN statement
+     * @param   string  $field
+     * @param   string  $value1
+     * @param   string  $value2
+     * @return  object      
+     */
     function or_between($field,$value1,$value2) {
         $this->between($field,$value1,$value2,'','OR');
         return $this;
     }
 
     /**
-    *   Build OR NOT BERWEEN statement
-    *   @param  $field   string
-    *   @param  $value1  mixed
-    *   @param  $value2  mixed
-    */
+     * Build OR NOT BERWEEN statement
+     * @param   string  $field
+     * @param   string  $value1
+     * @param   string  $value2
+     * @return  object      
+     */
     function ornot_between($field,$value1,$value2) {
         $this->between($field,$value1,$value2,'NOT ','OR');
         return $this;
     }
 
     /**
-    *   Build LIKE statement
-    *   @param  $field   string
-    *   @param  $data    mixed
-    *   @param  $type    string|NULL
-    *   @param  $and_or  string
-    */
+     * Build LIKE statement
+     * @param   string       $field
+     * @param   mixed        $data 
+     * @param   string|null  $type 
+     * @param   string       $and_or
+     * @return  object
+     */
     function like($field,$data,$type='',$and_or='AND') {
         $where=$field.' '.$type.'LIKE '.$this->escape($data);
         if ($this->grouped) {
@@ -471,40 +499,44 @@ class SQL {
     }
 
     /**
-    *   Build OR LIKE statement
-    *   @param  $field   string
-    *   @param  $data    mixed
-    */
+     * Build OR LIKE statement
+     * @param   string  $field
+     * @param   mixed   $data 
+     * @return  object
+     */
     function or_like($field,$data) {
         $this->like($field,$data,'','OR');
         return $this;
     }
 
     /**
-    *   Build NOT LIKE statement
-    *   @param  $field   string
-    *   @param  $data    mixed
-    */
+     * Build NOT LIKE statement
+     * @param   string  $field
+     * @param   mixed   $data 
+     * @return  object
+     */
     function not_like($field,$data) {
         $this->like($field,$data,'NOT ','AND');
         return $this;
     }
 
     /**
-    *   Build OR NOT LIKE statement
-    *   @param  $field   string
-    *   @param  $data    mixed
-    */
+     * Build OR NOT LIKE statement
+     * @param   string  $field
+     * @param   mixed   $data 
+     * @return  object
+     */
     function ornot_like($field,$data) {
         $this->like($field,$data,'NOT ','OR');
         return $this;
     }
 
     /**
-    *   Build LIMIT statement
-    *   @param  $limit      int
-    *   @param  $limit_end  int
-    */
+     * Buils LIMIT statement
+     * @param   integer       $limit
+     * @param   integer|null  $limit_end
+     * @return  object
+     */
     function limit($limit,$limit_end=NULL) {
         if (!is_null($limit_end))
             $this->limit=$limit.', '.$limit_end;
@@ -513,19 +545,21 @@ class SQL {
     }
 
     /**
-    *   Build OFFSET statement
-    *   @param  $offset  int
-    */
+     * Build OFFSET statement
+     * @param   integer  $offset
+     * @return  object
+     */
     function offset($offset) {
         $this->offset=$offset;
         return $this;
     }
 
     /**
-    *   Paginate query result
-    *   @param  $perpage  int
-    *   @param  $page     int
-    */
+     * Paginate query results
+     * @param   integer  $perpage
+     * @param   integer  $page
+     * @return  object
+     */
     function paginate($perpage,$page) {
         $this->limit=$perpage;
         $this->offset=($page-1)*$perpage;
@@ -533,10 +567,11 @@ class SQL {
     }
 
     /**
-    *   Build ORDER BY statement
-    *   @param  $orderby  int
-    *   @param  $sorting  int
-    */
+     * Build ORDER BY statement
+     * @param   string       $orderby
+     * @param   string|null  $sorting
+     * @return  object
+     */
     function order_by($orderby,$sorting=NULL) {
         if (!is_null($sorting))
             $this->orderby=$orderby.' '.strtoupper($sorting);
@@ -549,9 +584,10 @@ class SQL {
     }
 
     /**
-    *   Build GROUP BY statement
-    *   @param  $groupby  string
-    */
+     * Build GROUP BY statement
+     * @param   string  $groupby
+     * @return  object
+     */
     function group_by($groupby) {
         if (is_array($groupby))
             $this->groupby=implode(', ',$groupby);
@@ -560,11 +596,12 @@ class SQL {
     }
 
     /**
-    *   Build HAVING statement
-    *   @param  $field  string
-    *   @param  $op     string|NULL
-    *   @param  $val    mixed|NULL
-    */
+     * Build HAVING statement
+     * @param   string       $field
+     * @param   string|null  $op
+     * @param   mixed|null   $val
+     * @return  object
+     */
     function having($field,$op=NULL,$val=NULL) {
         if (is_array($op)) {
             $x=explode('?',$field);
@@ -580,17 +617,26 @@ class SQL {
         return $this;
     }
 
-    // Get number of affected rows
+    /**
+     * Get number of affected rows
+     * @return  integer
+     */
     function num_rows() {
         return $this->numrows;
     }
 
-    // Get last insert id
+    /**
+     * Get last insert id
+     * @return  integer
+     */
     function insert_id() {
         return $this->insertid;
     }
 
-    // Get last database error message
+    /**
+     * Prints last database error messages
+     * @return  void
+     */
     function error() {
         $fw=\Alit::instance();
         if ($fw->get('DEBUG')==0)
@@ -602,10 +648,10 @@ class SQL {
     }
 
     /**
-    *   Get only one/first row of data
-    *   @param   $type         bool|string
-    *   @return  array|object
-    */
+     * Get only one/first row of query as array or object
+     * @param   boolean|string  $type
+     * @return  array|object
+     */
     function one($type=FALSE) {
         $this->limit=1;
         $query=$this->many(TRUE);
@@ -614,11 +660,12 @@ class SQL {
         else return $this->query($query,FALSE,(($type=='array')?TRUE:FALSE));
     }
 
+
     /**
-    *   Get all data of affected rows
-    *   @param   $type         bool|string
-    *   @return  array|object
-    */
+     * Get all affected rows of query as array or object
+     * @param   boolean|string  $type
+     * @return  array|object
+     */
     function many($type=FALSE) {
         $query='SELECT '.$this->select.' FROM '.$this->from;
         if (!is_null($this->join))
@@ -641,9 +688,10 @@ class SQL {
     }
 
     /**
-    *   Execute INSERT statement
-    *   @param   $data  array
-    */
+     * Execute INSERT statement
+     * @param   array   $data
+     * @return  object
+     */
     function insert($data) {
         $val=implode(', ',array_map([$this,'escape'],$data));
         $query='INSERT INTO '.$this->from.' ('.implode(',',array_keys($data)).') VALUES ('.$val.')';
@@ -656,9 +704,10 @@ class SQL {
     }
 
     /**
-    *   Execute UPDATE statement
-    *   @param   $data  array
-    */
+     * Execute UPDATE statement
+     * @param   array   $data
+     * @return  object
+     */
     function update($data) {
         $query='UPDATE '.$this->from.' SET ';
         $values=[];
@@ -675,9 +724,9 @@ class SQL {
     }
 
     /**
-    *   Execute DELETE statement
-    *   @return  bool
-    */
+     * Execute DELETE statement
+     * @return  boolean
+     */
     function delete() {
         $query='DELETE FROM '.$this->from;
         if (!is_null($this->where))
@@ -691,38 +740,53 @@ class SQL {
         return $this->query($query);
     }
 
-    // Analyze table
+    /**
+     * Analyze table
+     * @return  mixed
+     */
     function analyze() {
         return $this->query('ANALYZE TABLE '.$this->from);
     }
 
-    // Check table
+    /**
+     * Check table
+     * @return  mixed
+     */
     function check() {
         return $this->query('CHECK TABLE '.$this->from);
     }
 
-    // Checksum table
+    /**
+     * Checksum table
+     * @return  boolean
+     */
     function checksum() {
         return $this->query('CHECKSUM TABLE '.$this->from);
     }
 
-    // Optimize table
+    /**
+     * Optimize table
+     * @return  boolean
+     */
     function optimize() {
         return $this->query('OPTIMIZE TABLE '.$this->from);
     }
 
-    // Repair table
+    /**
+     * Repair table
+     * @return  mixed
+     */
     function repair() {
         return $this->query('REPAIR TABLE '.$this->from);
     }
 
     /**
-    *   Execute sql statement
-    *   @param   $query  string
-    *   @param   $all    string
-    *   @param   $array  string
-    *   @return  mixed
-    */
+     * Execute sql queries
+     * @param   string   $query
+     * @param   boolean  $all
+     * @param   boolean  $array
+     * @return  mixed
+     */
     function query($query,$all=TRUE,$array=FALSE) {
         $this->reset();
         if (is_array($all)) {
@@ -791,10 +855,10 @@ class SQL {
     }
 
     /**
-    *   Add quote to sql query for sql-injection prevention
-    *   @param   $data   mixed
-    *   @return  string
-    */
+     * Add quote to sql query for sql-injection prevention
+     * @param   string  $data
+     * @return  string
+     */
     function escape($data) {
         if ($data===NULL)
             return 'NULL';
@@ -804,25 +868,35 @@ class SQL {
     }
 
     /**
-    *   Database caching
-    *   @param   $time  int|float
-    */
+     * Cache database query
+     * @param   integer|float  $time
+     * @return  object
+     */
     function cache($time) {
         $this->cache=new \DB\SQLCache($this->cachedir,$time);
         return $this;
     }
 
-    // Count executed queries
+    /**
+     * Count executed queries
+     * @return  integer
+     */
     function query_count() {
         return $this->querycount;
     }
 
-    // Get builded string of sql query
+    /**
+     * Get sql query string
+     * @return  string
+     */
     function sql() {
         return $this->query;
     }
 
-    // Reset class properties
+    /**
+     * Reset class properties
+     * @return  void
+     */
     protected function reset() {
         $this->result=[];
         $this->numrows=0;
@@ -842,7 +916,10 @@ class SQL {
         return;
     }
 
-    // Class destructor
+    /**
+     * Class destructor
+     * @return  void
+     */
     function __destruct() {
         $this->conn=NULL;
     }
@@ -863,7 +940,12 @@ class SQLCache {
         // Elapsed cache time
         $elapsed=NULL;
 
-    // Class constructor
+    /**
+     * Class constructor
+     * @param   string|null  $dir
+     * @param   integer      $time
+     * @return  void
+     */
     function __construct($dir=NULL,$time=0) {
         if (!file_exists($dir))
             mkdir($dir,0755);
@@ -873,10 +955,11 @@ class SQLCache {
     }
 
     /**
-    *   Set cache data to file
-    *   @param  $sql     string
-    *   @param  $result  string
-    */
+     * Write cache data to file
+     * @param   string  $sql
+     * @param   mixed   $result
+     * @return  void
+     */
     function set($sql,$result) {
         if (is_null($this->cache))
             return FALSE;
@@ -888,10 +971,11 @@ class SQLCache {
     }
 
     /**
-    *   Get cached data
-    *   @param  $sql    string
-    *   @param  $array  bool
-    */
+     * Read cache data from file
+     * @param   string  $sql
+     * @param   boolean $array
+     * @return  void|boolean
+     */
     function get($sql,$array=FALSE) {
         if (is_null($this->cache))
             return FALSE;
@@ -908,10 +992,10 @@ class SQLCache {
     }
 
     /**
-    *   Set cache filename (MD5 encrypted)
-    *   @param  $sql    string
-    *   @param  $array  bool
-    */
+     * Set cache filename (MD5 encrypted)
+     * @param   string  $name
+     * @return  string
+     */
     private function filename($name) {
         return md5($name);
     }

@@ -1,12 +1,12 @@
 <?php
 /**
-*   Tiny Cache Library for Alit PHP
-*   @package     Alit PHP
-*   @subpackage  Alit.Cache
-*   @copyright   Copyright (c) 2017 Suyadi. All Rights Reserved.
-*   @license     https://opensource.org/licenses/MIT The MIT License (MIT)
-*   @author      Suyadi <suyadi.1992@gmail.com>
-*/
+ * Tiny Cache Library for Alit PHP
+ * @package     Alit
+ * @subpackage  Cache
+ * @copyright   Copyright (c) 2017 Suyadi. All Rights Reserved.
+ * @license     <https://opensource.org/licenses/MIT> The MIT License (MIT).
+ * @author      Suyadi <suyadi.1992@gmail.com>
+ */
 // Prohibit direct access to file
 defined('DS') or die('Direct file access is not allowed.');
 
@@ -23,11 +23,11 @@ class Cache extends \Factory {
 		$prefix;
 
 	/**
-	*	Return timestamp and lifetime of cache entry or FALSE if not found
-	*	@param   $key         string
-	*	@param   $val         mixed
-	*	@return  array|FALSE
-	*/
+	 * Return timestamp and lifetime of cache entry or FALSE if not found
+	 * @param   string       $key
+	 * @param   mixed        &$val
+	 * @return  array|false
+	 */
 	function exists($key,&$val=NULL) {
 		$fw=\Alit::instance();
 		if (!$this->dsn)
@@ -61,6 +61,12 @@ class Cache extends \Factory {
 	*	@param   $ttl         int
 	*	@return  mixed|FALSE
 	*/
+	/**
+	 * Store value in cache
+	 * @param  string   $key
+	 * @param  mixed    $val
+	 * @param  integer  $ttl
+	 */
 	function set($key,$val,$ttl=0) {
 		$fw=\Alit::instance();
 		if (!$this->dsn)
@@ -85,19 +91,19 @@ class Cache extends \Factory {
 	}
 
 	/**
-	*	Retrieve value of cache entry
-	*	@param   $key         string
-	*	@return  mixed|FALSE
-	*/
+	 * Retrieve value of cache entry
+	 * @param   string       $key
+	 * @return  mixed|false
+	 */
 	function get($key) {
 		return $this->dsn&&$this->exists($key,$data)?$data:FALSE;
 	}
 
 	/**
-	*	Erase cache entry
-	*	@param   $key  string
-	*	@return  bool
-	*/
+	 * Erase cache entry
+	 * @param   string   $key
+	 * @return  boolean
+	 */
 	function erase($key) {
 		if (!$this->dsn)
 			return;
@@ -117,10 +123,10 @@ class Cache extends \Factory {
 	}
 
 	/**
-	*	Clear contents of cache backend
-	*	@param   $suffix  string
-	*	@return  bool
-	*/
+	 * Clear contents of cache backend
+	 * @param   string   $suffix
+	 * @return  boolean
+	 */
 	function reset($suffix=NULL) {
 		if (!$this->dsn)
 			return TRUE;
@@ -176,11 +182,11 @@ class Cache extends \Factory {
 	}
 
 	/**
-	*	Load/auto-detect cache backend
-	*	@param   $dsn    bool|string
-	*	@param   $seed   bool|string
-	*	@return  string
-	*/
+	 * Load/auto-detect cache backend
+	 * @param   boolean|string  $dsn
+	 * @param   boolean|string  $seed
+	 * @return  string
+	 */
 	function load($dsn,$seed=NULL) {
 		$fw=\Alit::instance();
 		if ($dsn=trim($dsn)) {
@@ -222,11 +228,11 @@ class Cache extends \Factory {
 		$this->prefix=$seed?:$fw->get('SEED');
 		return $this->dsn=$dsn;
 	}
-
+	
 	/**
-	*	Class constructor
-	*	@param  $dsn  bool|string
-	*/
+	 * Class constructor
+	 * @param  boolean|string  $dsn
+	 */
 	function __construct($dsn=FALSE) {
 		if ($dsn)
 			$this->load($dsn);

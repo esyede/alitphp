@@ -1,12 +1,12 @@
 <?php
 /**
-*   Tiny Template Engine for Alit PHP
-*   @package     Alit PHP
-*   @subpackage  Alit.Knife
-*   @copyright   Copyright (c) 2017 Suyadi. All Rights Reserved.
-*   @license     https://opensource.org/licenses/MIT The MIT License (MIT)
-*   @author      Suyadi <suyadi.1992@gmail.com>
-*/
+ * Tiny Template Library for Alit PHP
+ * @package     Alit
+ * @subpackage  Knife
+ * @copyright   Copyright (c) 2017 Suyadi. All Rights Reserved.
+ * @license     <https://opensource.org/licenses/MIT> The MIT License (MIT).
+ * @author      Suyadi <suyadi.1992@gmail.com>
+ */
 // Prohibit direct access to file
 defined('DS') or die('Direct file access is not allowed.');
 
@@ -23,9 +23,10 @@ class Knife extends \Preview {
     const
         // Command-type tokens
         TOKENS='command|comment|echo';
-
-
-    // Class constructor
+    
+    /**
+     * Class constructor
+     */
     function __construct() {
         parent::__construct();
         $fw=\Alit::instance();
@@ -34,25 +35,27 @@ class Knife extends \Preview {
     }
 
     /**
-    *   Change echo format
-    *   @param  $format  string
-    */
+     * Change echo format
+     * @param   string $format
+     * @return  void
+     */
     protected function format($format) {
         $this->format=$format;
     }
 
     /**
-    *   Change cache location
-    *   @param  $path  string
-    */
+     * Change cache location
+     * @param   string  $path
+     * @return  void
+     */
     protected function cachepath($path) {
         $this->cachepath=$path;
     }
 
-	/**
-	*	Cleanup template cache
-	*	@return  bool
-	*/
+    /**
+     * Clean up cache
+     * @return boolean
+     */
     function cleanup() {
         foreach (glob($this->cachepath.'*.knife.php') as $f)
 			if (unlink($f))
@@ -61,10 +64,10 @@ class Knife extends \Preview {
     }
 
     /**
-    *   Add file to include
-    *   @param   $name   string
-    *   @return  string
-    */
+     * Add a file to include
+     * @param   string  $name
+     * @return  string
+     */
     protected function tpl($name) {
         $fw=\Alit::instance();
         $tpl=preg_replace('/\s\s+/','',$this->ui.$name.'.knife.php');
@@ -79,10 +82,10 @@ class Knife extends \Preview {
     }
 
     /**
-    *   Compile statements that start with "@"
-    *   @param   $vars  string
-    *   @return  mixed
-    */
+     * Compile statement starts with '@'
+     * @param   string  $vars
+     * @return  mixed
+     */
     protected function _command($vars) {
         return preg_replace_callback('/\B@(\w+)([ \t]*)(\( ( (?>[^()]+) | (?3) )* \))?/x',function($match) {
             if (method_exists($this,$method='_'.strtolower($match[1])))
@@ -92,19 +95,19 @@ class Knife extends \Preview {
     }
 
     /**
-    *   Compile comments
-    *   @param   $vars   string
-    *   @return  string
-    */
+     * Compile comments
+     * @param   string  $vars
+     * @return  string
+     */
     protected function _comment($vars) {
         return preg_replace('/\{\{--((.|\s)*?)--\}\}/','<?php /*$1*/?>',$vars);
     }
 
     /**
-    *   Compile echos
-    *   @param   $vars   string
-    *   @return  string
-    */
+     * Compile echos
+     * @param   string  $vars
+     * @return  string
+     */
     protected function _echo($vars) {
         $vars=preg_replace_callback('/\{\{\{\s*(.+?)\s*\}\}\}(\r?\n)?/s',function($found) {
             $space=empty($found[2])?'':$found[2];
@@ -124,118 +127,118 @@ class Knife extends \Preview {
     }
 
     /**
-    *   Compile the default values for the echo statement.
-    *   @param   $vars   string
-    *   @return  string
-    */
+     * Compile default value for rhe echo
+     * @param   string  $vars
+     * @return  string
+     */
     function _echodefault($vars) {
         return preg_replace('/^(?=\$)(.+?)(?:\s+or\s+)(.+?)$/s','isset($1)?$1:$2',$vars);
     }
 
     /**
-    *   Compile the @if statements
-    *   @param   $expr    string
-    *   @return  string
-    */
+     * Compile @if statement
+     * @param   string  $expr
+     * @return  string
+     */
     protected function _if($expr) {
         return "<?php if {$expr}:?>";
     }
 
     /**
-    *   Compile the @elseif statements
-    *   @param   $expr    string
-    *   @return  string
-    */
+     * Compile @elseif statement
+     * @param   string  $expr
+     * @return  string
+     */
     protected function _elseif($expr) {
         return "<?php elseif {$expr}:?>";
     }
 
     /**
-    *   Compile the @endif statements
-    *   @param   $expr    string
-    *   @return  string
-    */
+     * Compile @endif statement
+     * @param   string  $expr
+     * @return  string
+     */
     protected function _endif($expr) {
         return "<?php endif;?>";
     }
 
     /**
-    *   Compile the @unless statements
-    *   @param   $expr    string
-    *   @return  string
-    */
+     * Compile @unless statement
+     * @param   string  $expr
+     * @return  string
+     */
     protected function _unless($expr) {
         return "<?php if (!$expr):?>";
     }
 
     /**
-    *   Compile the @endunless statements
-    *   @param   $expr    string
-    *   @return  string
-    */
+     * Compile @endunless statement
+     * @param   string  $expr
+     * @return  string
+     */
     protected function _endunless($expr) {
         return "<?php endif;?>";
     }
 
     /**
-    *   Compile the @for statements
-    *   @param   $expr    string
-    *   @return  string
-    */
+     * Compile @for statement
+     * @param   string  $expr
+     * @return  string
+     */
     protected function _for($expr) {
         return "<?php for {$expr}:?>";
     }
 
     /**
-    *   Compile the @endfor statements
-    *   @param   $expr    string
-    *   @return  string
-    */
+     * Compile @endfor statement
+     * @param   string  $expr
+     * @return  string
+     */
     protected function _endfor($expr) {
         return "<?php endfor;?>";
     }
 
     /**
-    *   Compile the @foreach statements
-    *   @param   $expr    string
-    *   @return  string
-    */
+     * Compile @foreach statement
+     * @param   string  $expr
+     * @return  string
+     */
     protected function _foreach($expr) {
         return "<?php foreach {$expr}:?>";
     }
 
     /**
-    *   Compile the @endforeach statements
-    *   @param   $expr    string
-    *   @return  string
-    */
+     * Compile @endforeach statement
+     * @param   string  $expr
+     * @return  string
+     */
     protected function _endforeach($expr) {
         return "<?php endforeach;?>";
     }
 
     /**
-    *   Compile the @while statements
-    *   @param   $expr    string
-    *   @return  string
-    */
+     * Compile @while statement
+     * @param   string  $expr
+     * @return  string
+     */
     protected function _while($expr) {
         return "<?php while {$expr}:?>";
     }
 
     /**
-    *   Compile the @endwhile statements
-    *   @param   $expr    string
-    *   @return  string
-    */
+     * Compile @endwhile statement
+     * @param   string  $expr
+     * @return  string
+     */
     protected function _endwhile($expr) {
         return "<?php endwhile;?>";
     }
 
     /**
-    *   Compile the @extends statements
-    *   @param   $expr    string
-    *   @return  string
-    */
+     * Compile @extends statement
+     * @param   string  $expr
+     * @return  string
+     */
     protected function _extends($expr) {
         if (isset($expr{0})&&$expr{0}=='(')
             $expr=substr($expr,1,-1);
@@ -243,10 +246,10 @@ class Knife extends \Preview {
     }
 
     /**
-    *   Compile the @include statements
-    *   @param   $expr    string
-    *   @return  string
-    */
+     * Compile @include statement
+     * @param   string  $expr
+     * @return  string
+     */
     protected function _include($expr) {
         if (isset($expr{0})&&$expr{0}=='(')
             $expr=substr($expr,1,-1);
@@ -254,64 +257,64 @@ class Knife extends \Preview {
     }
 
     /**
-    *   Compile the @yield statements
-    *   @param   $expr    string
-    *   @return  string
-    */
+     * Compile @yield statement
+     * @param   string  $expr
+     * @return  string
+     */
     protected function _yield($expr) {
         return "<?php echo \$this->block{$expr}?>";
     }
 
     /**
-    *   Compile the @section statements
-    *   @param   $expr    string
-    *   @return  string
-    */
+     * Compile @section statement
+     * @param   string  $expr
+     * @return  string
+     */
     protected function _section($expr) {
         return "<?php \$this->beginblock{$expr}?>";
     }
 
     /**
-    *   Compile the @endsection statements
-    *   @param   $expr    string
-    *   @return  string
-    */
+     * Compile @endsection statement
+     * @param   string  $expr
+     * @return  string
+     */
     protected function _endsection($expr) {
         return "<?php \$this->endblock()?>";
     }
 
     /**
-    *   Compile the @show statements
-    *   @param   $expr    string
-    *   @return  string
-    */
+     * Compile @show statement
+     * @param   string  $expr
+     * @return  string
+     */
     protected function _show($expr) {
         return "<?php echo \$this->block(\$this->endblock())?>";
     }
 
     /**
-    *   Compile the @append statements
-    *   @param   $expr    string
-    *   @return  string
-    */
+     * Compile @append statement
+     * @param   string  $expr
+     * @return  string
+     */
     protected function _append($expr) {
         return "<?php \$this->endblock()?>";
     }
 
     /**
-    *   Compile the @stop statements
-    *   @param   $expr    string
-    *   @return  string
-    */
+     * Compile @stop statement
+     * @param   string  $expr
+     * @return  string
+     */
     protected function _stop($expr) {
         return "<?php \$this->endblock()?>";
     }
 
     /**
-    *   Compile the @overwrite statements
-    *   @param   $expr    string
-    *   @return  string
-    */
+     * Compile @overwrite statement
+     * @param   string  $expr
+     * @return  string
+     */
     protected function _overwrite($expr) {
         return "<?php \$this->endblock(TRUE)?>";
     }

@@ -1,12 +1,12 @@
 <?php
 /**
-*   Tiny Validation Library for Alit PHP
-*   @package     Alit PHP
-*   @subpackage  Alit.Validation
-*   @copyright   Copyright (c) 2017 Suyadi. All Rights Reserved.
-*   @license     https://opensource.org/licenses/MIT The MIT License (MIT)
-*   @author      Suyadi <suyadi.1992@gmail.com>
-*/
+ * Tiny Validation Library for Alit PHP
+ * @package     Alit
+ * @subpackage  Validation
+ * @copyright   Copyright (c) 2017 Suyadi. All Rights Reserved.
+ * @license     <https://opensource.org/licenses/MIT> The MIT License (MIT).
+ * @author      Suyadi <suyadi.1992@gmail.com>
+ */
 // Prohibit direct access to file
 defined('DS') or die('Direct file access is not allowed.');
 
@@ -103,7 +103,9 @@ class Validation extends \Factory {
         E_RULE_NOMSG="Rule doesn't have Error message: %s",
         E_ARGS_ISREGEX="You can't use regex as function argument";
 
-    // Class constructor
+    /**
+     * Class constructor
+     */
     function __construct() {
         $this->lang=[];
         foreach (self::$err_msg as $k=>$v)
@@ -112,9 +114,10 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Set error messages text
-    *   @param  $errors  array
-    */
+     * Set error messages
+     * @param   array  $errors
+     * @return  void
+     */
     static function setlang(array $errors) {
         $fw=\Alit::instance();
         $eval=self::instance();
@@ -127,11 +130,11 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Shorthand method for inline validation
-    *   @param   $data        array
-    *   @param   $validators  array
-    *   @return  bool|array
-    */
+     * Shorthand method for inline validation
+     * @param   array          $data
+     * @param   array          $validators
+     * @return  boolean|array
+     */
     static function isvalid(array $data,array $validators) {
         $eval=self::instance();
         $eval->validation_rules($validators);
@@ -141,29 +144,29 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Shorthand method for running only the data filters
-    *   @param   $data     array
-    *   @param   $filters  array
-    *   @return  mixed
-    */
+     * Shorthand method for running only the data filters
+     * @param   array  $data
+     * @param   array  $filters
+     * @return  mixed
+     */
     static function filter_input(array $data,array $filters) {
         $eval=self::instance();
         return $eval->filter($data,$filters);
     }
 
     /**
-    *   Magic method to generate the validation error messages
-    *   @return  string
-    */
+     * Magic method to generate the validation error messages
+     * @return string
+     */
     function __toString() {
         return $this->get_readable_errors(TRUE);
     }
 
     /**
-    *   Perform XSS sanitation
-    *   @param   $data  array
-    *   @return  array
-    */
+     * Perform XSS sanitation
+     * @param   array   $data
+     * @return  string
+     */
     function xss_clean(array $data) {
         foreach ($data as $k=>$v) {
             $data[$k]=str_replace(['&amp;','&lt;','&gt;'],['&amp;amp;','&amp;lt;','&amp;gt;'],$v);
@@ -199,12 +202,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Adds a custom validation rule using a callback function.
-    *   @param   $rule      string
-    *   @param   $callback  callable
-    *   @param   $err_msg   string
-    *   @return  bool
-    */
+     * Add custom validation rule using a callback function.
+     * @param  string     $rule
+     * @param  clallable  $callback
+     * @param  string     $err_msg
+     * @return boolean
+     */
     static function add_validator($rule,$callback,$err_msg=NULL) {
         $fw=\Alit::instance();
         $method='validate_'.$rule;
@@ -218,11 +221,11 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Adds a custom filter using a callback function
-    *   @param   $rule      string
-    *   @param   $callback  callable
-    *   @return  bool
-    */
+     * Add custom filter using a callback function
+     * @param   string    $rule
+     * @param   callable  $callback
+     * @return  boolean
+     */
     static function add_filter($rule,$callback) {
         $fw=\Alit::instance();
         $method='filter_'.$rule;
@@ -234,12 +237,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Helper method to safely extract an element from an array
-    *   @param   $key      mixed
-    *   @param   $arr      array
-    *   @param   $default  mixed
-    *   @return  mixed
-    */
+     * Helper method to safely extract an element from an array
+     * @param   mixed  $key
+     * @param   array  $arr
+     * @param   mixed  $default
+     * @return  mixed
+     */
     static function field($key,array $arr,$default=NULL) {
         if (!is_array($arr))
             return NULL;
@@ -247,10 +250,10 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Getter/setter for the validation rules.
-    *   @param   $rules  array
-    *   @return  array
-    */
+     * Getter/setter for the validation rules
+     * @param   array  $rules
+     * @return  array
+     */
     function validation_rules(array $rules=[]) {
         if (empty($rules))
             return $this->validation_rules;
@@ -258,10 +261,10 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Getter/Setter for the filter rules.
-    *   @param   $rules  array
-    *   @return  array
-    */
+     * Getter/Setter for the filter rules
+     * @param   array  $rules
+     * @return  array
+     */
     function filter_rules(array $rules=[]) {
         if (empty($rules))
             return $this->filter_rules;
@@ -269,11 +272,11 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Run the filtering and validation after each other
-    *   @param   $data   array
-    *   @param   $check  bool
-    *   @return  array
-    */
+     * Run the filtering and validation after each other
+     * @param   array    $data
+     * @param   boolean  $check
+     * @return  array
+     */
     function run(array $data,$check=FALSE) {
         $data=$this->filter($data,$this->filter_rules());
         $passed=$this->validate($data,$this->validation_rules());
@@ -285,9 +288,10 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Ensure that the field counts match the validation rule counts
-    *   @param  $data  array
-    */
+     * Ensure that the field counts match the validation rule counts
+     * @param   array  $data
+     * @return  void
+     */
     private function check_fields(array $data) {
         $fields=array_keys(array_diff_key($data,$this->validation_rules()));
         foreach ($fields as $field)
@@ -300,12 +304,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Sanitize the input data.
-    *   @param   $ipt     array
-    *   @param   $fields  array|NULL
-    *   @param   $utf8    bool
-    *   @return  array
-    */
+     * Sanitize the input data
+     * @param   array    $ipt
+     * @param   array    $fields
+     * @param   boolean  $utf8
+     * @return  array
+     */
     function sanitize(array $ipt,array $fields=[],$utf8=TRUE) {
         $magic=(bool)get_magic_quotes_gpc();
         if (empty($fields))
@@ -339,19 +343,19 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Return the error array from the last validation run
-    *   @return  array
-    */
+     * Return the error array from the last validation run
+     * @return  array
+     */
     function errors() {
         return $this->errors;
     }
 
     /**
-    *   Perform data validation against the provided ruleset
-    *   @param   $ipt      mixed
-    *   @param   $ruleset  array
-    *   @return  mixed
-    */
+     * Perform data validation against the provided ruleset
+     * @param   array       $ipt
+     * @param   array       $ruleset
+     * @return  array|true
+     */
     function validate(array $ipt,array $ruleset) {
         $fw=\Alit::instance();
         $this->errors=[];
@@ -410,47 +414,52 @@ class Validation extends \Factory {
         return ($count>0)?$this->errors:TRUE;
     }
 
+
     /**
-    *   Set a readable name for a specified field names
-    *   @param  $field  string
-    *   @param  $as     string
-    */
+     * Set a readable name for a specified field names
+     * @param   string  $field
+     * @param   string  $as
+     * @return  void
+     */
     static function set_field_name($field,$as) {
         self::$fields[$field]=$as;
     }
 
     /**
-    *   Set readable name for specified fields in an array
-    *   @param  $arr  array
-    */
+     * Set readable name for specified fields in an array
+     * @param   array  $arr
+     * @return  void
+     */
     static function set_field_names(array $arr) {
         foreach ($arr as $field=>$as)
             self::set_field_name($field,$as);
     }
 
     /**
-    *   Set a custom error message for a validation rule
-    *   @param  $rule  string
-    *   @param  $msg   string
-    */
+     * Set a custom error message for a validation rule
+     * @param   string  $rule
+     * @param   string  $msg
+     * @return  void
+     */
     static function set_error_message($rule,$msg) {
         $eval=self::instance();
         self::$validation_methods_errors[$rule]=$msg;
     }
 
     /**
-    *   Set custom error messages for validation rules in an array
-    *   @param  $arr  array
-    */
+     * Set custom error messages for validation rules in an array
+     * @param   array  $arr
+     * @return  void
+     */
     static function set_error_messages(array $arr) {
         foreach ($arr as $rule=>$msg)
             self::set_error_message($rule,$msg);
     }
 
     /**
-    *   Get error languages.
-    *   @return  array
-    */
+     * Get error messages
+     * @return  array
+     */
     function languages() {
         $res=[];
         foreach ($this->lang as $k=>$v)
@@ -459,12 +468,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Process the validation errors and return human readable error messages.
-    *   @param   $to_string     bool
-    *   @param   $field_class   string
-    *   @param   $err_class     string
-    *   @return  array|string
-    */
+     * Process the validation errors and return human readable error messages
+     * @param   boolean       $to_string
+     * @param   string        $field_class
+     * @param   string        $err_class
+     * @return  array|string
+     */
     function get_readable_errors($to_string=FALSE,$field_class='check-field',$err_class='error-msg') {
         $fw=\Alit::instance();
         if (empty($this->errors))
@@ -498,10 +507,10 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Process the validation errors and return an array of errors with field names as keys
-    *   @param   $to_string  bool
-    *   @return  array|NULL
-    */
+     * Process the validation errors and return an array of errors with field names as keys
+     * @param   boolean     $to_string
+     * @return  array|null
+     */
     function get_errors_array($to_string=FALSE) {
         $fw=\Alit::instance();
         if (empty($this->errors))
@@ -532,11 +541,11 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Filter the input data according to the specified filter set
-    *   @param   $ipt        mixed
-    *   @param   $filterset  array
-    *   @return  mixed
-    */
+     * Filter the input data according to the specified filter set
+     * @param   array  $ipt
+     * @param   array  $filterset
+     * @return  mixed
+     */
     function filter(array $ipt,array $filterset) {
         $fw=\Alit::instance();
         foreach ($filterset as $field=>$filters) {
@@ -571,12 +580,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Replace noise words in a string
-    *   Reference: http://tax.cchgroup.com/help/Avoiding_noise_words_in_your_search.htm
-    *   @param   $val   string
-    *   @param   $args  array
-    *   @return  string
-    */
+     * Replace noise words in a string
+     * Reference: http://tax.cchgroup.com/help/Avoiding_noise_words_in_your_search.htm
+     * @param   string  $val
+     * @param   null    $args
+     * @return  string
+     */
     protected function filter_noise_words($val,$args=NULL) {
         $val=' '.preg_replace('/\s\s+/u',chr(32),$val).' ';
         $words=explode(',',self::$en_noise_words);
@@ -589,102 +598,102 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Remove all known punctuation from a string
-    *   @param   $val    string
-    *   @param   $args   array
-    *   @return  string
-    */
+     * Remove all known punctuation from a string
+     * @param   string  $val
+     * @param   null    $args
+     * @return  string
+     */
     protected function filter_rmpunctuation($val,$args=NULL) {
         return preg_replace("/(?![.=$'â‚¬%-])\p{P}/u",'',$val);
     }
 
     /**
-    *   Sanitize the string by removing any script tags
-    *   @param   $val    string
-    *   @param   $args   array
-    *   @return  string
-    */
+     * Sanitize the string by removing any script tags
+     * @param   string  $val
+     * @param   null    $args
+     * @return  string
+     */
     protected function filter_sanitize_string($val,$args=NULL) {
         return filter_var($val,FILTER_SANITIZE_STRING);
     }
 
     /**
-    *   Sanitize the string by urlencoding characters
-    *   @param   $val    string
-    *   @param   $args   array
-    *   @return  string
-    */
+     * Sanitize the string by urlencoding characters
+     * @param   string  $val
+     * @param   null    $args
+     * @return
+     */
     protected function filter_urlencode($val,$args=NULL) {
         return filter_var($val,FILTER_SANITIZE_ENCODED);
     }
 
     /**
-    *   Sanitize the string by converting html characters to their HTML entities
-    *   @param   $val    string
-    *   @param   $args   array
-    *   @return  string
-    */
+     * Sanitize the string by converting html characters to their HTML entities
+     * @param   string  $val
+     * @param   null    $args
+     * @return  string
+     */
     protected function filter_htmlencode($val,$args=NULL) {
         return filter_var($val,FILTER_SANITIZE_SPECIAL_CHARS);
     }
 
     /**
-    *   Sanitize the string by removing illegal characters from emails
-    *   @param   $val    string
-    *   @param   $args   array
-    *   @return  string
-    */
+     * Sanitize the string by removing illegal characters from emails
+     * @param   string  $val
+     * @param   null    $args
+     * @return  string
+     */
     protected function filter_sanitize_email($val,$args=NULL) {
         return filter_var($val,FILTER_SANITIZE_EMAIL);
     }
 
     /**
-    *   Sanitize the string by removing illegal characters from numbers
-    *   @param   $val    string
-    *   @param   $args   array
-    *   @return  string
-    */
+     * Sanitize the string by removing illegal characters from number
+     * @param   string  $val
+     * @param   null    $args
+     * @return  string
+     */
     protected function filter_sanitize_numbers($val,$args=NULL) {
         return filter_var($val,FILTER_SANITIZE_NUMBER_INT);
     }
 
     /**
-    *   Sanitize the string by removing illegal characters from float numbers
-    *   @param   $val    string
-    *   @param   $args   array
-    *   @return  string
-    */
+     * Sanitize the string by removing illegal characters from float number
+     * @param   string  $val
+     * @param   null    $args
+     * @return  string
+     */
     protected function filter_sanitize_floats($val,$args=NULL) {
         return filter_var($val,FILTER_SANITIZE_NUMBER_FLOAT,FILTER_FLAG_ALLOW_FRACTION);
     }
 
     /**
-    *   Filter out all HTML tags except the defined basic tags
-    *   @param   $val    string
-    *   @param   $args   array
-    *   @return  string
-    */
+     * Filter out all HTML tags except the defined basic tag
+     * @param   string  $val
+     * @param   null    $args
+     * @return  string
+     */
     protected function filter_basic_tags($val,$args=NULL) {
         return strip_tags($val,self::$basic_tags);
     }
 
     /**
-    *   Convert the provided numeric value to a whole number
-    *   @param   $val    string
-    *   @param   $args   array
-    *   @return  string
-    */
+     * Convert the provided numeric value to a whole number
+     * @param   string  $val
+     * @param   null    $args
+     * @return  string
+     */
     protected function filter_whole_number($val,$args=NULL) {
         return intval($val);
     }
 
     /**
-    *   Convert MS Word special characters to web safe characters
-    *   Reference: https://stackoverflow.com/questions/7419302/converting-microsoft-word-special-characters-with-php
-    *   @param   $val    string
-    *   @param   $args   array
-    *   @return  string
-    */
+     * Convert MS Word special characters to web safe characters
+     * Reference: https://stackoverflow.com/questions/7419302/converting-microsoft-word-special-characters-with-php
+     * @param   string  $val
+     * @param   null    $args
+     * @return  string
+     */
     protected function filter_ms_word_characters($val,$args=NULL) {
         $val=str_replace([
                 "\xC2\xAB","\xC2\xBB","\xE2\x80\x98","\xE2\x80\x99",
@@ -705,12 +714,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Verify that a value is contained within the pre-defined value set
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @param   $arg    NULL
-    *   @return  mixed
-    */
+     * Verify that a value is contained within the value set
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_contains($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field]))
             return;
@@ -730,12 +739,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Verify that a value is contained within the pre-defined value set
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @param   $arg    string|NULL
-    *   @return  mixed
-    */
+     * Verify that a value is contained within the pre-defined value set
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_contains_list($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -754,12 +763,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Verify that a value is NOT contained within the pre-defined value set
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @param   $arg    string|NULL
-    *   @return  mixed
-    */
+     * Verify that a value is NOT contained within the pre-defined value set
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_doesnt_contain_list($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -778,12 +787,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Check if the specified key is present and not empty
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @param   $arg    string|NULL
-    *   @return  mixed
-    */
+     * Check if the specified key is present and not empty
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_required($field,$ipt,$arg=NULL) {
         if (isset($ipt[$field])
         &&($ipt[$field]===FALSE
@@ -801,12 +810,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided email is valid
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @param   $arg    string|NULL
-    *   @return  mixed
-    */
+     * Determine if the provided email is valid
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_valid_email($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -821,12 +830,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided value length is less or equal to a specific value
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @param   $arg    string|NULL
-    *   @return  mixed
-    */
+     * Determine if the provided value length is less or equal to a specific value
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_max_len($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field]))
             return;
@@ -844,12 +853,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided value length is more or equal to a specific value
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @param   $arg    string|NULL
-    *   @return  mixed
-    */
+     * Determine if the provided value length is more or equal to a specific value
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_min_len($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -868,12 +877,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided value length matches a specific value
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @param   $arg    string|NULL
-    *   @return  mixed
-    */
+     * Determine if the provided value length is matches a specific value
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_exact_len($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -892,12 +901,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided value contains only alpha characters
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @param   $arg    string|NULL
-    *   @return  mixed
-    */
+     * Determine if the provided value contains only alphabetic characters
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_alpha($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -913,12 +922,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided value contains only alpha-numeric characters
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @param   $arg    string|NULL
-    *   @return  mixed
-    */
+     * Determine if the provided value contains only alpha-numeric characters
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_alpha_numeric($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -934,12 +943,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided value contains only alpha characters with dashed and underscores
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @param   $arg    string|NULL
-    *   @return  mixed
-    */
+     * Determine if the provided value contains only alphabetic characters with dashes and underscores
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_alpha_dash($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -955,12 +964,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided value contains only alpha numeric characters with spaces
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @param   $arg    string|NULL
-    *   @return  mixed
-    */
+     * Determine if the provided value contains only alpha-numeric characters with spaces
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_alpha_numeric_space($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -976,12 +985,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided value contains only alpha numeric characters with spaces
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @param   $arg    string|NULL
-    *   @return  mixed
-    */
+     * Determine if the provided value contains only alphabetic characters with spaces
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_alpha_space($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -997,12 +1006,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided value is a valid number or numeric string
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @param   $arg    string|NULL
-    *   @return  mixed
-    */
+     * Determine if the provided value contains only numeric characters
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_numeric($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -1017,12 +1026,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided value is a valid integer
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @param   $arg    string|NULL
-    *   @return  mixed
-    */
+     * Determine if the provided value is a valif integer
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_integer($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -1037,12 +1046,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided value is a PHP accepted boolean
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @param   $arg    string|NULL
-    *   @return  mixed
-    */
+     * Determine if the provided value is PHP accepted boolean
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_boolean($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field])
@@ -1060,12 +1069,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided value is a valid float
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @param   $arg    NULL
-    *   @return  mixed
-    */
+     * Determine if the provided value is a valid float
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_float($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -1080,12 +1089,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided value is a valid url
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @param   $arg    string|NULL
-    *   @return  mixed
-    */
+     * Determine if the provided value is a valid URL
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_valid_url($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -1100,12 +1109,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if a URL exists & is accessible
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @param   $arg    string|NULL
-    *   @return  mixed
-    */
+     * Determine if a URL exists and is accessible
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_url_exists($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -1131,11 +1140,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided value is a valid IP address
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @return  mixed
-    */
+     * Determine provided value is valid IP address
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_valid_ip($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -1150,11 +1160,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided value is a valid IPv4 address
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @return  mixed
-    */
+     * Determine provided value is valid IPv4 address
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_valid_ipv4($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -1169,11 +1180,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided value is a valid IPv6 address
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @return  mixed
-    */
+     * Determine provided value is valid IPv6 address
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_valid_ipv6($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -1188,12 +1200,13 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the input is a valid credit card number.
-    *   Reference: http://stackoverflow.com/questions/174730/what-is-the-best-way-to-validate-a-credit-card-in-php
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @return  mixed
-    */
+     * Determine if the provided value is a valid credit card number
+     * Reference: http://stackoverflow.com/questions/174730/what-is-the-best-way-to-validate-a-credit-card-in-php
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_valid_cc($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -1222,11 +1235,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the input is a valid human name
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @return  mixed
-    */
+     * Determine if the provided value is a valid human name
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_valid_name($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -1242,11 +1256,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided input is likely to be a street address using weak detection
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @return  mixed
-    */
+     * Determine if the provided value is likely to be a street address (using weak detection)
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_street_address($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -1264,11 +1279,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided value is a valid IBAN
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @return  mixed
-    */
+     * Determine if the provided value is valid IBAN
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_iban($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -1299,12 +1315,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided input is a valid date (ISO 8601) or specify a custom format
-    *   @param   $field  string
-    *   @param   $ipt    string
-    *   @param   $arg    string
-    *   @return  mixed
-    */
+     * Determine if the provided input is a valid ISO 8601 date (or yaou can specify a custom format)
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_date($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -1334,12 +1350,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided input meets age requirement (ISO 8601)
-    *   @param   $field  string
-    *   @param   $ipt    string
-    *   @param   $arg    string|int
-    *   @return  mixed
-    */
+     * Determine if the provided input meets age requirement (ISO 8601)
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_min_age($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -1358,12 +1374,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided numeric value is lower or equal to a specific value
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @param   $arg    string|NULL
-    *   @return  mixed
-    */
+     * Determine if the provided numeric value is lower or equal to a specific value
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_max_numeric($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -1381,12 +1397,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided numeric value is higher or equal to a specific value
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @param   $arg    string|NULL
-    *   @return  mixed
-    */
+     * Determine if the provided numeric value is higher or equal to a specific value
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_min_numeric($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||$ipt[$field]==='')
@@ -1404,11 +1420,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided value starts with param
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @return  mixed
-    */
+     * Determine if the provided value is starts with provided param
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_starts($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -1423,11 +1440,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Checks if a file was uploaded
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @return  mixed
-    */
+     * Check if required file is not empty
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_required_file($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field]))
             return;
@@ -1443,11 +1461,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Check the uploaded file for extension (only)
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @return  mixed
-    */
+     * Check the uploaded file for extension (only)
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_extension($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field]))
             return;
@@ -1469,12 +1488,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided field value equals current field value
-    *   @param   $field  string
-    *   @param   $ipt    string
-    *   @param   $arg    string
-    *   @return  mixed
-    */
+     * Determine if the provided field value equals current field value
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_equalsfield($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -1490,12 +1509,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Determine if the provided field value is a valid GUID (v4)
-    *   @param   $field  string
-    *   @param   $ipt    string
-    *   @param   $arg    string
-    *   @return  mixed
-    */
+     * Determine if the provided field value is a valid GUID (v4)
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_guidv4($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -1511,20 +1530,21 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Trim whitespace only when the value is a scalar
-    *   @param   $val   mixed
-    *   @return  mixed
-    */
+     * Trim whitespace only when the value is a scalar
+     * @param   mixed  $val
+     * @return  mixed]
+     */
     private function trim_scalar($val) {
         return is_scalar($val)?trim($val):$val;
     }
 
     /**
-    *   Determine if the provided value is a valid phone number
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @return  mixed
-    */
+     * Determine if the provided field value is a valid phone number
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_phone_number($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -1539,11 +1559,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   JSON validator
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @return  mixed
-    */
+     * Validate json string
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_valid_json_string($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -1559,11 +1580,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Check if an input is an array and if the size is more or equal to a specific value
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @return  mixed
-    */
+     * Check if an input is an array and if the size is greater or equal to a specific value
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_valid_array_size_greater($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -1579,11 +1601,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Check if an input is an array and if the size is less or equal to a specific value
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @return  mixed
-    */
+     * Check if an input is an array and if the size is less or equal to a specific value
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_valid_array_size_lesser($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))
@@ -1599,11 +1622,12 @@ class Validation extends \Factory {
     }
 
     /**
-    *   Check if an input is an array and if the size is equal to a specific value
-    *   @param   $field  string
-    *   @param   $ipt    array
-    *   @return  mixed
-    */
+     * Check if an input is an array and if the size is equal to a specific value
+     * @param   string  $field
+     * @param   array   $ipt
+     * @param   null    $arg
+     * @return  mixed
+     */
     protected function validate_valid_array_size_equal($field,$ipt,$arg=NULL) {
         if (!isset($ipt[$field])
         ||empty($ipt[$field]))

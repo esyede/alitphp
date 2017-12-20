@@ -1,12 +1,12 @@
 <?php
 /**
-*   Tiny String Manipulation Library for Alit PHP
-*   @package     Alit PHP
-*   @subpackage  Alit.String
-*   @copyright   Copyright (c) 2017 Suyadi. All Rights Reserved.
-*   @license     https://opensource.org/licenses/MIT The MIT License (MIT)
-*   @author      Suyadi <suyadi.1992@gmail.com>
-*/
+ * Tiny String Manipulation Library for Alit PHP
+ * @package     Alit
+ * @subpackage  String
+ * @copyright   Copyright (c) 2017 Suyadi. All Rights Reserved.
+ * @license     <https://opensource.org/licenses/MIT> The MIT License (MIT).
+ * @author      Suyadi <suyadi.1992@gmail.com>
+ */
 // Prohibit direct access to file
 defined('DS') or die('Direct file access is not allowed.');
 
@@ -23,116 +23,127 @@ class String extends \Factory implements \Serializable {
         $str;
 
     /**
-    *   Set initial string value
-    *   @param  $str  string
-    */
+     * Set initial string value
+     * @param   string  $str
+     * @return  object
+     */
     function from($str) {
         $this->str=(string)$str;
         return $this;
     }
 
     /**
-    *   Returns internal string value
-    *   @return  string
-    */
+     * Returns internal string value
+     * @return  string
+     */
     function get() {
         return $this->str;
     }
 
     /**
-    *   Append the string
-    *   @param  $str  string
-    */
+     * Append the string
+     * @param   string  $str
+     * @return  object
+     */
     function append($str) {
         $this->str.=(string)$str;
         return $this;
     }
 
     /**
-    *   Prepend the string
-    *   @param  $str  string
-    */
+     * Prepend the string
+     * @param   string  $str
+     * @return  object
+     */
     function prepend($str) {
         $this->str=(string)$str.$this->str;
         return $this;
     }
 
     /**
-    *   Surround text with given string
-    *   @param  $start  string
-    *   @param  $end    string
-    */
+     * Surround text with given string
+     * @param   string  $start
+     * @param   string  $end
+     * @return  object
+     */
     function wrap($start,$end=NULL) {
         $this->str=$start.$this->str.(is_null($end)?$start:$end);
         return $this;
     }
 
     /**
-    *   Make a string lowercase
-    */
+     * Make string lowercase
+     * @return  object
+     */
     function lower() {
         $this->str=strtolower($this->str);
         return $this;
     }
 
     /**
-    * Make a string uppercase
-    */
+     * Make string uppercase
+     * @return  object
+     */
     function upper() {
         $this->str=strtoupper($this->str);
         return $this;
     }
 
     /**
-    *   Strip whitespace (or other characters) from the beginning and end of a string
-    *   Optionally, the stripped characters can also be specified using the chars parameter.
-    *   Simply list all characters that you want to be stripped.
-    *   With .. you can specify a range of characters.
-    *   @param  $chars  string
-    */
+     * Strip whitespace (or other characters) from the beginning and end of a string
+     * Optionally, the stripped characters can also be specified using the chars parameter.
+     * Simply list all characters that you want to be stripped.
+     * With .. you can specify a range of characters
+     * @param   string  $str
+     * @return  object
+     */
     function trim($chars=NULL) {
         $this->str=is_null($chars)?trim($this->str):trim($this->str,$chars);
         return $this;
     }
 
     /**
-    *   Strip whitespace (or other characters) from the end of a string
-    *   You can also specify the characters you want to strip, by means of the chars parameter.
-    *   Simply list all characters that you want to be stripped.
-    *   With .. you can specify a range of characters.
-    *   @param $chars  string
-    */
+     * Strip whitespace (or other characters) from the end of a string
+     * Optionally, the stripped characters can also be specified using the chars parameter.
+     * Simply list all characters that you want to be stripped.
+     * With .. you can specify a range of characters
+     * @param   string  $str
+     * @return  object
+     */    
     function rtrim($chars=NULL) {
         $this->str=is_null($chars)?rtrim($this->str):rtrim($this->str,$chars);
         return $this;
     }
 
     /**
-    *   Strip whitespace (or other characters) from the beginning of a string
-    *   You can also specify the characters you want to strip, by means of the chars parameter.
-    *   Simply list all characters that you want to be stripped.
-    *   With .. you can specify a range of characters.
-    *   @param  $chars  string
-    */
+     * Strip whitespace (or other characters) from the beginning of a string
+     * Optionally, the stripped characters can also be specified using the chars parameter.
+     * Simply list all characters that you want to be stripped.
+     * With .. you can specify a range of characters
+     * @param   string  $str
+     * @return  object
+     */
     function ltrim($chars=NULL) {
         $this->str=is_null($chars)?ltrim($this->str):ltrim($this->str,$chars);
         return $this;
     }
 
     /**
-    *   Convert special characters to HTML entities
-    *   @param  $opt  int
-    */
+     * Convert special characters to HTML entities
+     * @param   integer  $opt
+     * @return  object
+     */
     function escape($opt=ENT_QUOTES) {
         $this->str=htmlspecialchars($this->str,$opt,'UTF-8',false);
         return $this;
     }
 
     /**
-    *   Perform a regular expression search and replace
-    *   @param  $pattern  string
-    *   @param  $replace  string|callable
-    */
+     * Perform a regular expression search and replace
+     * @param   string           $pattern
+     * @param   string|callable  $replace
+     * @return  object
+     */
     function replace($pattern,$replace) {
         if (!is_string($pattern))
             \Alit::instance()->abort(500,self::E_PATTERN);
@@ -149,37 +160,41 @@ class String extends \Factory implements \Serializable {
     }
 
     /**
-    *   Replace all occurrences of the search string with the replacement string
-    *   @param  $search   string|array
-    *   @param  $replace  string|array
-    */
+     * Replace all occurrences of the search string with the replacement string
+     * @param   string|array  $search
+     * @param   string|array  $replace
+     * @return  object
+     */
     function strreplace($search,$replace) {
         $this->str=str_replace($search,$replace,$this->str);
         return $this;
     }
 
     /**
-    *   Add one level of line-leading spaces
-    *   @param  $spaces  int
-    */
+     * Add one level of line-leading spaces
+     * @param   integer  $spaces
+     * @return  object
+     */
     function indent($spaces=4) {
         $this->replace('/^/m',str_repeat(' ',$spaces));
         return $this;
     }
 
     /**
-    *   Remove one level of line-leading tabs or spaces
-    *   @param  $spaces  int
-    */
+     * Remove one level of line-leading tabs or spaces
+     * @param   integer  $spaces
+     * @return  object
+     */
     function outdent($spaces=4) {
         $this->replace('/^(\t|[ ]{1,'.$spaces.'})/m','');
         return $this;
     }
 
     /**
-    *   Convert tabs to spaces
-    *   @param  $spaces  int
-    */
+     * Convert tabs to spaces
+     * @param  integer  $spaces
+     * @return  object
+     */
     function detab($spaces=4) {
         $this->replace('/(.*?)\t/',function(\String $w,\String $str) use($spaces) {
             return $str.str_repeat(' ',$spaces-$str->length()%$spaces);
@@ -188,27 +203,27 @@ class String extends \Factory implements \Serializable {
     }
 
     /**
-    *   Determine whether a variable is empty
-    *   @return bool
-    */
+     * Determine whether a variable is empty
+     * @return boolean
+     */
     function dry() {
         return empty($this->str);
     }
 
     /**
-    *   Finds whether a variable is a number or a numeric string
-    *   @return  bool
-    */
+     * Determine whether a variable is number or numeric string
+     * @return boolean
+     */
     function isnum() {
         return is_numeric($this->str);
     }
 
     /**
-    *   Perform a regular expression match
-    *   @param   $pattern  string
-    *   @param   $found    array|NULL
-    *   @return  bool
-    */
+     * Perform a regular expression match
+     * @param   string      $pattern
+     * @param   array|null  &$found
+     * @return  object
+     */
     function match($pattern,&$found=NULL) {
         if (!is_string($pattern))
             \Alit::instance()->abort(500,self::E_PATTERN);
@@ -216,11 +231,11 @@ class String extends \Factory implements \Serializable {
     }
 
     /**
-    *   Split string by a regular expression (with optional flag)
-    *   @param   $pattern      string
-    *   @param   $flags        int
-    *   @return  object|array
-    */
+     * Split string by a regular expression (with optional flag)
+     * @param   string        $pattern
+     * @param   int           $flags
+     * @return  array|object
+     */
     function split($pattern,$flags=PREG_SPLIT_DELIM_CAPTURE) {
         if (!is_string($pattern))
             \Alit::instance()->abort(500,self::E_PATTERN);
@@ -230,10 +245,10 @@ class String extends \Factory implements \Serializable {
     }
 
     /**
-    *   Split string by a line break
-    *   @param   $pattern      string
-    *   @return  object|array
-    */
+     * Split string by a line break
+     * @param   string        $pattern
+     * @return  array|object
+     */
     function lines($pattern='/(\r?\n)/') {
         if (!is_string($pattern))
             \Alit::instance()->abort(500,self::E_PATTERN);
@@ -245,9 +260,9 @@ class String extends \Factory implements \Serializable {
     }
 
     /**
-    *   Convert a string to an array
-    *   @return  array
-    */
+     * Convert a string to array
+     * @return  array
+     */
     function chars() {
         if (strlen($this->str)==$this->length())
             return str_split($this->str);
@@ -255,9 +270,10 @@ class String extends \Factory implements \Serializable {
     }
 
     /**
-    *   Apply a user function to every line of the string
-    *   @param  $callback  callable
-    */
+     * Apply a user function to every line of the string
+     * @param   callable  $callback
+     * @return  object
+     */
     function eachline(callable $callback) {
         $ln=$this->lines();
         foreach ($ln as $k=>$v) {
@@ -269,9 +285,9 @@ class String extends \Factory implements \Serializable {
     }
 
     /**
-    *   Gets the length of a string
-    *   @return  int
-    */
+     * Gets the length of a string
+     * @return  integer
+     */
     function length() {
         if (function_exists('mb_strlen'))
             return mb_strlen($this->str,'UTF-8');
@@ -279,54 +295,55 @@ class String extends \Factory implements \Serializable {
     }
 
     /**
-    *   Returns the number of lines
-    *   @return  int
-    */
+     * Returns the number of lines
+     * @return  integer
+     */
     function countlines() {
         $count=count($this->lines());
         return $count;
     }
 
     /**
-    *   Find the position of the first occurrence of a substring in a string
-    *   @param   $needle  string
-    *   @param   $offset  int
-    *   @return  int
-    */
+     * Find the position of the first occurrence of a substring in a string
+     * @param   string   $needle
+     * @param   integer  $offset
+     * @return  integer
+     */
     function indexof($needle,$offset=0) {
         return strpos($this->str,$needle,$offset);
     }
 
     /**
-    *   Write a string to a file
-    *   @param   $path        string
-    *   @return  int|boolean
-    */
-    function save($path) {
+     * Write a string to a file
+     * @param   string    $path
+     * @return  boolean
+     */
+    function write($path) {
         $fw=\Alit::instance();
         return $fw->write($path,$this->str);
     }
 
     /**
-    *   Magic method to get string result
-    *   @return  string
-    */
+     * Magic method to get string result
+     * @return  string
+     */
     function __toString() {
         return $this->get();
     }
 
     /**
-    *   String representation of object
-    *   @return  string|NULL
-    */
+     * Serialize the string
+     * @return  string
+     */
     function serialize() {
         return \ALit::instance()->serialize($this->str);
     }
 
     /**
-    *   Constructs the object
-    *   @param  $str  string
-    */
+     * Unserialize the string
+     * @param   string  $str
+     * @return  mixed
+     */
     function unserialize($str) {
         $this->str=\ALit::instance()->unserialize($str);
     }
