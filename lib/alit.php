@@ -119,6 +119,10 @@ final class Alit extends \Factory implements \ArrayAccess {
     * @return  object
     */
     function notfound($fn=NULL) {
+        if (is_callable($fn)) {
+            call_user_func($fn);
+            exit();
+        }
         $this->set('ROUTES.Notfound',is_string($fn)?trim($fn):$fn);
         // It's chainable!
         return $this;
@@ -173,15 +177,19 @@ final class Alit extends \Factory implements \ArrayAccess {
             // Call notfound handler if any
             if (!empty($notfound)) {
                 // Call directly if it's a callable (anonymous/lambda) function
-                if (is_callable($notfound))
+                if (is_callable($notfound)) {
                     call_user_func($notfound);
+                    exit();
+                }
                 // If it's a class method
                 elseif (is_string($notfound)) {
                     if (stripos($notfound,'@')!==FALSE) {
                         list($controller,$fn)=explode('@',$notfound);
                         // Check class existence, then call appropriate method inside it!
-                        if (class_exists($controller))
+                        if (class_exists($controller)) {
                             call_user_func([new $controller,$fn]);
+                            exit();
+                        }
                         // Error, class or class-method cannot be found
                         else user_error(sprintf(self::E_ROUTE,$controller.'@'.$fn),E_USER_ERROR);
                     }
@@ -268,10 +276,10 @@ final class Alit extends \Factory implements \ArrayAccess {
    /**
     * Trigger error message
     * @param   integer      $code
-    * @param   string|null  $reason
-    * @param   string|null  $file
-    * @param   string|null  $line
-    * @param   mixed|null   $trace
+    * @param   string|NULL  $reason
+    * @param   string|NULL  $file
+    * @param   string|NULL  $line
+    * @param   mixed|NULL   $trace
     * @param   integer      $level
     * @return  void
     */
@@ -334,7 +342,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 
    /**
     * Return filtered stack trace as a formatted string or array
-    * @param   array|null    $trace
+    * @param   array|NULL    $trace
     * @param   boolean       $format
     * @return  string|array   
     */
@@ -534,7 +542,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 
    /**
     * Return base url (with protocol)
-    * @param   string|null  $suffix
+    * @param   string|NULL  $suffix
     * @return  string
     */
     function base($suffix=NULL) {
@@ -547,10 +555,10 @@ final class Alit extends \Factory implements \ArrayAccess {
     * @param   string   $class
     * @return  boolean
     */
-    protected function autoloader($class) {
+    protected function autoload($class) {
         $class=$this->slash(ltrim($class,'\\'));
         $fn=NULL;
-        if (is_array($loc=$this->hive['MODULES'])
+        if (is_array($loc=$this->hive['AUTOLOAD'])
         &&isset($loc[1])
         &&is_callable($loc[1]))
             list($loc,$fn)=$loc;
@@ -585,7 +593,7 @@ final class Alit extends \Factory implements \ArrayAccess {
    /**
     * Recursively convert array to object
     * @param   array        $arr
-    * @return  object|null
+    * @return  object|NULL
     */
     function arr2obj($arr) {
         return is_array($arr)?json_decode(json_encode($arr,JSON_FORCE_OBJECT),FALSE):NULL;
@@ -594,7 +602,7 @@ final class Alit extends \Factory implements \ArrayAccess {
    /**
     * Recursively convert object to array
     * @param   object      $obj
-    * @return  array|null
+    * @return  array|NULL
     */
     function obj2arr($obj) {
         return is_object($obj)?json_decode(json_encode($obj),TRUE):NULL;
@@ -602,13 +610,13 @@ final class Alit extends \Factory implements \ArrayAccess {
 
    /**
     * Retrieve POST data
-    * @param   string|null  $key
+    * @param   string|NULL  $key
     * @param   boolean      $escape
-    * @return  string|null
+    * @return  string|NULL
     */
     function post($key=NULL,$escape=TRUE) {
         $eval=\Validation::instance();
-        if (is_null($key)) {
+        if (is_NULL($key)) {
             $post=[];
             if ($escape===TRUE)
                 foreach ($_POST as $k=>$v)
@@ -622,9 +630,9 @@ final class Alit extends \Factory implements \ArrayAccess {
 
     /**
     * Retrieve FILES data
-    * @param   string|null  $key
+    * @param   string|NULL  $key
     * @param   boolean      $escape
-    * @return  string|null
+    * @return  string|NULL
     */
     function files($key=NULL,$escape=TRUE) {
         $eval=\Validation::instance();
@@ -642,9 +650,9 @@ final class Alit extends \Factory implements \ArrayAccess {
 
    /**
     * Retrieve COOKIE data
-    * @param   string|null  $key
+    * @param   string|NULL  $key
     * @param   boolean      $escape
-    * @return  string|null
+    * @return  string|NULL
     */
     function cookie($key=NULL,$escape=TRUE) {
         $eval=\Validation::instance();
@@ -675,7 +683,7 @@ final class Alit extends \Factory implements \ArrayAccess {
    /**
     * Retrieve part of URI
     * @param   integer      $key
-    * @param   string|null  $default
+    * @param   string|NULL  $default
     * @return  string
     */
     function segment($key,$default=NULL) {
@@ -738,7 +746,7 @@ final class Alit extends \Factory implements \ArrayAccess {
    /**
     * Multiple-set data to hive using associative array
     * @param   array        $arr
-    * @param   string|null  $prefix
+    * @param   string|NULL  $prefix
     * @return  void
     */
     function mset(array $arr,$prefix=NULL) {
@@ -749,8 +757,8 @@ final class Alit extends \Factory implements \ArrayAccess {
    /**
     * Get a value from hive or default value if path doesn't exist
     * @param   string      $key
-    * @param   mixed|null  $default
-    * @return  mixed|null
+    * @param   mixed|NULL  $default
+    * @return  mixed|NULL
     */
     function get($key,$default=NULL) {
         $keys=explode('.',(string)$key);
@@ -876,7 +884,7 @@ final class Alit extends \Factory implements \ArrayAccess {
    /**
     * Merge a given array with the given key
     * @param   string|array
-    * @param   mixed|null
+    * @param   mixed|NULL
     * @return  void
     */
     function merge($key,$val=NULL) {
@@ -892,7 +900,7 @@ final class Alit extends \Factory implements \ArrayAccess {
    /**
     * Return the value of given key and delete the key
     * @param   string       $key
-    * @param   string|null  $default
+    * @param   string|NULL  $default
     * @return  mixed
     */
     function pull($key,$default=NULL) {
@@ -906,7 +914,7 @@ final class Alit extends \Factory implements \ArrayAccess {
    /**
     * Push a given array to the end of the array in a given key
     * @param   string      $key
-    * @param   mixed|null  $val
+    * @param   mixed|NULL  $val
     * @return  void
     */
     function push($key,$val=NULL) {
@@ -923,7 +931,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 
    /**
     * Sort the values of a hive path or all the stored values
-    * @param   string|null  $key
+    * @param   string|NULL  $key
     * @return  array
     */
     function sort($key=NULL) {
@@ -935,8 +943,8 @@ final class Alit extends \Factory implements \ArrayAccess {
 
    /**
     * Recursively sort the values of a hive path or all the stored values
-    * @param   string|null  $key
-    * @param   array|null   $arr
+    * @param   string|NULL  $key
+    * @param   array|NULL   $arr
     * @return  array
     */
     function recsort($key=NULL,$arr=NULL) {
@@ -973,7 +981,7 @@ final class Alit extends \Factory implements \ArrayAccess {
 
    /**
     * Determine if an array is associative
-    * @param   array|null  $arr
+    * @param   array|NULL  $arr
     * @return  boolean
     */
     function isassoc($arr=NULL) {
@@ -1149,6 +1157,7 @@ final class Alit extends \Factory implements \ArrayAccess {
         // Assign default value to system variables
         $fw->hive=[
             'AJAX'=>$isajax,
+            'AUTOLOAD'=>NULL,
             'BASE'=>$_SERVER['SERVER_NAME'].$base,
             'CACHE'=>FALSE,
             'DEBUG'=>0,
@@ -1158,7 +1167,6 @@ final class Alit extends \Factory implements \ArrayAccess {
             'HOST'=>$_SERVER['SERVER_NAME'],
             'IP'=>$ip,
             'LIB'=>$fw->slash(__DIR__).'/',
-            'MODULES'=>NULL,
             'PACKAGE'=>self::PACKAGE,
             'PROTO'=>$proto,
             'PORT'=>$port,
@@ -1180,7 +1188,7 @@ final class Alit extends \Factory implements \ArrayAccess {
         // Set default timezone
         date_default_timezone_set($fw->hive['TZ']);
         // Register custom class-autoloader function
-        spl_autoload_register([$fw,'autoloader']);
+        spl_autoload_register([$fw,'autoload']);
         // Register custom shutdown function
         register_shutdown_function([$fw,'shutdown'],getcwd());
     }
@@ -1267,7 +1275,7 @@ class Preview extends \Factory {
    /**
     * Return content of block if exists
     * @param   string       $name   
-    * @param   string|null  $default
+    * @param   string|NULL  $default
     * @return  string
     */
     protected function block($name,$default=NULL) {
@@ -1360,7 +1368,7 @@ final class Warehouse {
    /**
     * Delete object from table
     * @param   string  $key
-    * @return  null
+    * @return  NULL
     */
     static function clear($key) {
         self::$table[$key]=NULL;
