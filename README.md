@@ -177,11 +177,6 @@ class Test {
 }
 ```
 
-Then you **must** append class directory to `MODULES` directive in order to help autoloader find your classes
-
-```php
-$app->set('MODULES','app/controllers/'); // Note: you must add trailing slash to the end of it
-```
 
 And finally, you can register it to your route:
 
@@ -555,15 +550,22 @@ $bench->stop('my-app'); // Stop the benchmark
 
 ### Loading 3rd-party Library
 
-Since alit treats external class as modules (including your controller classes),
-you can load external modules by appending the containing-path of your library
-to the `MODULES` directive, for example:
+Since it's an external class, you need to append the containing-path of your library
+to the `AUTOLOAD` directive in order to help alit find the library, for example:
 
 ```php
-$app->set('MODULES','app/controllers/|thirdparty/');
+$app->set('AUTOLOAD','vendor/');
 ```
 
-Note that you must add `|` (pipe, or you can also use `,` or `;`) for each supplied folder.
+And the folder struture of the library must match with namespace inside your class. For example if your namespace is 
+`Foo\Bar` so your class must be placed in `vendor/Foo/Bar/YourClass.php`
+
+
+You also can append multiple directory using `|`, `,` or `;` as separator, like this:
+
+```php 
+$app->set('AUTOLOAD','vendor/|fooVendor/;barVendor/,bazVendor/');
+```
 
 
 
