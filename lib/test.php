@@ -44,9 +44,9 @@ class Test {
 
 	/**
 	 * Evaluate condition and save test result
-	 * @param   boolean        $cond  test condition
-	 * @param   string|null    $msg   test message
-	 * @return  object                object of this class (chain-ability)
+	 * @param   boolean       $cond
+	 * @param   string|NULL   $msg
+	 * @return  object
 	 */
 	function expect($cond,$msg=NULL) {
 		$fw=\Alit::instance();
@@ -69,7 +69,7 @@ class Test {
 
 	/**
 	 * Append message to test results
-	 * @param   string  $msg  message to be append
+	 * @param   string  $msg
 	 * @return  void
 	 */
 	function message($msg) {
@@ -78,7 +78,7 @@ class Test {
 
 	/**
 	 * Class constructor
-	 * @param  int  $level  result level
+	 * @param  int  $level
 	 */
 	function __construct($level=self::RL_BOTH) {
 		$this->level=$level;

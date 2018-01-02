@@ -118,7 +118,7 @@ class SQL {
     /**
      * Build MAX statement
      * @param   string       $field
-     * @param   string|null  $name
+     * @param   string|NULL  $name
      * @return  object
      */
     function max($field,$name=NULL) {
@@ -130,7 +130,7 @@ class SQL {
     /**
      * Build MIN statement
      * @param   string       $field
-     * @param   string|null  $name
+     * @param   string|NULL  $name
      * @return  object
      */
     function min($field,$name=NULL) {
@@ -142,7 +142,7 @@ class SQL {
     /**
      * Build SUM statement
      * @param   string       $field
-     * @param   string|null  $name
+     * @param   string|NULL  $name
      * @return  object
      */
     function sum($field,$name=NULL) {
@@ -154,7 +154,7 @@ class SQL {
     /**
      * Build COUNT statement
      * @param   string       $field
-     * @param   string|null  $name
+     * @param   string|NULL  $name
      * @return  object
      */
     function count($field,$name=NULL) {
@@ -166,7 +166,7 @@ class SQL {
     /**
      * Build AVG statement
      * @param   string       $field
-     * @param   string|null  $name
+     * @param   string|NULL  $name
      * @return  object
      */
     function avg($field,$name=NULL) {
@@ -178,9 +178,9 @@ class SQL {
     /**
      * Build JOIN statement
      * @param   string       $table
-     * @param   string|null  $field1
-     * @param   string|null  $op
-     * @param   string|null  $field2
+     * @param   string|NULL  $field1
+     * @param   string|NULL  $op
+     * @param   string|NULL  $field2
      * @param   string       $type
      * @return  object
      */
@@ -278,9 +278,9 @@ class SQL {
     /**
      * Build WHERE statement
      * @param   string       $where
-     * @param   string|null  $op
-     * @param   string|null  $val
-     * @param   string|null  $type
+     * @param   string|NULL  $op
+     * @param   string|NULL  $val
+     * @param   string|NULL  $type
      * @param   string       $and_or
      * @return  object
      */
@@ -308,7 +308,7 @@ class SQL {
             $where='('.$where;
             $this->grouped=FALSE;
         }
-        if (is_null($this->where))
+        if (is_NULL($this->where))
             $this->where=$where;
         else $this->where=$this->where.' '.$and_or.' '.$where;
         return $this;
@@ -317,8 +317,8 @@ class SQL {
     /**
      * Build OR WHERE statement
      * @param   string       $where
-     * @param   string|null  $op
-     * @param   string|null  $val
+     * @param   string|NULL  $op
+     * @param   string|NULL  $val
      * @return  object
      */
     function or_where($where,$op=NULL,$val=NULL) {
@@ -329,8 +329,8 @@ class SQL {
     /**
      * Build NOT WHERE statement
      * @param   string       $where
-     * @param   string|null  $op
-     * @param   string|null  $val
+     * @param   string|NULL  $op
+     * @param   string|NULL  $val
      * @return  object
      */
     function not_where($where,$op=NULL,$val=NULL) {
@@ -341,8 +341,8 @@ class SQL {
     /**
      * Build OR NOT WHERE statement
      * @param   string       $where
-     * @param   string|null  $op
-     * @param   string|null  $val
+     * @param   string|NULL  $op
+     * @param   string|NULL  $val
      * @return  object
      */
     function ornot_where($where,$op=NULL,$val=NULL) {
@@ -366,7 +366,7 @@ class SQL {
      * Build WHERE IN statement
      * @param   string       $field
      * @param   array        $keys 
-     * @param   string|null  $type 
+     * @param   string|NULL  $type 
      * @param   string       $and_or
      * @return  object        
      */
@@ -426,7 +426,7 @@ class SQL {
      * @param   string       $field
      * @param   string       $value1
      * @param   string       $value2
-     * @param   string|null  $type
+     * @param   string|NULL  $type
      * @param   string       $and_or
      * @return  object
      */
@@ -482,7 +482,7 @@ class SQL {
      * Build LIKE statement
      * @param   string       $field
      * @param   mixed        $data 
-     * @param   string|null  $type 
+     * @param   string|NULL  $type 
      * @param   string       $and_or
      * @return  object
      */
@@ -534,7 +534,7 @@ class SQL {
     /**
      * Buils LIMIT statement
      * @param   integer       $limit
-     * @param   integer|null  $limit_end
+     * @param   integer|NULL  $limit_end
      * @return  object
      */
     function limit($limit,$limit_end=NULL) {
@@ -569,7 +569,7 @@ class SQL {
     /**
      * Build ORDER BY statement
      * @param   string       $orderby
-     * @param   string|null  $sorting
+     * @param   string|NULL  $sorting
      * @return  object
      */
     function order_by($orderby,$sorting=NULL) {
@@ -598,8 +598,8 @@ class SQL {
     /**
      * Build HAVING statement
      * @param   string       $field
-     * @param   string|null  $op
-     * @param   mixed|null   $val
+     * @param   string|NULL  $op
+     * @param   mixed|NULL   $val
      * @return  object
      */
     function having($field,$op=NULL,$val=NULL) {
@@ -942,7 +942,7 @@ class SQLCache {
 
     /**
      * Class constructor
-     * @param   string|null  $dir
+     * @param   string|NULL  $dir
      * @param   integer      $time
      * @return  void
      */

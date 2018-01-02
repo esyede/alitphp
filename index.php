@@ -2,7 +2,7 @@
 // Instantiate the framework
 $app=require('lib/alit.php');
 // Load config file
-$app->config('config.ini')
+$app->config('app.cfg')
 	// Define route to main page
 	->route('GET /',
 		// Define route handler

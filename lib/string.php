@@ -134,7 +134,7 @@ class String extends \Factory implements \Serializable {
      * @return  object
      */
     function escape($opt=ENT_QUOTES) {
-        $this->str=htmlspecialchars($this->str,$opt,'UTF-8',false);
+        $this->str=htmlspecialchars($this->str,$opt,'UTF-8',FALSE);
         return $this;
     }
 
@@ -221,7 +221,7 @@ class String extends \Factory implements \Serializable {
     /**
      * Perform a regular expression match
      * @param   string      $pattern
-     * @param   array|null  &$found
+     * @param   array|NULL  &$found
      * @return  object
      */
     function match($pattern,&$found=NULL) {
@@ -346,5 +346,44 @@ class String extends \Factory implements \Serializable {
      */
     function unserialize($str) {
         $this->str=\ALit::instance()->unserialize($str);
+    }
+
+    /**
+     * Return chunk of dummy lorem ipsum text
+     * @param   integer  $count
+     * @param   integer  $max
+     * @param   boolean  $std
+     * @return  string
+     */
+    function lorem($count=1,$max=20,$std=TRUE) {
+        $out='';
+        if ($std)
+            $out='Lorem ipsum dolor sit amet, consectetur adipisicing elit, '.
+                'sed do eiusmod tempor incididunt ut labore et dolore magna '.
+                'aliqua.';
+        $rand=explode(' ',
+            'a ab ad accusamus adipisci alias aliquam amet animi aperiam '.
+            'architecto asperiores aspernatur assumenda at atque aut beatae '.
+            'blanditiis cillum commodi consequatur corporis corrupti culpa '.
+            'cum cupiditate debitis delectus deleniti deserunt dicta '.
+            'dignissimos distinctio dolor ducimus duis ea eaque earum eius '.
+            'eligendi enim eos error esse est eum eveniet ex excepteur '.
+            'exercitationem expedita explicabo facere facilis fugiat harum '.
+            'hic id illum impedit in incidunt ipsa iste itaque iure iusto '.
+            'laborum laudantium libero magnam maiores maxime minim minus '.
+            'modi molestiae mollitia nam natus necessitatibus nemo neque '.
+            'nesciunt nihil nisi nobis non nostrum nulla numquam occaecati '.
+            'odio officia omnis optio pariatur perferendis perspiciatis '.
+            'placeat porro possimus praesentium proident quae quia quibus '.
+            'quo ratione recusandae reiciendis rem repellat reprehenderit '.
+            'repudiandae rerum saepe sapiente sequi similique sint soluta '.
+            'suscipit tempora tenetur totam ut ullam unde vel veniam vero '.
+            'vitae voluptas');
+        for ($i=0,$add=$count-(int)$std;$i<$add;$i++) {
+            shuffle($rand);
+            $words=array_slice($rand,0,mt_rand(3,$max));
+            $out.=' '.ucfirst(implode(' ',$words)).'.';
+        }
+        return $out;
     }
 }

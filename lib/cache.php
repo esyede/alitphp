@@ -26,7 +26,7 @@ class Cache extends \Factory {
 	 * Return timestamp and lifetime of cache entry or FALSE if not found
 	 * @param   string       $key
 	 * @param   mixed        &$val
-	 * @return  array|false
+	 * @return  array|FALSE
 	 */
 	function exists($key,&$val=NULL) {
 		$fw=\Alit::instance();
@@ -93,7 +93,7 @@ class Cache extends \Factory {
 	/**
 	 * Retrieve value of cache entry
 	 * @param   string       $key
-	 * @return  mixed|false
+	 * @return  mixed|FALSE
 	 */
 	function get($key) {
 		return $this->dsn&&$this->exists($key,$data)?$data:FALSE;
@@ -223,7 +223,7 @@ class Cache extends \Factory {
 					?current($grep):('folder='.$fw->get('TEMP').'cache/');
 			if (preg_match('/^folder\h*=\h*(.+)/',$dsn,$parts)
 			&&!is_dir($parts[1]))
-				mkdir($parts[1],0755,TRUE);
+				mkdir($parts[1],\Alit::CHMODE,TRUE);
 		}
 		$this->prefix=$seed?:$fw->get('SEED');
 		return $this->dsn=$dsn;

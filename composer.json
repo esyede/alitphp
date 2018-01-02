@@ -1,11 +1,12 @@
 {
 	"name": "esyede/alitphp",
-	"description": "Lightweight, blazing-fast PHP microframework",
+	"description": "Lightweight, yet Minimalist PHP Microframework",
 	"keywords": [
 		"microframework",
 		"php",
-		"lightweight",
 		"framework",
+		"lightweight",
+		"minimalist",
 		"alitphp"
 	],
 	"type": "project",

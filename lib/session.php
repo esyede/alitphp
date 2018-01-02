@@ -29,7 +29,7 @@ class Session {
 
     const
         // Error messages
-        E_DBPARAM="Table and cookie param can only accept string";
+        E_DBPARAM="Table and cookie parameter can only accept string with non-empty value";
 
     /**
      * Class constructor
@@ -40,7 +40,8 @@ class Session {
      */
     function __construct(\DB\SQL $db,$table='session',$cookie='cookies') {
         $fw=\Alit::instance();
-        if (!is_string($table)||!is_string($cookie))
+        if ((!is_string($table)||(is_string($table)&&strlen(trim($table))==0))
+        ||(!is_string($cookie)||(is_string($cookie)&&strlen(trim($cookie))==0)))
             $fw->abort(500,self::E_DBPARAM);
         $this->db=$db;
         $this->table=$table;
@@ -121,8 +122,8 @@ class Session {
     /**
      * Get session data from database
      * @param   string      $key
-     * @param   mixed|null  $default
-     * @return  mixed|null
+     * @param   mixed|NULL  $default
+     * @return  mixed|NULL
      */
     function get($key,$default=NULL) {
         return isset($this->data[$key])?$this->data[$key]:$default;
@@ -130,9 +131,9 @@ class Session {
 
     /**
      * Set/store session to database
-     * @param string    $key
-     * @param mixed     $val
-     * @return boolean
+     * @param   string    $key
+     * @param   mixed     $val
+     * @return  boolean
      */
     function set($key,$val=NULL) {
         $fw=\Alit::instance();
@@ -172,7 +173,7 @@ class Session {
 
     /**
      * Renew/update session data
-     * @return boolean
+     * @return  boolean
      */
     protected function renew() {
         $fw=\Alit::instance();
