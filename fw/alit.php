@@ -1,7 +1,7 @@
 <?php
 /**
- * Core Class of Alit PHP
- * @package     Alit
+ * Core class of alitphp
+ * @package     alitphp
  * @subpackage  none
  * @copyright   Copyright (c) 2017 Suyadi. All Rights Reserved.
  * @license     <https://opensource.org/licenses/MIT> The MIT License (MIT).
@@ -12,15 +12,16 @@ defined('DS') or define('DS',DIRECTORY_SEPARATOR);
 
 
 
-//!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//!=============================================================================
 //! Alit - The core class
-//!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-final class Alit extends \Factory implements \ArrayAccess {
+//!=============================================================================
+final class Alit extends Factory implements ArrayAccess {
 
     const
         // Package and version info
-        PACKAGE='Alit PHP',
-        VERSION='1.0.0-stable';
+        PACKAGE='alitphp',
+        VERSION='1.0.0',
+        TAGLINE='Simple, lightweight php microframework';
 
     const
         // HTTP status codes
@@ -66,20 +67,21 @@ final class Alit extends \Factory implements \ArrayAccess {
         HTTP_505='HTTP Version Not Supported';
 
     const
-        // Error messages
-        E_METHOD="Invalid method supplied: '%s'",
-        E_REDIRECT="Can't redirect to specified url: '%s'",
+        // System error messages
+        E_UI="Can't find view file: '%s' (%s)",
+        E_FATAL="Fatal error: %s",
         E_ROUTE="Can't find route handler: '%s'",
-        E_MIDDLEWARE="Can't execute %s-route middleware in '%s'",
+        E_METHOD="Invalid method supplied: '%s'",
         E_FORWARD="Can't forward route handler: '%s'",
-        E_VIEW="Can't find view file: '%s'",
-        E_NOTFOUND="The page you have requested can not be found on this server.";
+        E_REDIRECT="Can't redirect to specified url: '%s'",
+        E_NOTFOUND="The page you have requested can not be found on this server.",
+        E_MIDDLEWARE="Can't execute %s-route middleware in '%s'";
 
     const
         // Valid request methods
         METHODS='CONNECT|DELETE|GET|HEAD|OPTIONS|PATCH|POST|PUT',
         // Default directory permission
-        CHMODE=0755;
+        CHMOD=0755;
 
     protected
         // Stores all framework variables
@@ -94,8 +96,8 @@ final class Alit extends \Factory implements \ArrayAccess {
      */
     function before($req,$fn) {
         $req=preg_split('/ /',$this->tab2space($req),NULL,PREG_SPLIT_NO_EMPTY);
-        foreach ($this->split($req[0]) as $verb)
-            $this->push('ROUTES.Before.'.$verb,['uri'=>$req[1],'fn'=>is_string($fn)?trim($fn):$fn]);
+        foreach ($this->split($req[0]) as $mtd)
+            $this->push('ROUTES.Before.'.$mtd,array('uri'=>$req[1],'fn'=>is_string($fn)?trim($fn):$fn));
         // It's chainable!
         return $this;
     }
@@ -109,8 +111,8 @@ final class Alit extends \Factory implements \ArrayAccess {
     */
     function after($req,$fn) {
         $req=preg_split('/ /',$this->tab2space($req),NULL,PREG_SPLIT_NO_EMPTY);
-        foreach ($this->split($req[0]) as $verb)
-            $this->push('ROUTES.After.'.$verb,['uri'=>$req[1],'fn'=>is_string($fn)?trim($fn):$fn]);
+        foreach ($this->split($req[0]) as $mtd)
+            $this->push('ROUTES.After.'.$mtd,array('uri'=>$req[1],'fn'=>is_string($fn)?trim($fn):$fn));
         // It's chainable!
         return $this;
     }
@@ -121,11 +123,11 @@ final class Alit extends \Factory implements \ArrayAccess {
     * @return  object
     */
     function notfound($fn=NULL) {
+        $this->set('ROUTES.Notfound',is_string($fn)?trim($fn):$fn);
         if (is_callable($fn)) {
             call_user_func($fn);
             exit();
         }
-        $this->set('ROUTES.Notfound',is_string($fn)?trim($fn):$fn);
         // It's chainable!
         return $this;
     }
@@ -139,74 +141,70 @@ final class Alit extends \Factory implements \ArrayAccess {
     */
     function route($req,$fn) {
         $req=preg_split('/ /',$this->tab2space($req),NULL,PREG_SPLIT_NO_EMPTY);
-        foreach ($this->split($req[0]) as $verb) {
-            if (!in_array($verb,$this->split(self::METHODS)))
-                user_error(sprintf(self::E_METHOD,$verb),E_USER_ERROR);
-            $this->push('ROUTES.Main.'.$verb,['uri'=>$req[1],'fn'=>is_string($fn)?trim($fn):$fn]);
+        foreach ($this->split($req[0]) as $mtd) {
+            if (!in_array($mtd,$this->split(self::METHODS)))
+                trigger_error(sprintf(self::E_METHOD,$mtd));
+            $this->push('ROUTES.Main.'.$mtd,array('uri'=>$req[1],'fn'=>is_string($fn)?trim($fn):$fn));
         }
         // It's chainable!
         return $this;
     }
 
    /**
-    * Run the framework: Loop all defined route before middleware's and routes, -
-    * and execute the handling function if a route was found.
+    * Run the framework: Loop all defined before and/or after middleware's and the main routes, -
+    * and then execute the handler function if a route was found.
     * @return  boolean
     */
     function run() {
         // Send some headers
         header('X-XSS-Protection: 1; mode=block');
         header('X-Content-Type-Options: nosniff');
-        if (!empty($this->get('PACKAGE')))
+        if (!empty($this->hive['PACKAGE']))
             header('X-Powered-By: '.$this->get('PACKAGE'));
-        if (!empty($this->get('XFRAME')))
+        if (!empty($this->hive['XFRAME']))
             header('X-Frame-Options: '.$this->get('XFRAME'));
         // Get routes info
         $before=$this->get('ROUTES.Before');
         $main=$this->get('ROUTES.Main');
         $after=$this->get('ROUTES.After');
         $notfound=$this->get('ROUTES.Notfound');
-        $verb=$this->get('VERB');
+        $mtd=$this->get('METHOD');
         // Execute before-route middleware if any
-        if (isset($before[$verb]))
-            $this->execute($before[$verb]);
+        if (isset($before[$mtd]))
+            $this->execute($before[$mtd]);
         $executed=0;
         // Execute main routes
-        if (isset($main[$verb]))
-            $executed=$this->execute($main[$verb],TRUE);
-        // No route specified or fail to execute routes
+        if (isset($main[$mtd]))
+            $executed=$this->execute($main[$mtd],TRUE);
+        // No route specified or failed to execute routes. Give 404 error
         if ($executed===0) {
-            // Call notfound handler if any
-            if (!empty($notfound)) {
-                // Call directly if it's a callable (anonymous/lambda) function
+            // Default 404 handler
+            if (empty($notfound))
+                $this->abort(404,self::E_NOTFOUND);
+            // Custom 404 hadler
+            else {
+                // 404 handler is a callable function
                 if (is_callable($notfound)) {
                     call_user_func($notfound);
                     exit();
                 }
-                // If it's a class method
-                elseif (is_string($notfound)) {
-                    if (stripos($notfound,'@')!==FALSE) {
-                        list($controller,$fn)=explode('@',$notfound);
-                        // Check class existence, then call appropriate method inside it!
-                        if (class_exists($controller)) {
-                            call_user_func([new $controller,$fn]);
-                            exit();
-                        }
-                        // Error, class or class-method cannot be found
-                        else user_error(sprintf(self::E_ROUTE,$controller.'@'.$fn),E_USER_ERROR);
-                    }
-                    // Error, route handler is neither string containing '@' or callable function
-                    else user_error(sprintf(self::E_ROUTE,$notfound),E_USER_ERROR);
+                // 404 handler is a 'Class@method' string
+                if (is_string($notfound)&&stripos($notfound,'@')!==FALSE) {
+                    list($controller,$fn)=explode('@',$notfound);
+                    if (class_exists($controller))
+                        call_user_func(array(new $controller,$fn));
+                    // Class doesn't exists
+                    else trigger_error(sprintf(self::E_ROUTE,$controller.'@'.$fn));
                 }
+                // Invalid 404 handler
+                else user_error(sprintf(self::E_ROUTE,$notfound));
             }
-            // Call default notfound message if notfound handler is not set
-            else $this->abort(404,self::E_NOTFOUND);
         }
         // Execute after-route middleware if any
-        else if (isset($after[$verb]))
-            $this->execute($after[$verb]);
+        else if (isset($after[$mtd]))
+            $this->execute($after[$mtd]);
         // Clean output buffer if it's a HEAD request
-        if ($verb=='HEAD')
+        if ($mtd=='HEAD')
             ob_end_clean();
         return ($executed>0);
     }
@@ -218,7 +216,7 @@ final class Alit extends \Factory implements \ArrayAccess {
     * @return  integer
     */
     private function execute($routes,$break=FALSE) {
-        $verb=$this->get('VERB');
+        $mtd=$this->get('METHOD');
         $uri=$this->get('URI');
         $executed=0;
         foreach ($routes as $route) {
@@ -244,29 +242,29 @@ final class Alit extends \Factory implements \ArrayAccess {
                         // Check existence of before-route middleware first
                         if (method_exists($class,'before')) {
                             // Assign before-route middleware info to hive
-                            $this->push('ROUTES.Before.'.$verb,['uri'=>$uri,'fn'=>$controller.'@before']);
+                            $this->push('ROUTES.Before.'.$mtd,array('uri'=>$uri,'fn'=>$controller.'@before'));
                             // Execute before-route middleware inside controller class
-                            if (call_user_func([$class,'before'])===FALSE)
-                                user_error(sprintf(self::E_MIDDLEWARE,'before',$controller.'@'.$fn),E_USER_ERROR);
+                            if (call_user_func(array($class,'before'))===FALSE)
+                                trigger_error(sprintf(self::E_MIDDLEWARE,'before',$controller.'@'.$fn));
                         }
                         // Assign after-route middleware info to hive if exists
                         if (($after=method_exists($class,'after')))
-                            $this->push('ROUTES.After.'.$verb,['uri'=>$uri,'fn'=>$controller.'@after']);
+                            $this->push('ROUTES.After.'.$mtd,array('uri'=>$uri,'fn'=>$controller.'@after'));
                         // Execute main route handler
-                        if (call_user_func_array([$class,$fn],$args)===FALSE)
-                            if (forward_static_call_array([$controller,$fn],$args)===FALSE)
-                                user_error(sprintf(self::E_FORWARD,$route['fn']),E_USER_ERROR);
+                        if (call_user_func_array(array($class,$fn),$args)===FALSE)
+                            if (forward_static_call_array(array($controller,$fn),$args)===FALSE)
+                                trigger_error(sprintf(self::E_FORWARD,$route['fn']));
                         // If after-route middleware exists
                         if ($after===TRUE)
                             // Execute after-route middleware inside controller class
-                            if (call_user_func([$class,'after'])===FALSE)
-                                user_error(sprintf(self::E_MIDDLEWARE,'after',$controller.'@'.$fn),E_USER_ERROR);
+                            if (call_user_func(array($class,'after'))===FALSE)
+                                trigger_error(sprintf(self::E_MIDDLEWARE,'after',$controller.'@'.$fn));
                     }
                     // Class doesn't exists
-                    else user_error(sprintf(self::E_ROUTE,$controller.'@'.$fn),E_USER_ERROR);
+                    else trigger_error(sprintf(self::E_ROUTE,$controller.'@'.$fn));
                 }
                 // Invalid route handler detected!
-                else user_error(sprintf(self::E_ROUTE,$route['fn']),E_USER_ERROR);
+                else trigger_error(sprintf(self::E_ROUTE,$route['fn']));
                 $executed++;
                 if ($break===TRUE)
                     break;
@@ -293,7 +291,7 @@ final class Alit extends \Factory implements \ArrayAccess {
             foreach (explode("\n",$trace) as $log)
                 if ($log)
                     error_log($log);
-            $this->set('ERROR',[
+            $this->set('ERROR',array(
                 'status'=>$status,
                 'code'=>$code,
                 'file'=>$file,
@@ -301,40 +299,41 @@ final class Alit extends \Factory implements \ArrayAccess {
                 'reason'=>$reason,
                 'trace'=>$trace,
                 'level'=>$level
-            ]);
-            // Write error to file if SYSLOG is activated
+            ));
+            // Write error message to file if 'LOG' directive is activated
             $debug='[ERROR]'.PHP_EOL;
             $debug.='---------------------------------------------'.PHP_EOL;
-            if ($this->get('SYSLOG')) {
+            if ($this->get('LOG')) {
                 $err=$this->get('ERROR');
                 unset($err['level']);
                 unset($err['trace']);
                 foreach ($err as $k=>$v)
-                    $debug.=ucfirst(((strlen($k)<=8)?$k.str_repeat(' ',(8-strlen($k))):$k)).': '.$v.PHP_EOL;
-                $this->log($debug,$this->get('TEMP').'syslog.log');
+                    $debug.=ucfirst(((strlen($k)<=8)?$k.
+                        str_repeat(' ',(8-strlen($k))):$k)).': '.$v.PHP_EOL;
+                $this->log($debug,$this->get('TMP').'alit.log');
             }
             ob_start();
             if (!headers_sent()) {
                 header($_SERVER['SERVER_PROTOCOL'].' '.$code.' '.$status);
-                if (!empty($this->get('PACKAGE')))
+                if (!empty($this->hive['PACKAGE']))
                     header('X-Powered-By: '.$this->get('PACKAGE'));
             }
-            if ($this->get('AJAX')) {
+            if ($this->get('ISAJAX')) {
                 if (!headers_sent())
                     header('Content-Type: application/json');
-                echo json_encode(['status'=>500,'data'=>$this->get('ERROR')]);
+                echo json_encode(array('status'=>500,'data'=>$this->get('ERROR')));
             }
             else {
                 echo "<!DOCTYPE html>\n<html>".
-                    "\n\t<head>\n\t\t<title>".$code." ".$status."</title>\n\t</head>".
-                    "\n\t<body style=\"color:#666\">\n".
-                    "\t\t<h1>".$code." ".$status."</h1>\n".
-                    "\t\t<p>Error: ".$reason."</p>\n";
+                    "\n\t<head>\n\t\t<title>$code $status</title>\n\t</head>".
+                    "\n\t<body style=\"color: #555\">\n".
+                    "\t\t<h1>$code $status</h1>\n".
+                    "\t\t<p>Error: $reason</p>\n";
                 echo (!empty($file)&&!empty($line))
-                    ?"\t\t<pre>".$file.":<font color=\"red\">".$line."</font></pre><br>\n":"";
-                // Show debug backtrace if DEBUG is activated
+                    ?"\t\t<pre>$file:<font color=\"red\">$line</font></pre><br>\n":"";
+                // Show debug backtrace if 'DEBUG' directive is activated
                 if ($this->get('DEBUG')>0)
-                    echo "\t\t<b>Back Trace:</b><br>\n\t\t<pre>".$trace."</pre>\n";
+                    echo "\t\t<b>Back Trace:</b><br>\n\t\t<pre>$trace</pre>\n";
                 echo "\t</body>\n</html>";
             }
             ob_end_flush();
@@ -352,34 +351,29 @@ final class Alit extends \Factory implements \ArrayAccess {
         if (!$trace) {
             $trace=debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
             $stack=$trace[0];
-            if (isset($stack['file'])
-            &&$stack['file']==__FILE__)
+            if (isset($stack['file'])&&$stack['file']==__FILE__)
                 array_shift($trace);
         }
         $debug=$this->get('DEBUG');
-        $trace=array_filter($trace,
-            function($stack) use($debug) {
-                return isset($stack['file'])
-                    &&($debug>1||($stack['file']!=__FILE__||$debug)
-                    &&(empty($stack['function'])
-                    ||!preg_match('~^(?:(?:trigger|user)_error|__call|call_user_func)~',
-                        $stack['function'])));
-            }
-        );
-        if (!$format)
+        $trace=array_filter($trace,function($stack) use($debug) {
+            return isset($stack['file'])
+                &&($debug>1||($stack['file']!=__FILE__||$debug)&&(empty($stack['function'])
+                ||!preg_match('~^(?:(?:trigger|user)_error|__call|call_user_func)~',$stack['function'])));
+        });
+        if ($format===FALSE)
             return $trace;
         $out='';
         // Analyze stack trace
         foreach ($trace as $stack) {
             $line='';
-            // Delete the function arguments, we don't need it :)
+            // Delete the function arguments, e don't need it :)
             if (isset($stack['args']))
                 unset($stack['args']);
             if (isset($stack['class']))
                 $line.=$stack['class'].$stack['type'];
             if (isset($stack['function']))
                 $line.=$stack['function'].'()';
-            $src=$this->slash(str_replace($_SERVER['DOCUMENT_ROOT'].'/','',$stack['file'])).
+            $src=$this->fwslash(str_replace($_SERVER['DOCUMENT_ROOT'].'/','',$stack['file'])).
                 ':<font color="red">'.$stack['line'].'</font>';
             $out.='['.$src.'] '.$line.PHP_EOL;
         }
@@ -393,10 +387,11 @@ final class Alit extends \Factory implements \ArrayAccess {
     */
     function shutdown($cwd) {
         chdir($cwd);
-        if (!($error=error_get_last())
-        &&session_status()==PHP_SESSION_ACTIVE)
+        $active=(php_sapi_name()!=='cli')?(version_compare(PHP_VERSION,'5.4.0','>=')
+            ?(session_status()===PHP_SESSION_ACTIVE):(session_id()!=='')):FALSE;
+        if (!($error=error_get_last())&&$active)
             session_commit();
-        $errors=[E_ERROR,E_PARSE,E_CORE_ERROR,E_CORE_WARNING,E_COMPILE_ERROR,E_COMPILE_WARNING];
+        $errors=array(E_ERROR,E_PARSE,E_CORE_ERROR,E_CORE_WARNING,E_COMPILE_ERROR,E_COMPILE_WARNING);
         if ($error&&in_array($error['type'],$errors))
             $this->abort(500,$error['message'],$error['file'],$error['line']);
     }
@@ -408,22 +403,16 @@ final class Alit extends \Factory implements \ArrayAccess {
     * @return  void
     */
     function redirect($url=NULL,$permanent=TRUE) {
-        $base=$this->get('PROTO').'://'.rtrim($this->get('BASE'),'/');
         $url=filter_var($url,FILTER_SANITIZE_URL);
-        if (!is_null($url)) {
-            if (!preg_match('~^(http(s)?://)?[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(/.*)?$~i',$url)
-            ||!filter_var($url,FILTER_VALIDATE_URL))
-                $url=$base.$url;
-        }
-        else $url=$base;
+        $url=is_null($url)?$this->baseurl():(filter_var($url,FILTER_VALIDATE_URL)?$url:$this->baseurl().$url);
         try {
             ob_start();
             header('Location: '.$url,TRUE,$permanent?302:307);
             ob_end_flush();
             exit();
         }
-        catch (\Exception $ex) {
-            user_error(sprintf(self::E_REDIRECT,$url),E_USER_ERROR);
+        catch (Exception $ex) {
+            trigger_error(sprintf(self::E_REDIRECT,$url));
         }
     }
 
@@ -434,10 +423,10 @@ final class Alit extends \Factory implements \ArrayAccess {
     * @return  void
     */
     function render($name,$data=NULL) {
-        $file=str_replace('/',DS,$this->get('ROOT').
-            str_replace('./','',$this->get('UI')).$name);
+        $file=$this->get('ROOT').
+            str_replace(array('./','.'),array('','/'),$this->get('UI').$name).'.ui.php';
         if (!file_exists($file))
-            user_error(sprintf(self::E_VIEW,$name),E_USER_ERROR);
+            trigger_error(sprintf(self::E_UI,$name,$file));
         ob_start();
         if (is_array($data))
             extract($data);
@@ -457,47 +446,44 @@ final class Alit extends \Factory implements \ArrayAccess {
             $source=$this->split($source);
         foreach ($source as $file) {
             preg_match_all(
-                '~(?<=^|\n)(?:'.
-                '\[(?<child>.+?)\]|'.
-                '(?<left>[^\h\r\n;].*?)\h*=\h*'.
-                '(?<right>(?:\\\\\h*\r?\n|.+?)*)'.
-                ')(?=\r?\n|$)~',
+                '~(?<=^|\n)(?:\[(?<flag>.+?)\]|(?<key>[^\h\r\n;].*?)\h*=\h*'.
+                '(?<val>(?:\\\\\h*\r?\n|.+?)*))(?=\r?\n|$)~',
                 $this->read($file),$matches,PREG_SET_ORDER
             );
             if ($matches) {
-                $child='global';
-                $fn=[];
+                $flag='global';
+                $fn=array();
                 foreach ($matches as $match) {
-                    if ($match['child']) {
-                        $child=$match['child'];
-                        if (preg_match('~^(?!(?:global|config|route)\b)((?:\.?\w)+)~i',$child,$gchild)
-                        &&!$this->exists($gchild[0],$this->hive()))
-                            $this->set($gchild[0],NULL);
-                        preg_match('~^(config|route)\b|^((?:\.?\w)+)\s*\>\s*(.*)~i',$child,$fn);
+                    if ($match['flag']) {
+                        $flag=$match['flag'];
+                        if (preg_match('~^(?!(?:global|config|route)\b)((?:\.?\w)+)~i',$flag,$child)
+                        &&!$this->exists($child[0],$this->hive()))
+                            $this->set($child[0],NULL);
+                        preg_match('~^(config|route)\b|^((?:\.?\w)+)\s*\>\s*(.*)~i',$flag,$fn);
                         continue;
                     }
                     if (!empty($fn))
                         call_user_func_array(
                             // Call method based on config flag (route/config)
-                            [$this,$fn[1]],
+                            array($this,$fn[1]),
                             // Array to be passed in
-                            array_merge([$match['left']],str_getcsv($match['right']))
+                            array_merge(array($match['key']),str_getcsv($match['val']))
                         );
                     else {
-                        $right=preg_replace('~\\\\\h*(\r?\n)~','\1',$match['right']);
-                        if (preg_match('~^(.+)\|\h*(\d+)$~',$right,$tmp)) {
+                        $val=preg_replace('~\\\\\h*(\r?\n)~','\1',$match['val']);
+                        if (preg_match('~^(.+)\|\h*(\d+)$~',$val,$tmp)) {
                             array_shift($tmp);
-                            list($right)=$tmp;
+                            list($val)=$tmp;
                         }
                         // Remove invisible characters
-                        $right=$this->tab2space(preg_replace('~[[:cntrl:]]~u','',$right));
+                        $val=$this->tab2space(preg_replace('~[[:cntrl:]]~u','',$val));
                         // Mark quoted strings with 0x00 whitespace
-                        str_getcsv(preg_replace('~(?<!\\\\)(")(.*?)\1~',"\\1\x00\\2\\1",trim($right)));
-                        preg_match('~^(?<child>[^:]+)?~',$child,$node);
-                        $custom=(strtolower($node['child']!='global'));
-                        $left=($custom?($node['child'].'.'):'').preg_replace('/\s\s+/','',$match['left']);
+                        str_getcsv(preg_replace('~(?<!\\\\)(")(.*?)\1~',"\\1\x00\\2\\1",trim($val)));
+                        preg_match('~^(?<flag>[^:]+)?~',$flag,$node);
+                        $custom=(strtolower($node['flag']!='global'));
+                        $key=($custom?($node['flag'].'.'):'').preg_replace('/\s\s+/','',$match['key']);
                         // Set config array to hive
-                        call_user_func_array([$this,'set'],array_merge([$left],[$right]));
+                        call_user_func_array(array($this,'set'),array_merge(array($key),array($val)));
                     }
                 }
             }
@@ -537,19 +523,19 @@ final class Alit extends \Factory implements \ArrayAccess {
     */
     function log($data,$file,$lf=FALSE) {
         $ts=time();
-        $date=new \DateTime('now',new \DateTimeZone($this->get('TZ')));
+        $date=new DateTime('now',new DateTimeZone($this->get('TZ')));
         $date->setTimestamp($ts);
-        return $this->write($file,"[".$date->format('Y/m/d H:i:s')."]".
-            ($lf?PHP_EOL:" ").$data.PHP_EOL,file_exists($file));
+        return $this->write($file,'['.$date->format('Y/m/d H:i:s').']'.
+            ($lf?PHP_EOL:' ').$data.PHP_EOL,file_exists($file));
     }
 
    /**
-    * Return base url (with protocol)
+    * Return link to base url
     * @param   string|NULL  $suffix
     * @return  string
     */
-    function base($suffix=NULL) {
-        $base=rtrim($this->get('PROTO').'://'.$this->get('BASE'),'/');
+    function baseurl($suffix=NULL) {
+        $base=rtrim($this->get('PROTOCOL').'://'.$this->get('BASE'),'/');
         return empty($suffix)?$base:$base.(is_string($suffix)?$suffix:NULL);
     }
 
@@ -559,13 +545,12 @@ final class Alit extends \Factory implements \ArrayAccess {
     * @return  boolean
     */
     protected function autoload($class) {
-        $class=$this->slash(ltrim($class,'\\'));
+        $class=$this->fwslash(ltrim($class,'\\'));
         $fn=NULL;
-        if (is_array($loc=$this->hive['AUTOLOAD'])
-        &&isset($loc[1])
-        &&is_callable($loc[1]))
-            list($loc,$fn)=$loc;
-        foreach ($this->split($this->hive['LIB'].'|./|'.$loc) as $auto)
+        if (is_array($path=$this->hive['AUTOLOAD'])
+        &&isset($path[1])&&is_callable($path[1]))
+            list($path,$fn)=$path;
+        foreach ($this->split($this->hive['FW'].'|./|'.$path) as $auto)
             if ($fn&&is_file($file=$fn($auto.$class).'.php')
             ||is_file($file=$auto.$class.'.php')
             ||is_file($file=$auto.strtolower($class).'.php')
@@ -595,29 +580,29 @@ final class Alit extends \Factory implements \ArrayAccess {
 
    /**
     * Recursively convert array to object
-    * @param   array        $arr
-    * @return  object|NULL
+    * @param   array         $arr
+    * @return  object|FALSE
     */
     function arr2obj($arr) {
-        return is_array($arr)?json_decode(json_encode($arr,JSON_FORCE_OBJECT),FALSE):NULL;
+        return is_array($arr)?json_decode(json_encode($arr,JSON_FORCE_OBJECT),FALSE):FALSE;
     }
 
    /**
     * Recursively convert object to array
-    * @param   object      $obj
-    * @return  array|NULL
+    * @param   object       $obj
+    * @return  array|FALSE
     */
     function obj2arr($obj) {
-        return is_object($obj)?json_decode(json_encode($obj),TRUE):NULL;
+        return is_object($obj)?json_decode(json_encode($obj),TRUE):FALSE;
     }
 
     /**
      * Replace tab to space in given string
-     * @param   string       $var
-     * @return  string|NULL
+     * @param   string        $var
+     * @return  string|FALSE
      */
     function tab2space($str) {
-        return is_string($str)?preg_replace('/\s\s+/',' ',$str):NULL;
+        return is_string($str)?preg_replace('/\s\s+/',' ',$str):FALSE;
     }
 
     /**
@@ -625,9 +610,9 @@ final class Alit extends \Factory implements \ArrayAccess {
      * @param   array  $data
      * @return  array
      */
-    function scrub(array $data) {
+    function sanitize(array $data) {
         foreach ($data as $k=>$v) {
-            $data[$k]=str_replace(['&amp;','&lt;','&gt;'],['&amp;amp;','&amp;lt;','&amp;gt;'],$v);
+            $data[$k]=str_replace(array('&amp;','&lt;','&gt;'),array('&amp;amp;','&amp;lt;','&amp;gt;'),$v);
             $data[$k]=preg_replace('~(&#*\w+)[\x00-\x20]+;~u','$1;',$v);
             $data[$k]=preg_replace('~(&#x*[0-9A-F]+);*~iu','$1;',$v);
             $data[$k]=html_entity_decode($v,ENT_COMPAT,'UTF-8');
@@ -661,58 +646,58 @@ final class Alit extends \Factory implements \ArrayAccess {
 
    /**
     * Retrieve POST data
-    * @param   string|NULL  $key
-    * @param   boolean      $escape
-    * @return  string|NULL
+    * @param   string|NULL   $key
+    * @param   boolean       $sanitize
+    * @return  string|FALSE
     */
-    function post($key=NULL,$escape=TRUE) {
+    function post($key=NULL,$sanitize=TRUE) {
         if (is_null($key)) {
-            $post=[];
-            if ($escape===TRUE)
+            $out=array();
+            if ($sanitize===TRUE)
                 foreach ($_POST as $k=>$v)
-                    $post[$k]=$this->scrub([$v]);
-            return ($escape===TRUE)?$post:$_POST;
+                    $out[$k]=$this->sanitize(array($v));
+            return ($sanitize===TRUE)?$out:$_POST;
         }
         elseif (isset($_POST[$key]))
-            return ($escape===TRUE)?$this->scrub([$_POST[$key]]):$_POST[$key];
-        return NULL;
+            return ($sanitize===TRUE)?$this->sanitize(array($_POST[$key])):$_POST[$key];
+        return FALSE;
     }
 
     /**
     * Retrieve FILES data
-    * @param   string|NULL  $key
-    * @param   boolean      $escape
-    * @return  string|NULL
+    * @param   string|NULL   $key
+    * @param   boolean       $sanitize
+    * @return  string|FALSE
     */
-    function files($key=NULL,$escape=TRUE) {
+    function files($key=NULL,$sanitize=TRUE) {
         if (is_null($key)) {
-            $files=[];
-            if ($escape===TRUE)
+            $out=array();
+            if ($sanitize===TRUE)
                 foreach ($_FILES as $k=>$v)
-                    $files[$k]=$this->scrub([$v]);
-            return ($escape===TRUE)?$files:$_FILES;
+                    $out[$k]=$this->sanitize(array($v));
+            return ($sanitize===TRUE)?$out:$_FILES;
         }
         elseif (isset($_FILES[$key]))
-            return ($escape===TRUE)?$this->scrub([$_FILES[$key]]):$_FILES[$key];
-        return NULL;
+            return ($sanitize===TRUE)?$this->sanitize(array($_FILES[$key])):$_FILES[$key];
+        return FALSE;
     }
 
    /**
     * Retrieve COOKIE data
-    * @param   string|NULL  $key
-    * @param   boolean      $escape
-    * @return  string|NULL
+    * @param   string|NULL   $key
+    * @param   boolean       $sanitize
+    * @return  string|FALSE
     */
-    function cookie($key=NULL,$escape=TRUE) {
+    function cookie($key=NULL,$sanitize=TRUE) {
         if (is_null($key)) {
-            $cookie=[];
-            if ($escape===TRUE)
+            $out=array();
+            if ($sanitize===TRUE)
                 foreach ($_COOKIE as $k=>$v)
-                    $cookie[$k]=$this->scrub([$v]);
-            return ($escape===TRUE)?$cookie:$_COOKIE;
+                    $out[$k]=$this->sanitize(array($v));
+            return ($sanitize===TRUE)?$out:$_COOKIE;
         }
         elseif (isset($_COOKIE[$key]))
-            return ($escape===TRUE)?$this->scrub([$_COOKIE[$key]]):$_COOKIE[$key];
+            return ($sanitize===TRUE)?$this->sanitize(array($_COOKIE[$key])):$_COOKIE[$key];
         return FALSE;
     }
 
@@ -720,16 +705,15 @@ final class Alit extends \Factory implements \ArrayAccess {
     * Set a cookie
     * @param   string   $key
     * @param   mixed    $val
-    * @param   integer  $ttl
-    * @return  void
+    * @param   integer  $expiry
+    * @return  boolran
     */
-    function setcookie($key,$val,$ttl=NULL) {
-        $ttl=empty($ttl)?(time()+(60*60*24)):$ttl;
-        setcookie($key,$val,$ttl,$this->get('TEMP'));
+    function setcookie($key,$val,$expiry=NULL) {
+        return setcookie($key,$val,(empty($expiry)?(time()+(60*60*24)):$expiry),$this->get('TMP'));
     }
 
    /**
-    * Retrieve part of URI
+    * Return a segment of URI
     * @param   integer      $key
     * @param   string|NULL  $default
     * @return  string
@@ -740,11 +724,11 @@ final class Alit extends \Factory implements \ArrayAccess {
     }
 
    /**
-    * Replace backslash with slash
+    * Replace backslash with forward slash
     * @param   string  $str
     * @return  string
     */
-    function slash($str) {
+    function fwslash($str) {
         return $str?strtr($str,'\\','/'):$str;
     }
 
@@ -755,13 +739,13 @@ final class Alit extends \Factory implements \ArrayAccess {
     * @return  array
     */
     function split($str,$noempty=TRUE) {
-        return array_map('trim',preg_split('/[,;|]/',$str,0,$noempty?PREG_SPLIT_NO_EMPTY:0));
+        return array_map('trim',preg_split('/[,;|]/',$str,NULL,(bool)$noempty?PREG_SPLIT_NO_EMPTY:0));
     }
 
 
-//!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//! Hive - Methods to play around with framework variables
-//!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    //!=============================================================================
+    //! Hive - Methods to play around with framework variables
+    //!=============================================================================
 
    /**
     * Set a value to hive or rewrite it if already exist
@@ -775,12 +759,11 @@ final class Alit extends \Factory implements \ArrayAccess {
                 foreach ($val as $k=>$v)
                     $this->set($key.'.'.$k,$v);
             else {
-                $keys=explode('.',$key);
+                $keys=preg_split('/\./',(string)$key,NULL,PREG_SPLIT_NO_EMPTY);
                 $hive=&$this->hive;
                 foreach ($keys as $key) {
-                    if (!isset($hive[$key])
-                    ||!is_array($hive[$key]))
-                        $hive[$key]=[];
+                    if (!isset($hive[$key])||!is_array($hive[$key]))
+                        $hive[$key]=array();
                     $hive=&$hive[$key];
                 }
                 $hive=$val;
@@ -798,7 +781,7 @@ final class Alit extends \Factory implements \ArrayAccess {
     * @return  mixed|NULL
     */
     function get($key,$default=NULL) {
-        $keys=explode('.',(string)$key);
+        $keys=preg_split('/\./',(string)$key,NULL,PREG_SPLIT_NO_EMPTY);
         $hive=&$this->hive;
         foreach ($keys as $key) {
             if (!$this->exists($key,$hive))
@@ -822,14 +805,13 @@ final class Alit extends \Factory implements \ArrayAccess {
                 foreach ($val as $k=>$v)
                     $this->add($key.'.'.$k,$v,TRUE);
             else {
-                $keys=explode('.',$key);
+                $keys=preg_split('/\./',(string)$key,NULL,PREG_SPLIT_NO_EMPTY);
                 $hive=&$this->hive;
                 if ($pop===TRUE)
                     array_pop($keys);
                 foreach ($keys as $key) {
-                    if (!isset($hive[$key])
-                    ||!is_array($hive[$key]))
-                        $hive[$key]=[];
+                    if (!isset($hive[$key])||!is_array($hive[$key]))
+                        $hive[$key]=array();
                     $hive=&$hive[$key];
                 }
                 $hive[]=$val;
@@ -841,12 +823,12 @@ final class Alit extends \Factory implements \ArrayAccess {
     }
 
    /**
-    * Check if hive path exists
+    * Check if key exists in hive
     * @param   string   $key
     * @return  boolean
     */
     function has($key) {
-        $keys=explode('.',(string)$key);
+        $keys=preg_split('/\./',(string)$key,NULL,PREG_SPLIT_NO_EMPTY);
         $hive=&$this->hive;
         foreach ($keys as $key) {
             if (!$this->exists($key,$hive))
@@ -863,7 +845,7 @@ final class Alit extends \Factory implements \ArrayAccess {
     * @return  boolean
     */
     function exists($key,$arr) {
-        if ($arr instanceof \ArrayAccess)
+        if ($arr instanceof ArrayAccess)
             return isset($arr[$key]);
         return array_key_exists($key,(array)$arr);
     }
@@ -875,7 +857,7 @@ final class Alit extends \Factory implements \ArrayAccess {
     */
     function clear($key) {
         if (is_string($key))
-            $this->set($key,[]);
+            $this->set($key,array());
         elseif (is_array($key))
             foreach ($key as $k)
                 $this->clear($k);
@@ -888,7 +870,7 @@ final class Alit extends \Factory implements \ArrayAccess {
     */
     function erase($key) {
         if (is_string($key)) {
-            $keys=explode('.',$key);
+            $keys=preg_split('/\./',(string)$key,NULL,PREG_SPLIT_NO_EMPTY);
             $hive=&$this->hive;
             $last=array_pop($keys);
             foreach ($keys as $key) {
@@ -910,18 +892,18 @@ final class Alit extends \Factory implements \ArrayAccess {
     */
     function dry($key) {
         if (is_string($key))
-            return empty($this->get($key));
+            return empty($this->hive[$key]);
         elseif (is_array($key))
             foreach ($key as $k)
-                if (!empty($this->get($k)))
+                if (!empty($this->hive[$k]))
                     return FALSE;
         return TRUE;
     }
 
    /**
     * Merge a given array with the given key
-    * @param   string|array
-    * @param   mixed|NULL
+    * @param   string|array  $key
+    * @param   mixed|NULL    $val
     * @return  void
     */
     function merge($key,$val=NULL) {
@@ -929,13 +911,13 @@ final class Alit extends \Factory implements \ArrayAccess {
             $this->hive=array_merge($this->hive,$key);
         elseif (is_string($key)) {
             $item=(array)$this->get($key);
-            $val=array_merge($item,($val instanceof \ArrayAccess||is_array($val))?$val:(array)$val);
+            $val=array_merge($item,($val instanceof ArrayAccess||is_array($val))?$val:(array)$val);
             $this->set($key,$val);
         }
     }
 
    /**
-    * Return the value of given key and delete the key
+    * Return the value of given key and delete the actual key
     * @param   string       $key
     * @param   string|NULL  $default
     * @return  mixed
@@ -1009,11 +991,11 @@ final class Alit extends \Factory implements \ArrayAccess {
 
    /**
     * Determine whether the given value is array accessible
-    * @param   array    $val
+    * @param   array    $arr
     * @return  boolean
     */
-    function accessible($val) {
-        return is_array($val)||$val instanceof \ArrayAccess;
+    function accessible($arr) {
+        return is_array($arr)||$arr instanceof ArrayAccess;
     }
 
    /**
@@ -1045,9 +1027,9 @@ final class Alit extends \Factory implements \ArrayAccess {
     }
 
 
-//!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//! ArrayAccess Interface Methods
-//!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    //!=============================================================================
+    //! ArrayAccess Interface Methods
+    //!=============================================================================
     function offsetSet($offset,$val) {
         $this->set($offset,$val);
     }
@@ -1068,9 +1050,9 @@ final class Alit extends \Factory implements \ArrayAccess {
     }
 
 
-//!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//! PHP Magic Methods
-//!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    //!=============================================================================
+    //! PHP Magic Methods
+    //!=============================================================================
     function __set($key,$val=NULL) {
         $this->set($key,$val);
     }
@@ -1087,9 +1069,9 @@ final class Alit extends \Factory implements \ArrayAccess {
         $this->erase($key);
     }
 
-    // Prohibit cloning
+    // Prohibit cloning of this class
     private function __clone() {}
-    // Prohibit unserialization
+    // Prohibit unserialization of this class
     private function __wakeup() {}
 
     // Class constructor
@@ -1100,34 +1082,38 @@ final class Alit extends \Factory implements \ArrayAccess {
             mb_internal_encoding($charset);
         // Turn-off default error reporting
         ini_set('display_errors',0);
+        // Deprecated directives as of PHP 5.4+
+        @ini_set('magic_quotes_gpc',0);
+        @ini_set('register_globals',0);
+        $fw=$this;
         // Override default PHP exception handler
-        set_exception_handler(function($obj) {
-            $this->set('EXCEPTION',$obj);
-            $this->abort(500,
-                $obj->getMessage(),
-                $obj->getFile(),
-                $obj->getLine(),
-                $obj->getTrace(),
-                $obj->getCode()
+        set_exception_handler(function($ex) use($fw) {
+            $fw->set('EXCEPTION',$ex);
+            $fw->abort(500,
+                $ex->getMessage(),
+                $ex->getFile(),
+                $ex->getLine(),
+                $ex->getTrace(),
+                $ex->getCode()
             );
         });
         // Override default PHP error handler
-        set_error_handler(function($level,$reason,$file,$line) {
+        set_error_handler(function($level,$reason,$file,$line,$context) use($fw) {
             if ($level & error_reporting())
-                $this->abort(500,$reason,$file,$line,NULL,$level);
+                $fw->abort(500,$reason,$file,$line,$context,$level);
         });
-        $fw=$this;
+        // Determine base url
         $base=NULL;
         if (empty($fw->hive['URI']))
             $base=implode('/',array_slice(explode('/',$_SERVER['SCRIPT_NAME']),0,-1)).'/';
+        // Generate 64bit/base36 hash seed
         $seed=$_SERVER['SERVER_NAME'].$base;
         $seed=str_pad(base_convert(substr(sha1($seed),-16),16,36),11,'0',STR_PAD_LEFT);
+        // Determine current URI
         $uri=substr($_SERVER['REQUEST_URI'],strlen($base));
-        if (strstr($uri,'?'))
-            $uri=substr($uri,0,strpos($uri,'?'));
-        $uri='/'.trim($uri,'/');
+        $uri='/'.trim((strstr($uri,'?')?substr($uri,0,strpos($uri,'?')):$uri),'/');
         // Get all headers
-        $headers=[];
+        $headers=array();
         if (function_exists('getallheaders')) {
             foreach (getallheaders() as $key=>$val) {
                 $tmp=strtoupper(strtr($key,'-','_'));
@@ -1143,8 +1129,10 @@ final class Alit extends \Factory implements \ArrayAccess {
             if (isset($_SERVER['CONTENT_TYPE']))
                 $headers['Content-Type']=&$_SERVER['CONTENT_TYPE'];
             foreach (array_keys($_SERVER) as $key)
-                if (substr($key,0,5)=='HTTP_')
-                    $headers[strtr(ucwords(strtolower(strtr(substr($key,5),'_',' '))),' ','-')]=&$_SERVER[$key];
+                if (substr($key,0,5)=='HTTP_') {
+                    $prefix=strtr(ucwords(strtolower(strtr(substr($key,5),'_',' '))),' ','-');
+                    $headers[$prefix]=&$_SERVER[$key];
+                }
         }
         // Get user-agent
         $ua=isset($headers['X-Operamini-Phone-UA'])
@@ -1155,199 +1143,85 @@ final class Alit extends \Factory implements \ArrayAccess {
                     ?$headers['User-Agent']:''));
         // Get client ip
         $ip=isset($headers['Client-IP'])
-            ?$headers['Client-IP']
-            :(isset($headers['X-Forwarded-For'])
-                ?explode(',',$headers['X-Forwarded-For'])[0]
-                :(isset($_SERVER['REMOTE_ADDR'])
-                    ?$_SERVER['REMOTE_ADDR']:''));
+		    ?$headers['Client-IP']
+		    :(isset($headers['X-Forwarded-For'])
+		    	?($ip=explode(',',$headers['X-Forwarded-For'])&&$ip=$ip[0])
+		        :(isset($_SERVER['REMOTE_ADDR'])
+		            ?$_SERVER['REMOTE_ADDR']:''));
         // Get server protocol
-        $proto=isset($_SERVER['HTTPS'])
+        $protocol=isset($_SERVER['HTTPS'])
             &&$_SERVER['HTTPS']=='on'
             ||isset($headers['X-Forwarded-Proto'])
             &&$headers['X-Forwarded-Proto']=='https'?'https':'http';
         // Get request method
         // if it's a HEAD request, override it to being GET and prevent any output
         // Reference: http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.4
-        $verb=$_SERVER['REQUEST_METHOD'];
-        if ($_SERVER['REQUEST_METHOD']=='HEAD') {
+        $method=$_SERVER['REQUEST_METHOD'];
+        if ($method=='HEAD') {
             ob_start();
-            $verb='GET';
-        } // If it's a POST request, check for a method override header
-        elseif ($_SERVER['REQUEST_METHOD']=='POST') {
+            $method='GET';
+        }
+        // If it's a POST request, check for a method override header
+        elseif ($method=='POST') {
             if (isset($headers['X-HTTP-Method-Override'])
-            &&in_array($headers['X-HTTP-Method-Override'],['PUT','DELETE','PATCH']))
-                $verb=$headers['X-HTTP-Method-Override'];
+            &&in_array($headers['X-HTTP-Method-Override'],array('PUT','DELETE','PATCH')))
+                $method=$headers['X-HTTP-Method-Override'];
         }
         // Determine server port
-        $port=80;
-        if (isset($headers['X-Forwarded-Port']))
-            $port=$headers['X-Forwarded-Port'];
-        elseif (isset($_SERVER['SERVER_PORT']))
-            $port=$_SERVER['SERVER_PORT'];
+        $port=isset($headers['X-Forwarded-Port'])
+            ?$headers['X-Forwarded-Port']
+            :(isset($_SERVER['SERVER_PORT'])?$_SERVER['SERVER_PORT']:80);
         // Determine ajax request
         $isajax=(isset($_SERVER['HTTP_X_REQUESTED_WITH'])
-            &&$_SERVER['HTTP_X_REQUESTED_WITH']==='XMLHttpRequest')?TRUE:FALSE;
+            &&$_SERVER['HTTP_X_REQUESTED_WITH']==='XMLHttpRequest');
         // Determine default serializer
         $serializer=extension_loaded('igbinary')?'igbinary':'default';
-        // Initial values of routes variables
-        $routes=['Before'=>[],'Main'=>[],'After'=>[],'Notfound'=>NULL];
+        // Initial values of route variables
+        $routes=array('Before'=>array(),'Main'=>array(),'After'=>array(),'Notfound'=>NULL);
         // Assign default value to system variables
-        $fw->hive=[
-            'AJAX'=>$isajax,
+        $fw->hive=array(
             'AUTOLOAD'=>NULL,
             'BASE'=>$_SERVER['SERVER_NAME'].$base,
             'CACHE'=>FALSE,
             'DEBUG'=>0,
             'ERROR'=>NULL,
             'EXCEPTION'=>NULL,
+            'FW'=>$fw->fwslash(__DIR__).'/',
             'HEADERS'=>&$headers,
             'HOST'=>$_SERVER['SERVER_NAME'],
             'IP'=>$ip,
-            'LIB'=>$fw->slash(__DIR__).'/',
+            'ISAJAX'=>$isajax,
+            'LOG'=>FALSE,
+            'METHOD'=>$method,
             'PACKAGE'=>self::PACKAGE,
-            'PROTO'=>$proto,
+            'PROTOCOL'=>$protocol,
             'PORT'=>$port,
             'ROOT'=>$_SERVER['DOCUMENT_ROOT'].$base,
             'ROUTES'=>$routes,
             'SEED'=>$seed,
             'SERIALIZER'=>$serializer,
-            'SYSLOG'=>FALSE,
-            'TEMP'=>'tmp/',
+            'TAGLINE'=>self::TAGLINE,
             'TIME'=>&$_SERVER['REQUEST_TIME_FLOAT'],
+            'TMP'=>'tmp/',
             'TZ'=>@date_default_timezone_get(),
             'UA'=>$ua,
             'UI'=>'./',
             'URI'=>$uri,
-            'VERB'=>$verb,
             'VERSION'=>self::VERSION,
-            'XFRAME'=>'SAMEORIGIN',
-        ];
+            'XFRAME'=>'SAMEORIGIN'
+        );
         // Set default timezone
         date_default_timezone_set($fw->hive['TZ']);
         // Register custom class-autoloader function
-        spl_autoload_register([$fw,'autoload']);
+        spl_autoload_register(array($fw,'autoload'));
         // Register custom shutdown function
-        register_shutdown_function([$fw,'shutdown'],getcwd());
+        register_shutdown_function(array($fw,'shutdown'),getcwd());
     }
 }
 
-
-
-//!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//! Preview - lightweight template compiler engine
-//!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-class Preview extends \Factory {
-    protected
-        // UI directory
-        $ui,
-        // Template blocks
-        $block,
-        // Template stacks
-        $stack;
-
-    /**
-     * Class constructor
-     */
-    function __construct() {
-        $fw=\Alit::instance();
-        $this->block=[];
-        $this->stack=[];
-        $this->ui=str_replace('/',DS,$fw->get('ROOT').str_replace('./','',$fw->get('UI')));
-    }
-
-   /**
-    * Add file to include
-    * @param   string  $name
-    * @return  string
-    */
-    protected function tpl($name) {
-        return preg_replace('/\s\s+/','',$this->ui.$name);
-    }
-
-   /**
-    * Print result of templating
-    * @param   string  $name
-    * @param   array   $data
-    * @return  void
-    */
-    function render($name,$data=[]) {
-        echo $this->retrieve($name,$data);
-    }
-
-   /**
-    * Retrieve result of templating
-    * @param   string  $name
-    * @param   array   $data
-    * @return  string
-    */
-    function retrieve($name,$data=[]) {
-        $this->tpl[]=$name;
-        $data=empty($data)?[]:extract($data);
-        while ($file=array_shift($this->tpl)) {
-            $this->beginblock('content');
-            require ($this->tpl($file));
-            $this->endblock(TRUE);
-        }
-        return $this->block('content');
-    }
-
-   /**
-    * Check existance of a template file
-    * @param   string   $name
-    * @return  boolean
-    */
-    function exists($name) {
-        return file_exists($this->tpl($name));
-    }
-
-   /**
-    * Define parent
-    * @param   string  $name
-    * @return  void
-    */
-    protected function extend($name) {
-        $this->tpl[]=$name;
-    }
-
-   /**
-    * Return content of block if exists
-    * @param   string       $name   
-    * @param   string|NULL  $default
-    * @return  string
-    */
-    protected function block($name,$default=NULL) {
-        return array_key_exists($name,$this->block)?$this->block[$name]:$default;
-    }
-
-   /**
-    * Bnock begins
-    * @param   string $name
-    * @return  void
-    */
-    protected function beginblock($name) {
-        array_push($this->stack,$name);
-        ob_start();
-    }
-
-   /**
-    * Block ends
-    * @param   boolean $overwrite
-    * @return  string
-    */
-    protected function endblock($overwrite=FALSE) {
-        $name=array_pop($this->stack);
-        if ($overwrite||!array_key_exists($name,$this->block))
-            $this->block[$name]=ob_get_clean();
-        else $this->block[$name].=ob_get_clean();
-        return $name;
-    }
-}
-
-
-
-//!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//!=============================================================================
 //! Factory - A factory class for single-instance objects
-//!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//!=============================================================================
 abstract class Factory {
 
    /**
@@ -1355,24 +1229,23 @@ abstract class Factory {
     * @return  static
     */
     static function instance() {
-        if (!\Warehouse::exists($class=get_called_class())) {
-            $ref=new \ReflectionClass($class);
+        if (!Warehouse::exists($class=get_called_class())) {
+            $ref=new ReflectionClass($class);
             $args=func_get_args();
-            \Warehouse::set($class,$args?$ref->newInstanceArgs($args):new $class);
+            Warehouse::set($class,$args?$ref->newInstanceArgs($args):new $class);
         }
-        return \Warehouse::get($class);
+        return Warehouse::get($class);
     }
-
 }
 
-
-
-//!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//!=============================================================================
 //! Warehouse - Container for singular object instances
-//!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//!=============================================================================
 final class Warehouse {
-    // Object table
-    private static $table;
+    
+    private static
+        // Object table
+        $table;
 
    /**
     * Return TRUE if object exists in table
@@ -1386,7 +1259,7 @@ final class Warehouse {
    /**
     * Add object to table
     * @param  string   $key
-    * @param  object   $obj  object to be add
+    * @param  object   $obj
     * @return boolean
     */
     static function set($key,$obj) {
@@ -1405,17 +1278,17 @@ final class Warehouse {
    /**
     * Delete object from table
     * @param   string  $key
-    * @return  NULL
+    * @return  void
     */
     static function clear($key) {
         self::$table[$key]=NULL;
         unset(self::$table[$key]);
     }
 
-    // Prohibit cloning
+    // Prohibit cloning of this class
     private function __clone() {}
-    // Prohibit instantiation
+    // Prohibit instantiation of this class
     private function __construct() {}
 }
 // Return framework instance on file inclusion
-return \Alit::instance();
+return Alit::instance();
