@@ -314,7 +314,7 @@ $fw->log('[info] paijo is logged in!','info.log');
 
 
 ### Documentation
-Full documentation available on [https://github.com/esyede/alitphp/wiki](official wiki)
+Work in progress...
 
 
 ### Contribute
