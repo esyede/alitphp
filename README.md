@@ -1,6 +1,6 @@
 # alitphp
 Simple, lightweight php microframework
-[https://github.com/esyede/alitphp/wiki](official wiki)
+[Documentation](https://github.com/esyede/alitphp/wiki)
 
 ### What you get?
 * Simple routing engine with middleware support
@@ -131,6 +131,8 @@ $fw->route('GET /test','App\Controllers\Test@index');
 
 You can also specify routes in a config file:
 ```ini
+; File path: [root]/app.cfg
+
 [route]
 GET /                 = Welcome@home
 GET /profile(/\w+)?   = Welcome@profile
@@ -196,7 +198,7 @@ store.dummy.text     = This is an example \
 
 ### Playing with hive
 Hive (like a _bee hive_) is a variable that holds an array of whole system configuration.
-Alit provide simple methods to play with it. Let's take a look at some of them:
+Alit provide simple methods to play with it. Let's take a look some of them:
 
 Set a value to hive:
 ```php
@@ -244,7 +246,8 @@ $fw->add(array(
 
 Check if key exists in hive:
 ```php
-$fw->has('profile.family.wife'); // TRUE
+$fw->has('profile.nationality'); // TRUE
+$fw->has('profile.qwertyuiop'); // FALSE
 ```
 
 Erase a hive path or array of hive paths:
@@ -256,8 +259,8 @@ $fw->erase(array('profile.city','profile.favorite.food'));
 
 
 #### Framework Variables
-Since all framework variables are stored in `Alit::hive` property,
-You can get, set, add or dump it to see the contents:
+All framework variables are stored in `Alit::$hive` _protected_ property,
+But, you can still get, set, add or dump it to see the contents:
 ```php
 // See all hive vars
 var_dump($fw->hive());
@@ -288,7 +291,7 @@ $fw->set('AUTOLOAD','vendor/|foo_vendor/;bar_vendor/,baz_vendor/');
 
 
 ### Debugging
-Alit provide a `SYSDEBUG` directive that you can adjust to see more detailed error info:
+Alit provide a `DEBUG` directive that you can adjust to see more detailed error info:
 ```php
 $fw->set('DEBUG',3);
 ```
@@ -318,4 +321,4 @@ Work in progress...
 
 
 ### Contribute
-Please fork or pull request if you find this useful.
+Please fork and pull request if you find this useful.
