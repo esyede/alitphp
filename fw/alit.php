@@ -15,7 +15,7 @@ defined('DS') or define('DS',DIRECTORY_SEPARATOR);
 //!=============================================================================
 //! Alit - The core class
 //!=============================================================================
-final class Alit extends Factory implements ArrayAccess {
+final class Alit extends \Factory implements \ArrayAccess {
 
     const
         // Package and version info
@@ -69,7 +69,7 @@ final class Alit extends Factory implements ArrayAccess {
     const
         // System error messages
         E_UI="Can't find view file: '%s' (%s)",
-        E_FATAL="Fatal error: %s",
+        E_TYPE="Invalid route type: %s",
         E_ROUTE="Can't find route handler: '%s'",
         E_METHOD="Invalid method supplied: '%s'",
         E_FORWARD="Can't forward route handler: '%s'",
@@ -92,12 +92,10 @@ final class Alit extends Factory implements ArrayAccess {
      * executed when accessed using one of the specified methods.
      * @param   string           $req
      * @param   string|callable  $fn
-     * @return  object
+     * @return  $this
      */
     function before($req,$fn) {
-        $req=preg_split('/ /',$this->tab2space($req),NULL,PREG_SPLIT_NO_EMPTY);
-        foreach ($this->split($req[0]) as $mtd)
-            $this->push('ROUTES.Before.'.$mtd,array('uri'=>$req[1],'fn'=>is_string($fn)?trim($fn):$fn));
+        $this->pair($req,$fn,'before');
         // It's chainable!
         return $this;
     }
@@ -107,27 +105,10 @@ final class Alit extends Factory implements ArrayAccess {
     * executed when accessed using one of the specified methods
     * @param   string           $req
     * @param   string|callable  $fn
-    * @return  object
+    * @return  $this
     */
     function after($req,$fn) {
-        $req=preg_split('/ /',$this->tab2space($req),NULL,PREG_SPLIT_NO_EMPTY);
-        foreach ($this->split($req[0]) as $mtd)
-            $this->push('ROUTES.After.'.$mtd,array('uri'=>$req[1],'fn'=>is_string($fn)?trim($fn):$fn));
-        // It's chainable!
-        return $this;
-    }
-
-   /**
-    * Set the page not found (404) handling function
-    * @param   string|callable  $fn
-    * @return  object
-    */
-    function notfound($fn=NULL) {
-        $this->set('ROUTES.Notfound',is_string($fn)?trim($fn):$fn);
-        if (is_callable($fn)) {
-            call_user_func($fn);
-            exit();
-        }
+        $this->pair($req,$fn,'after');
         // It's chainable!
         return $this;
     }
@@ -137,14 +118,49 @@ final class Alit extends Factory implements ArrayAccess {
     * when accessed using one of the specified methods.
     * @param   string           $req
     * @param   string|callable  $fn
-    * @return  object
+    * @return  $this
     */
     function route($req,$fn) {
+        $this->pair($req,$fn,'main');
+        // It's chainable!
+        return $this;
+    }
+    
+   /**
+    * Pair a route and the appropriate handler function to hive
+    * @param   string           $req
+    * @param   string|callable  $fn
+    * @param   string           $type
+    * @return  $this
+    */
+    private function pair($req,$fn,$type) {
+    	if (!in_array($type,array('before','main','after')))
+    		trigger_error(sprintf(self::E_TYPE,$type));
         $req=preg_split('/ /',$this->tab2space($req),NULL,PREG_SPLIT_NO_EMPTY);
-        foreach ($this->split($req[0]) as $mtd) {
-            if (!in_array($mtd,$this->split(self::METHODS)))
-                trigger_error(sprintf(self::E_METHOD,$mtd));
-            $this->push('ROUTES.Main.'.$mtd,array('uri'=>$req[1],'fn'=>is_string($fn)?trim($fn):$fn));
+        $mtds=$this->split($req[0]);
+        if ($type==='main') {
+        	foreach ($mtds as $mtd) {
+        		if (!in_array($mtd,$this->split(self::METHODS)))
+        			trigger_error(sprintf(self::E_METHOD,$mtd));
+          		$this->push('ROUTES.Main.'.$mtd,array('uri'=>$req[1],'fn'=>is_string($fn)?trim($fn):$fn));
+          	}
+        }
+        else {
+        	foreach ($mtds as $mtd)
+        		$this->push('ROUTES.'.ucfirst($type).'.'.$mtd,array('uri'=>$req[1],'fn'=>is_string($fn)?trim($fn):$fn));
+        }
+    }
+    
+   /**
+    * Set the page not found (404) handling function
+    * @param   string|callable  $fn
+    * @return  $this
+    */
+    function notfound($fn=NULL) {
+        $this->set('ROUTES.Notfound',is_string($fn)?trim($fn):$fn);
+        if (is_callable($fn)) {
+            call_user_func($fn);
+            exit();
         }
         // It's chainable!
         return $this;
@@ -288,7 +304,8 @@ final class Alit extends Factory implements ArrayAccess {
             $status=@constant('self::HTTP_'.$code);
             error_log($code.' '.$status);
             $trace=$this->backtrace($trace);
-            foreach (explode("\n",$trace) as $log)
+            $logs=explode("\n",$trace);
+            foreach ($logs as $log)
                 if ($log)
                     error_log($log);
             $this->set('ERROR',array(
@@ -305,8 +322,7 @@ final class Alit extends Factory implements ArrayAccess {
             $debug.='---------------------------------------------'.PHP_EOL;
             if ($this->get('LOG')) {
                 $err=$this->get('ERROR');
-                unset($err['level']);
-                unset($err['trace']);
+                unset($err['level'],$err['trace']);
                 foreach ($err as $k=>$v)
                     $debug.=ucfirst(((strlen($k)<=8)?$k.
                         str_repeat(' ',(8-strlen($k))):$k)).': '.$v.PHP_EOL;
@@ -324,11 +340,11 @@ final class Alit extends Factory implements ArrayAccess {
                 echo json_encode(array('status'=>500,'data'=>$this->get('ERROR')));
             }
             else {
-                echo "<!DOCTYPE html>\n<html>".
-                    "\n\t<head>\n\t\t<title>$code $status</title>\n\t</head>".
-                    "\n\t<body style=\"color: #555\">\n".
-                    "\t\t<h1>$code $status</h1>\n".
-                    "\t\t<p>Error: $reason</p>\n";
+                echo "<!DOCTYPE html>\n<html>"
+                    ."\n\t<head>\n\t\t<title>$code $status</title>\n\t</head>"
+                    ."\n\t<body style=\"color: #555\">\n"
+                    ."\t\t<h1>$code $status</h1>\n"
+                    ."\t\t<p>Error: $reason</p>\n";
                 echo (!empty($file)&&!empty($line))
                     ?"\t\t<pre>$file:<font color=\"red\">$line</font></pre><br>\n":"";
                 // Show debug backtrace if 'DEBUG' directive is activated
@@ -373,8 +389,8 @@ final class Alit extends Factory implements ArrayAccess {
                 $line.=$stack['class'].$stack['type'];
             if (isset($stack['function']))
                 $line.=$stack['function'].'()';
-            $src=$this->fwslash(str_replace($_SERVER['DOCUMENT_ROOT'].'/','',$stack['file'])).
-                ':<font color="red">'.$stack['line'].'</font>';
+            $src=$this->fwslash(str_replace($_SERVER['DOCUMENT_ROOT'].'/','',$stack['file']))
+                .':<font color="red">'.$stack['line'].'</font>';
             $out.='['.$src.'] '.$line.PHP_EOL;
         }
         return $out;
@@ -411,7 +427,7 @@ final class Alit extends Factory implements ArrayAccess {
             ob_end_flush();
             exit();
         }
-        catch (Exception $ex) {
+        catch (\Exception $ex) {
             trigger_error(sprintf(self::E_REDIRECT,$url));
         }
     }
@@ -446,8 +462,8 @@ final class Alit extends Factory implements ArrayAccess {
             $source=$this->split($source);
         foreach ($source as $file) {
             preg_match_all(
-                '~(?<=^|\n)(?:\[(?<flag>.+?)\]|(?<key>[^\h\r\n;].*?)\h*=\h*'.
-                '(?<val>(?:\\\\\h*\r?\n|.+?)*))(?=\r?\n|$)~',
+                '~(?<=^|\n)(?:\[(?<flag>.+?)\]|(?<key>[^\h\r\n;].*?)\h*=\h*'
+                .'(?<val>(?:\\\\\h*\r?\n|.+?)*))(?=\r?\n|$)~',
                 $this->read($file),$matches,PREG_SET_ORDER
             );
             if ($matches) {
@@ -523,7 +539,7 @@ final class Alit extends Factory implements ArrayAccess {
     */
     function log($data,$file,$lf=FALSE) {
         $ts=time();
-        $date=new DateTime('now',new DateTimeZone($this->get('TZ')));
+        $date=new \DateTime('now',new \DateTimeZone($this->get('TZ')));
         $date->setTimestamp($ts);
         return $this->write($file,'['.$date->format('Y/m/d H:i:s').']'.
             ($lf?PHP_EOL:' ').$data.PHP_EOL,file_exists($file));
@@ -550,11 +566,12 @@ final class Alit extends Factory implements ArrayAccess {
         if (is_array($path=$this->hive['AUTOLOAD'])
         &&isset($path[1])&&is_callable($path[1]))
             list($path,$fn)=$path;
-        foreach ($this->split($this->hive['FW'].'|./|'.$path) as $auto)
-            if ($fn&&is_file($file=$fn($auto.$class).'.php')
-            ||is_file($file=$auto.$class.'.php')
-            ||is_file($file=$auto.strtolower($class).'.php')
-            ||is_file($file=strtolower($auto.$class).'.php'))
+        $dirs=$this->split($this->hive['FW'].'|./|'.$path);
+        foreach ($dirs as $dir)
+            if ($fn&&is_file($file=$fn($dir.$class).'.php')
+            ||is_file($file=$dir.$class.'.php')
+            ||is_file($file=$dir.strtolower($class).'.php')
+            ||is_file($file=strtolower($dir.$class).'.php'))
                 return require($file);
     }
 
@@ -617,28 +634,28 @@ final class Alit extends Factory implements ArrayAccess {
             $data[$k]=preg_replace('~(&#x*[0-9A-F]+);*~iu','$1;',$v);
             $data[$k]=html_entity_decode($v,ENT_COMPAT,'UTF-8');
             $data[$k]=preg_replace('~(<[^>]+?[\x00-\x20"\'])(?:on|xmlns)[^>]*+>~iu','$1>',$k);
-            $data[$k]=preg_replace('~([a-z]*)[\x00-\x20]*=[\x00-\x20]*([`\'"]*)'.
-                '[\x00-\x20]*j[\x00-\x20]*a[\x00-\x20]*v[\x00-\x20]*a[\x00-\x20]*s'.
-                '[\x00-\x20]*c[\x00-\x20]*r[\x00-\x20]*i[\x00-\x20]*p[\x00-\x20]*t'.
-                '[\x00-\x20]*:~iu','$1=$2nojavascript...',$v);
-            $data[$k]=preg_replace('~([a-z]*)[\x00-\x20]*=([\'"]*)[\x00-\x20]*v'.
-                '[\x00-\x20]*b[\x00-\x20]*s[\x00-\x20]*c[\x00-\x20]*r[\x00-\x20]*i'.
-                '[\x00-\x20]*p[\x00-\x20]*t[\x00-\x20]*:~iu','$1=$2novbscript...',$v);
-            $data[$k]=preg_replace('~([a-z]*)[\x00-\x20]*=([\'"]*)[\x00-\x20]*'.
-                '-moz-binding[\x00-\x20]*:~u','$1=$2nomozbinding...',$v);
-            $data[$k]=preg_replace('~(<[^>]+?)style[\x00-\x20]*=[\x00-\x20]*[`\'"]'.
-                '*.*?expression[\x00-\x20]*\([^>]*+>~i','$1>',$v);
-            $data[$k]=preg_replace('~(<[^>]+?)style[\x00-\x20]*=[\x00-\x20]*[`\'"]'.
-                '*.*?behaviour[\x00-\x20]*\([^>]*+>~i','$1>',$v);
-            $data[$k]=preg_replace('~(<[^>]+?)style[\x00-\x20]*=[\x00-\x20]*[`\'"]'.
-                '*.*?s[\x00-\x20]*c[\x00-\x20]*r[\x00-\x20]*i[\x00-\x20]*p'.
-                '[\x00-\x20]*t[\x00-\x20]*:*[^>]*+>~iu','$1>',$v);
+            $data[$k]=preg_replace('~([a-z]*)[\x00-\x20]*=[\x00-\x20]*([`\'"]*)'
+                .'[\x00-\x20]*j[\x00-\x20]*a[\x00-\x20]*v[\x00-\x20]*a[\x00-\x20]*s'
+                .'[\x00-\x20]*c[\x00-\x20]*r[\x00-\x20]*i[\x00-\x20]*p[\x00-\x20]*t'
+                .'[\x00-\x20]*:~iu','$1=$2nojavascript...',$v);
+            $data[$k]=preg_replace('~([a-z]*)[\x00-\x20]*=([\'"]*)[\x00-\x20]*v'
+                .'[\x00-\x20]*b[\x00-\x20]*s[\x00-\x20]*c[\x00-\x20]*r[\x00-\x20]*i'
+                .'[\x00-\x20]*p[\x00-\x20]*t[\x00-\x20]*:~iu','$1=$2novbscript...',$v);
+            $data[$k]=preg_replace('~([a-z]*)[\x00-\x20]*=([\'"]*)[\x00-\x20]*'
+                .'-moz-binding[\x00-\x20]*:~u','$1=$2nomozbinding...',$v);
+            $data[$k]=preg_replace('~(<[^>]+?)style[\x00-\x20]*=[\x00-\x20]*[`\'"]'
+                .'*.*?expression[\x00-\x20]*\([^>]*+>~i','$1>',$v);
+            $data[$k]=preg_replace('~(<[^>]+?)style[\x00-\x20]*=[\x00-\x20]*[`\'"]'
+                .'*.*?behaviour[\x00-\x20]*\([^>]*+>~i','$1>',$v);
+            $data[$k]=preg_replace('~(<[^>]+?)style[\x00-\x20]*=[\x00-\x20]*[`\'"]'
+                .'*.*?s[\x00-\x20]*c[\x00-\x20]*r[\x00-\x20]*i[\x00-\x20]*p'
+                .'[\x00-\x20]*t[\x00-\x20]*:*[^>]*+>~iu','$1>',$v);
             $data[$k]=preg_replace('~</*\w+:\w[^>]*+>~i','',$v);
             do {
                 $old=$data[$k];
-                $data[$k]=preg_replace('~</*(?:applet|b(?:ase|gsound|link)|embed'.
-                    '|frame(?:set)?|i(?:frame|layer)|l(?:ayer|ink)|meta|object|s(?:cript|tyle)'.
-                    '|title|xml)[^>]*+>~i','',$data[$k]);
+                $data[$k]=preg_replace('~</*(?:applet|b(?:ase|gsound|link)|embed'
+                    .'|frame(?:set)?|i(?:frame|layer)|l(?:ayer|ink)|meta|object|s(?:cript|tyle)'
+                    .'|title|xml)[^>]*+>~i','',$data[$k]);
             } while ($old!==$data[$k]);
         }
         return filter_var($data[$k],FILTER_SANITIZE_STRING);
@@ -845,7 +862,7 @@ final class Alit extends Factory implements ArrayAccess {
     * @return  boolean
     */
     function exists($key,$arr) {
-        if ($arr instanceof ArrayAccess)
+        if ($arr instanceof \ArrayAccess)
             return isset($arr[$key]);
         return array_key_exists($key,(array)$arr);
     }
@@ -911,7 +928,7 @@ final class Alit extends Factory implements ArrayAccess {
             $this->hive=array_merge($this->hive,$key);
         elseif (is_string($key)) {
             $item=(array)$this->get($key);
-            $val=array_merge($item,($val instanceof ArrayAccess||is_array($val))?$val:(array)$val);
+            $val=array_merge($item,($val instanceof \ArrayAccess||is_array($val))?$val:(array)$val);
             $this->set($key,$val);
         }
     }
@@ -995,7 +1012,7 @@ final class Alit extends Factory implements ArrayAccess {
     * @return  boolean
     */
     function accessible($arr) {
-        return is_array($arr)||$arr instanceof ArrayAccess;
+        return is_array($arr)||$arr instanceof \ArrayAccess;
     }
 
    /**
@@ -1075,7 +1092,7 @@ final class Alit extends Factory implements ArrayAccess {
     private function __wakeup() {}
 
     // Class constructor
-    function __construct() {
+    public function __construct() {
         // Set default charset
         ini_set('default_charset',$charset='UTF-8');
         if (extension_loaded('mbstring'))
@@ -1115,7 +1132,8 @@ final class Alit extends Factory implements ArrayAccess {
         // Get all headers
         $headers=array();
         if (function_exists('getallheaders')) {
-            foreach (getallheaders() as $key=>$val) {
+        	$all=getallheaders();
+            foreach ($all as $key=>$val) {
                 $tmp=strtoupper(strtr($key,'-','_'));
                 $key=strtr(ucwords(strtolower(strtr($key,'-',' '))),' ','-');
                 $headers[$key]=$val;
@@ -1128,7 +1146,8 @@ final class Alit extends Factory implements ArrayAccess {
                 $headers['Content-Length']=&$_SERVER['CONTENT_LENGTH'];
             if (isset($_SERVER['CONTENT_TYPE']))
                 $headers['Content-Type']=&$_SERVER['CONTENT_TYPE'];
-            foreach (array_keys($_SERVER) as $key)
+            $keys=array_keys($_SERVER);
+            foreach ($keys as $key)
                 if (substr($key,0,5)=='HTTP_') {
                     $prefix=strtr(ucwords(strtolower(strtr(substr($key,5),'_',' '))),' ','-');
                     $headers[$prefix]=&$_SERVER[$key];
@@ -1229,12 +1248,12 @@ abstract class Factory {
     * @return  static
     */
     static function instance() {
-        if (!Warehouse::exists($class=get_called_class())) {
-            $ref=new ReflectionClass($class);
+        if (!\Warehouse::exists($class=get_called_class())) {
+            $ref=new \ReflectionClass($class);
             $args=func_get_args();
-            Warehouse::set($class,$args?$ref->newInstanceArgs($args):new $class);
+            \Warehouse::set($class,$args?$ref->newInstanceArgs($args):new $class);
         }
-        return Warehouse::get($class);
+        return \Warehouse::get($class);
     }
 }
 
@@ -1291,4 +1310,4 @@ final class Warehouse {
     private function __construct() {}
 }
 // Return framework instance on file inclusion
-return Alit::instance();
+return \Alit::instance();
